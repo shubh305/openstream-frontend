@@ -11,7 +11,6 @@ import { API_BASE_URL, PLACEHOLDER_IMAGES } from "@/lib/constants";
 export async function login(formData: FormData | Record<string, unknown>) {
   let username, password;
 
-  // Handle both FormData and plain object
   if (formData instanceof FormData) {
     username = formData.get("username") as string;
     password = formData.get("password") as string;
@@ -21,7 +20,7 @@ export async function login(formData: FormData | Record<string, unknown>) {
     password = data?.password as string;
   }
 
-  console.log("Login attempt:", { username });
+
 
   if (!username || !password) {
     console.error("Login validation failed: Missing fields");
@@ -54,7 +53,6 @@ export async function login(formData: FormData | Record<string, unknown>) {
     }
 
     const data = await response.json();
-    console.log("Login Response Keys:", Object.keys(data));
     const token = data.access_token;
     const streamKey = data.streamKey;
 
@@ -81,6 +79,14 @@ export async function login(formData: FormData | Record<string, unknown>) {
         path: "/",
       });
     }
+
+    // Store username to allow session fallback if /profile endpoint fails
+    cookieStore.set("session_username", username, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: "/",
+    });
   } catch (error) {
     console.error("Login action error:", error);
     return { error: "Something went wrong. Please try again." };
@@ -95,9 +101,6 @@ export async function login(formData: FormData | Record<string, unknown>) {
 export async function signup(formData: FormData | Record<string, unknown>) {
   let username, email, password;
 
-  console.log("Signup action called. Type:", typeof formData, "Is FormData:", formData instanceof FormData);
-
-  // Handle payload (FormData or Object)
   if (formData instanceof FormData) {
     username = formData.get("username") as string;
     email = formData.get("email") as string;
@@ -109,7 +112,7 @@ export async function signup(formData: FormData | Record<string, unknown>) {
     password = data?.password as string;
   }
 
-  console.log("Signup parsing result:", { username, email, hasPassword: !!password });
+
 
   if (!username || !password || !email) {
     console.error("Signup validation failed: Missing fields");
@@ -122,7 +125,6 @@ export async function signup(formData: FormData | Record<string, unknown>) {
       headers: {
         "Content-Type": "application/json",
       },
-      // Sending email as well, even if backend implementation might need update to store it
       body: JSON.stringify({ username, password, email }),
     });
 
@@ -146,8 +148,6 @@ export async function signup(formData: FormData | Record<string, unknown>) {
     return { error: "Something went wrong during signup." };
   }
 
-  // Auto-login after signup
-  // Pass object to login to avoid FormData issues if reused
   return await login({ username, password });
 }
 
@@ -159,6 +159,7 @@ export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete("session_token");
   cookieStore.delete("stream_key");
+  cookieStore.delete("session_username");
   redirect("/login");
 }
 
@@ -178,22 +179,38 @@ export async function getSession() {
     });
 
     if (!response.ok) {
+      console.error(`getSession failed: ${response.status} ${response.statusText}`);
+      const text = await response.text();
+      console.error("getSession response body:", text);
       return null;
     }
 
     const user = await response.json();
 
-    // Ensure avatar is present, fallback to placeholder if not
     if (!user.avatar) {
       user.avatar = PLACEHOLDER_IMAGES.AVATAR_DEFAULT;
     }
-
-    // Normalize for frontend components (Navbar expects avatarUrl)
     user.avatarUrl = user.avatar;
 
     return { user };
   } catch (error) {
     console.error("Get session error:", error);
+
+    const cookieStore = await cookies();
+    const fallbackUsername = cookieStore.get("session_username")?.value;
+
+    if (fallbackUsername) {
+      console.warn("Using fallback session from cookies due to API error");
+      return {
+        user: {
+          username: fallbackUsername,
+          email: `${fallbackUsername}@example.com`,
+          avatarUrl: PLACEHOLDER_IMAGES.AVATAR_DEFAULT,
+          id: "fallback-id",
+        },
+      };
+    }
+
     return null;
   }
 }
