@@ -1,61 +1,102 @@
+import Link from "next/link";
 import { VideoPlayer } from "@/features/video/components/VideoPlayer";
-import { VideoMetadata } from "@/features/video/components/VideoMetadata";
-import { MOCK_VIDEO_DETAILS } from "@/lib/mock-data";
-import { APP_NAME } from "@/lib/constants";
+import { CommentSection } from "@/features/video/components/CommentSection";
+import { SidebarCard } from "@/features/video/components/SidebarCard";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { getVideo, getRelatedVideos } from "@/actions/video";
+import { getComments } from "@/actions/comment";
+import { getSession } from "@/actions/auth";
+import { notFound } from "next/navigation";
+import { SubscribeButton } from "@/features/video/components/SubscribeButton";
+import { getChannelByHandle } from "@/actions/channel";
 
-/**
- * Watch Page Component
- * Renders the video player, metadata, and sidebar recommendations.
- * 
- * @param params - Route parameters containing the video ID
- */
-export default async function WatchPage({
-  // await params is required in Next.js 15
-  params, 
-}: { 
-  params: Promise<{ id: string }> 
-}) {
+export default async function WatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
-  // Mock Data Fetching based on ID
-  // In production, fetch(id) would happen here
-  const video = { 
-      ...MOCK_VIDEO_DETAILS,
-      id // Override ID to match param
-  };
+
+  const [video, recommendations, comments, session] = await Promise.all([getVideo(id), getRelatedVideos(id), getComments(id), getSession()]);
+
+  if (!video) {
+    notFound();
+  }
+
+  let channelId = "";
+  try {
+    const channel = await getChannelByHandle(video.creator.username);
+    if (channel) channelId = channel.id;
+  } catch (e) {
+    console.error("Failed to fetch channel for video", e);
+  }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
-         <header className="sticky top-0 z-50 flex h-14 items-center border-b bg-white/95 px-4 backdrop-blur dark:bg-black/95 dark:border-white/10">
-            <div className="font-bold text-lg tracking-tight">{APP_NAME}</div>
-        </header>
-
-        <div className="mx-auto max-w-[1800px] p-4 lg:p-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* Main Content (Player + Metadata) */}
-                <div className="lg:col-span-2">
-                    <VideoPlayer posterUrl={video.posterUrl} videoUrl={video.videoUrl} />
-                    <VideoMetadata {...video} />
-                </div>
-
-                {/* Sidebar (Recommendations) */}
-                <div className="hidden lg:block">
-                     <h3 className="mb-4 text-lg font-bold">Up Next</h3>
-                     {/* Placeholder for sidebar recommendations */}
-                     <div className="space-y-4">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="flex gap-2">
-                                <div className="h-24 w-40 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
-                                    <div className="h-3 w-1/2 rounded bg-neutral-200 dark:bg-neutral-800" />
-                                </div>
-                            </div>
-                        ))}
-                     </div>
-                </div>
+    <div className="min-h-screen bg-black">
+      <div className="mx-auto max-w-[1600px] p-4 lg:p-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+          {/* Main Content */}
+          <div className="space-y-4">
+            {/* Video Player */}
+            <div className="relative rounded-2xl overflow-hidden bg-noir-terminal">
+              <VideoPlayer videoId={video.id} posterUrl={video.posterUrl} videoUrl={video.videoUrl} />
             </div>
+
+            {/* Title Row */}
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-xl font-bold text-white leading-tight">{video.title}</h1>
+              <div className="flex items-center gap-2 shrink-0">
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-noir-terminal hover:bg-noir-border transition-colors">
+                  <ThumbsUp className="w-4 h-4 text-white" />
+                  <span className="text-xs font-bold">{video.views > 0 ? Intl.NumberFormat("en-US", { notation: "compact" }).format(video.views) : 0}</span>
+                </button>
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-noir-terminal hover:bg-noir-border transition-colors">
+                  <ThumbsDown className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Creator Info */}
+            <div className="flex items-center gap-4">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={video.creator.avatarUrl} alt={video.creator.username} />
+                <AvatarFallback className="bg-electric-lime text-black font-bold">{video.creator.username[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-white">{video.creator.username}</span>
+                  {video.creator.isVerified && <span className="text-xs bg-electric-lime text-black px-1.5 py-0.5 rounded font-bold">✓</span>}
+                </div>
+                <span className="text-xs text-muted-text">{video.creator.subscribers || 0} subscribers</span>
+              </div>
+              {channelId && <SubscribeButton channelId={channelId} channelName={video.creator.username} initialIsSubscribed={video.userInteraction?.subscribed || false} />}
+            </div>
+
+            {/* Description */}
+            <div className="bg-noir-terminal/50 rounded-xl p-4">
+              <div className="text-sm text-muted-text mb-2">
+                {Intl.NumberFormat("en-US", { notation: "compact" }).format(video.views)} views • {video.uploadedAt}
+              </div>
+              <p className="text-sm text-white/80 whitespace-pre-wrap line-clamp-3">{video.description}</p>
+            </div>
+
+            {/* Comments */}
+            <CommentSection videoId={video.id} initialComments={comments} currentUser={session?.user} />
+          </div>
+
+          {/* Sidebar */}
+          <aside className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white">You may like</h3>
+              <Link href="/videos" className="text-xs text-electric-lime hover:underline">
+                View all
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {recommendations.map(rec => (
+                <SidebarCard key={rec.id} id={rec.id} title={rec.title} thumbnailUrl={rec.thumbnailUrl} duration={rec.duration} views={rec.views} uploadedAt={rec.uploadedAt} creator={rec.creator} />
+              ))}
+            </div>
+          </aside>
         </div>
+      </div>
     </div>
   );
 }
