@@ -15,14 +15,14 @@ function Sparkline({ data, color, height = 32 }: { data: number[]; color: string
   const max = Math.max(...data, 1);
   const min = 0;
   const range = max - min;
-  const width = 100; // viewbox units
+  const width = 100;
 
   // Create SVG path
   const points = data
     .map((d, i) => {
       const x = (i / (data.length - 1)) * width;
       const normalizedY = (d - min) / range;
-      const y = height - normalizedY * height; // Invert Y because SVG 0 is top
+      const y = height - normalizedY * height;
       return `${x},${y}`;
     })
     .join(" ");
@@ -86,8 +86,8 @@ export function BroadcastConsole() {
   // Stats
   const [stats, setStats] = useState({
     bitrate: 0,
-    fps: 30, // Fixed for recorder
-    latency: 0, // Not measurable easily via simple WebSocket push without RTCP
+    fps: 30,
+    latency: 0,
   });
 
   const [history, setHistory] = useState<{
@@ -116,12 +116,9 @@ export function BroadcastConsole() {
   const connectionStatus = getConnectionQuality();
 
   const stopBroadcast = () => {
-    // Stop Recorder
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
-
-    // Close WebSocket
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
@@ -151,14 +148,13 @@ export function BroadcastConsole() {
         return;
       }
 
-      console.log("Connecting to ingest:", config.url);
+
 
       // 2. Connect WebSocket
       const ws = new WebSocket(config.url);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("WebSocket Connected");
         setIsLive(true);
         setDuration(0);
         startRecording(ws);
@@ -170,8 +166,7 @@ export function BroadcastConsole() {
         stopBroadcast();
       };;
 
-      ws.onclose = event => {
-        console.log("WebSocket Closed", { code: event.code, reason: event.reason, wasClean: event.wasClean });
+      ws.onclose = () => {
         if (isLive) stopBroadcast();
       };
     } catch (err) {
@@ -196,9 +191,9 @@ export function BroadcastConsole() {
       }
 
       if (!selectedMimeType) {
-        console.warn("No supported mime type found, letting browser decide");
+        // No supported mime type found, letting browser decide
       } else {
-        console.log("Selected MimeType:", selectedMimeType);
+        // Selected MimeType: selectedMimeType
       }
 
       const options: MediaRecorderOptions = {
@@ -207,7 +202,6 @@ export function BroadcastConsole() {
       };
 
       const recorder = new MediaRecorder(stream, options);
-      console.log("MediaRecorder started with:", recorder.mimeType, "Bitrate:", recorder.videoBitsPerSecond);
 
       let lastTime = performance.now();
 
@@ -361,9 +355,9 @@ export function BroadcastConsole() {
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-xl bg-black">
+    <div className="relative h-full w-full overflow-hidden bg-noir-bg border border-noir-border">
       {/* Camera Preview */}
-      <div className="flex h-full items-center justify-center bg-neutral-900 relative">
+      <div className="flex h-full items-center justify-center bg-noir-terminal relative">
         {/* 1. Error State */}
         {error && (
           <div className="text-center text-red-500 p-4 z-50 bg-black/80 rounded-lg backdrop-blur">
@@ -454,29 +448,29 @@ export function BroadcastConsole() {
       </>
 
       {/* Control Bar */}
-      <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-4 rounded-full bg-neutral-900/90 p-4 border border-white/10 backdrop-blur z-30">
-        <Button variant={micOn ? "secondary" : "destructive"} size="icon" className="rounded-full shadow-lg" onClick={toggleMic} disabled={!!error || isLoading}>
+      <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-4 bg-noir-terminal/90 p-4 border border-noir-border backdrop-blur z-30 shadow-2xl">
+        <Button variant={micOn ? "secondary" : "destructive"} size="icon" className="rounded-none border border-noir-border" onClick={toggleMic} disabled={!!error || isLoading}>
           {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
         </Button>
 
-        <Button variant={camOn ? "secondary" : "destructive"} size="icon" className="rounded-full shadow-lg" onClick={toggleCam} disabled={!!error || isLoading}>
+        <Button variant={camOn ? "secondary" : "destructive"} size="icon" className="rounded-none border border-noir-border" onClick={toggleCam} disabled={!!error || isLoading}>
           {camOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
         </Button>
 
-        <div className="mx-2 h-10 w-px bg-white/20" />
+        <div className="mx-2 h-10 w-px bg-noir-border" />
 
         <Button
           variant={isLive ? "destructive" : "default"}
-          className="w-32 rounded-full font-bold shadow-lg transition-all active:scale-95"
+          className="w-32 rounded-none font-bold shadow-lg transition-all active:scale-95 bg-white text-black hover:bg-electric-lime"
           onClick={isLive ? stopBroadcast : startBroadcast}
           disabled={!!error || isLoading}
         >
           {isLive ? "End Stream" : "Go Live"}
         </Button>
 
-        <div className="mx-2 h-10 w-px bg-white/20" />
+        <div className="mx-2 h-10 w-px bg-noir-border" />
 
-        <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/20">
+        <Button variant="ghost" size="icon" className="rounded-none text-white hover:bg-noir-border">
           <Settings className="h-5 w-5" />
         </Button>
       </div>
