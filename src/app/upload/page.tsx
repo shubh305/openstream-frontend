@@ -1,22 +1,32 @@
 import { UploadForm } from "@/features/upload/components/UploadForm";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, X } from "lucide-react";
+import Link from "next/link";
 
 export default function UploadPage() {
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-        <header className="sticky top-0 z-50 flex h-14 items-center border-b bg-white/95 px-4 backdrop-blur dark:bg-neutral-950/95 dark:border-neutral-800">
-            <div className="font-bold text-lg tracking-tight">OpenStream Studio</div>
-        </header>
-
-        <div className="container mx-auto max-w-5xl py-10 px-4">
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold tracking-tight">Upload Content</h1>
-                <p className="text-neutral-500 dark:text-neutral-400">
-                    Share your videos with the world.
-                </p>
-            </div>
-            
-            <UploadForm />
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden">
+      {/* Header */}
+      <header className="flex h-14 items-center justify-between border-b border-noir-border bg-noir-terminal px-6 shrink-0">
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="icon" className="text-muted-text hover:text-foreground">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <h1 className="text-lg font-medium text-foreground">Upload video</h1>
         </div>
+        <Link href="/">
+          <Button variant="ghost" size="icon" className="text-muted-text hover:text-foreground">
+            <X className="h-5 w-5" />
+          </Button>
+        </Link>
+      </header>
+
+      {/* Upload Form */}
+      <div className="flex-1 overflow-hidden">
+        <UploadForm />
+      </div>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface VideoCardProps {
   id: string;
@@ -29,49 +28,46 @@ export function VideoCard({
 }: VideoCardProps) {
   return (
     <Link href={isLive ? `/live/${creator.username}` : `/watch/${id}`}>
-      <Card className="group overflow-hidden border-none shadow-none bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer">
+      <div className="group relative rounded-xl overflow-hidden bg-noir-terminal/40 hover:bg-noir-terminal transition-all duration-300">
         {/* Thumbnail Section */}
-        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-800">
-          <img
-            src={thumbnailUrl}
+        <div className="relative aspect-video w-full overflow-hidden">
+          <Image
+            src={thumbnailUrl || "/placeholder.jpg"}
             alt={title}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           {isLive ? (
-            <Badge variant="destructive" className="absolute bottom-2 right-2 rounded-sm px-1.5 py-0.5 text-xs">
-              LIVE
-            </Badge>
-          ) : (
-            <div className="absolute bottom-2 right-2 rounded bg-black/80 px-1 py-0.5 text-xs font-medium text-white">
-              {duration}
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-signal-red px-2.5 py-1 rounded-md">
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span className="text-xs font-bold text-white uppercase">Live</span>
             </div>
+          ) : (
+            <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs font-medium text-white">{duration}</div>
           )}
         </div>
 
         {/* Metadata Section */}
-        <div className="flex gap-3 pt-3">
-          <Avatar className="h-9 w-9">
+        <div className="flex gap-3 p-3">
+          <Avatar className="h-9 w-9 shrink-0">
             <AvatarImage src={creator.avatarUrl} alt={creator.username} />
-            <AvatarFallback>{creator.username[0].toUpperCase()}</AvatarFallback>
+            <AvatarFallback className="bg-noir-border text-white text-xs font-bold">{creator.username[0].toUpperCase()}</AvatarFallback>
           </Avatar>
-          
-          <div className="flex flex-col gap-1">
-            <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-neutral-900 dark:text-neutral-50 group-hover:text-black dark:group-hover:text-white">
-              {title}
-            </h3>
-            <div className="text-xs text-neutral-500 dark:text-neutral-400">
-              <p className="hover:text-neutral-700 dark:hover:text-neutral-300">
-                {creator.username}
-              </p>
-              <div className="flex items-center gap-1">
-                <span>{Intl.NumberFormat('en-US', { notation: "compact" }).format(views)} views</span>
-                <span>•</span>
-                <span>{uploadedAt}</span>
-              </div>
+          <div className="flex flex-col gap-1 min-w-0">
+            <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 group-hover:text-electric-lime transition-colors">{title}</h3>
+            <div className="flex items-center gap-2 text-xs text-muted-text">
+              <span>{creator.username}</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-text">
+              <span>{Intl.NumberFormat("en-US", { notation: "compact" }).format(views)} views</span>
+              <span>•</span>
+              <span>{uploadedAt}</span>
             </div>
           </div>
         </div>
-      </Card>
+      </div>
     </Link>
   );
 }
+
