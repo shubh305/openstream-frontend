@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+import { getSession } from "@/actions/auth";
+import { getSubscriptions } from "@/actions/subscription";
+import { Navbar } from "@/components/Navbar";
+import { Sidebar } from "@/components/Sidebar";
+import { Toaster } from "@/components/ui/sonner";
+
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
@@ -17,26 +23,24 @@ export const metadata: Metadata = {
   description: "Open-source video streaming architecture",
 };
 
-import { getSession } from "@/actions/auth";
-import { Navbar } from "@/components/Navbar";
-
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
+  const [session, subscriptions] = await Promise.all([getSession(), getSubscriptions()]);
 
   return (
-    <html lang="en" suppressHydrationWarning>
-       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="flex min-h-screen flex-col">
-            <Navbar user={session?.user} />
-            <main className="flex-1">
-                {children}
-            </main>
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body className={`${interTight.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground font-mono min-h-screen relative`}>
+        <Sidebar subscriptions={subscriptions} />
+        <div className="flex min-h-screen flex-col relative z-0 pl-16">
+          <Navbar user={session?.user} />
+          <main className="flex-1 flex flex-col">{children}</main>
         </div>
+        <Toaster />
       </body>
     </html>
   );
 }
+
