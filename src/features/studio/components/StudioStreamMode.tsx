@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, Radio, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { updateStreamSettings, getStreamKey, regenerateStreamKey } from "@/actions/stream";
+import { RTMP_INGEST_URL } from "@/lib/constants";
 import type { StreamSettingsData } from "./StudioSettings";
 
 interface StudioStreamModeProps {
@@ -120,7 +121,7 @@ export function StudioStreamMode({ isLive, settings, isValid }: StudioStreamMode
     }
   };
 
-  const streamUrl = process.env.NEXT_PUBLIC_RTMP_URL || "rtmp://localhost:1935/live";
+  const streamUrl = RTMP_INGEST_URL || "";
 
   const copyToClipboard = async (text: string, type: "url" | "key") => {
     await navigator.clipboard.writeText(text);

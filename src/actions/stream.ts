@@ -96,10 +96,20 @@ export async function getStreamKey() {
 
   try {
     const data = await fetchApi<{ streamKey: string }>("/streams/key", { cache: "no-store" }, token);
-    if (data?.streamKey) {
-      return data;
+    let streamKey = data?.streamKey;
+    if (streamKey && streamKey.startsWith("sk_live_")) {
+      streamKey = streamKey.replace("sk_live_", "");
     }
-    if (cookieKey) return { streamKey: cookieKey };
+
+    if (streamKey) {
+      return { streamKey };
+    }
+
+    let fallbackKey = cookieKey;
+    if (fallbackKey && fallbackKey.startsWith("sk_live_")) {
+      fallbackKey = fallbackKey.replace("sk_live_", "");
+    }
+    if (fallbackKey) return { streamKey: fallbackKey };
     return { error: "No stream key found" };
   } catch (error) {
     console.error("getStreamKey error (Falling back to cookie):", error);
