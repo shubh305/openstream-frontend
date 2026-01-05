@@ -24,9 +24,13 @@ export async function getSubscriptions() {
   }
 
   try {
-    const response = await fetchApi<{ subscriptions: Subscription[] }>("/subscriptions", {
-      next: { revalidate: 60 },
-    }, token);
+    const response = await fetchApi<{ subscriptions: Subscription[] }>(
+      "/subscriptions",
+      {
+        cache: "no-store",
+      },
+      token,
+    );
     return response.subscriptions;
   } catch (error) {
     console.error("getSubscriptions error:", error);
@@ -47,9 +51,13 @@ export async function toggleSubscription(channelId: string, isSubscribed: boolea
             await fetchApi(`/subscriptions/${channelId}`, { method: "POST" }, token);
         }
         revalidatePath("/subscriptions");
+        revalidatePath("/");
         return { success: true };
     } catch (error) {
         console.error("toggleSubscription error:", error);
-        return { success: false, error: "Action failed" };
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Action failed",
+        };
     }
 }

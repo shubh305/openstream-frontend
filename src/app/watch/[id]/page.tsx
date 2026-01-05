@@ -10,6 +10,7 @@ import { getSession } from "@/actions/auth";
 import { notFound } from "next/navigation";
 import { SubscribeButton } from "@/features/video/components/SubscribeButton";
 import { getChannelByHandle } from "@/actions/channel";
+import { getSubscriptions } from "@/actions/subscription";
 
 export default async function WatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,9 +22,23 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
   }
 
   let channelId = "";
+  let isOwner = false;
+  let initialIsSubscribed = video.userInteraction?.subscribed || false;
   try {
     const channel = await getChannelByHandle(video.creator.username);
-    if (channel) channelId = channel.id;
+    if (channel) {
+      channelId = channel.id;
+      isOwner = session?.user?.id === channel.userId;
+
+      if (channel.isSubscribed) {
+        initialIsSubscribed = true;
+      } else if (session && !initialIsSubscribed) {
+        const subs = await getSubscriptions();
+        if (subs.some(s => s.channelId === channel.id)) {
+          initialIsSubscribed = true;
+        }
+      }
+    }
   } catch (e) {
     console.error("Failed to fetch channel for video", e);
   }
@@ -55,18 +70,21 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
 
             {/* Creator Info */}
             <div className="flex items-center gap-4">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={video.creator.avatarUrl} alt={video.creator.username} />
-                <AvatarFallback className="bg-electric-lime text-black font-bold">{video.creator.username[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-white">{video.creator.username}</span>
-                  {video.creator.isVerified && <span className="text-xs bg-electric-lime text-black px-1.5 py-0.5 rounded font-bold">✓</span>}
+              <Link href={`/@${video.creator.username}`} className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={video.creator.avatarUrl} alt={video.creator.username} />
+                  <AvatarFallback className="bg-electric-lime text-black font-bold">{video.creator.username[0]}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white">{video.creator.username}</span>
+                    {video.creator.isVerified && <span className="text-xs bg-electric-lime text-black px-1.5 py-0.5 rounded font-bold">✓</span>}
+                  </div>
+                  <span className="text-xs text-muted-text">{video.creator.subscribers || 0} subscribers</span>
                 </div>
-                <span className="text-xs text-muted-text">{video.creator.subscribers || 0} subscribers</span>
-              </div>
-              {channelId && <SubscribeButton channelId={channelId} channelName={video.creator.username} initialIsSubscribed={video.userInteraction?.subscribed || false} />}
+              </Link>
+              <div className="flex-1" />
+              {channelId && !isOwner && <SubscribeButton channelId={channelId} channelName={video.creator.username} initialIsSubscribed={initialIsSubscribed} />}
             </div>
 
             {/* Description */}
