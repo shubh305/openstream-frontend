@@ -10,7 +10,7 @@ export async function getChannelByHandle(handle: string) {
 
   try {
     const cleanHandle = handle.replace("@", "");
-    return await fetchApi<Channel>(`/channels/${cleanHandle}`, { next: { revalidate: 60 } }, token);
+    return await fetchApi<Channel>(`/channels/${cleanHandle}`, { cache: "no-store" }, token);
   } catch (error) {
     console.error(`getChannelByHandle(${handle}) error:`, error);
     return null;
@@ -46,15 +46,41 @@ export async function subscribeToChannel(channelId: string) {
 }
 
 export async function unsubscribeFromChannel(channelId: string) {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("session_token")?.value;
-    
-    if (!token) return { error: "Login required" };
-  
-    try {
-      await fetchApi(`/subscriptions/${channelId}`, { method: "DELETE" }, token);
-      return { success: true };
-    } catch {
-      return { error: "Failed to unsubscribe" };
-    }
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session_token")?.value;
+
+  if (!token) return { error: "Login required" };
+
+  try {
+    await fetchApi(`/subscriptions/${channelId}`, { method: "DELETE" }, token);
+    return { success: true };
+  } catch {
+    return { error: "Failed to unsubscribe" };
   }
+}
+
+export async function updateChannel(data: { name?: string; handle?: string; description?: string }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session_token")?.value;
+
+  if (!token) return { error: "Login required" };
+
+  try {
+    await fetchApi(
+      "/channels/me",
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      },
+      token,
+    );
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/studio/customization");
+    revalidatePath("/channels/me");
+    return { success: true };
+  } catch (error) {
+    console.error("updateChannel error:", error);
+    return { error: error instanceof Error ? error.message : "Failed to update channel" };
+  }
+}

@@ -1,147 +1,215 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Upload, Save, LayoutTemplate } from "lucide-react";
+import { getMyChannel, updateChannel } from "@/actions/channel";
+import { toast } from "sonner";
+import { Channel } from "@/types/api";
 
 export default function CustomizationPage() {
-  const [activeTab, setActiveTab] = useState("Branding");
+  const [channel, setChannel] = useState<Channel | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const [name, setName] = useState("");
+  const [handle, setHandle] = useState("");
+  const [description, setDescription] = useState("");
+
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+    async function fetchChannel() {
+      try {
+        const data = await getMyChannel();
+        if (data) {
+          setChannel(data);
+          setName(data.name);
+          setHandle(data.handle);
+          setDescription(data.description || "");
+        }
+      } catch (error) {
+        console.error("Failed to fetch channel:", error);
+        toast.error("Failed to load channel information");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchChannel();
+  }, []);
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      const result = await updateChannel({
+        name,
+        handle: handle.replace("@", ""),
+        description,
+      });
+
+      if (result.success) {
+        toast.success("Changes published successfully");
+        if (channel) {
+          setChannel({ ...channel, name, handle: handle.replace("@", ""), description });
+        }
+      } else {
+        toast.error(result.error || "Failed to update channel");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+      console.error(error);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleBannerClick = () => {
+    bannerInputRef.current?.click();
+  };
+
+  const handleAvatarClick = () => {
+    avatarInputRef.current?.click();
+  };
+
+  const handleFileChange = (type: "banner" | "avatar") => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      toast.info(`${type === "banner" ? "Banner" : "Avatar"} upload coming soon`);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-text" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Channel customization</h1>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-8 border-b border-noir-border">
-        {["Layout", "Branding", "Basic info"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-3 text-sm font-medium transition-colors border-b-2 ${
-              activeTab === tab
-                ? "border-electric-lime text-electric-lime"
-                : "border-transparent text-muted-text hover:text-foreground hover:border-muted-text/30"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
-      <div className="space-y-12">
-        {activeTab === "Branding" && (
-          <>
-            {/* Banner Image */}
-            <div className="space-y-4">
-               <div>
-                  <h3 className="text-base font-medium text-foreground">Banner image</h3>
-                  <p className="text-sm text-muted-text max-w-2xl">
-                    This image will appear across the top of your channel. For the best results on all devices, use an image that&apos;s at least 2048 x 1152 pixels and 6MB or less.
-                  </p>
-               </div>
-               
-               <div className="flex flex-col md:flex-row gap-6 items-start p-6 bg-noir-terminal border border-noir-border rounded-lg">
-                  <div className="w-64 aspect-video bg-noir-bg border border-noir-border flex items-center justify-center relative overflow-hidden group">
-                      <div className="absolute inset-x-0 bottom-0 top-1/2 bg-signal-red/20 border-t border-signal-red/50" />
-                      <div className="relative z-10 w-32 h-20 border-2 border-dashed border-muted-text rounded flex items-center justify-center">
-                          <span className="text-[10px] text-muted-text uppercase">Preview</span>
-                      </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                      <div className="text-xs text-muted-text font-mono uppercase tracking-widest">Current_Asset::Empty</div>
-                      <div className="flex gap-3">
-                        <Button variant="outline" className="text-electric-lime border-electric-lime/20 hover:bg-electric-lime/10">Upload</Button>
-                      </div>
-                  </div>
-               </div>
-            </div>
-
-            {/* Profile Picture */}
-            <div className="space-y-4 pt-8 border-t border-noir-border">
-               <div>
-                  <h3 className="text-base font-medium text-foreground">Picture</h3>
-                  <p className="text-sm text-muted-text max-w-2xl">
-                    Your profile picture will appear where your channel is presented on YouTube, like next to your videos and comments.
-                  </p>
-               </div>
-               
-               <div className="flex flex-col md:flex-row gap-6 items-start p-6 bg-noir-terminal border border-noir-border rounded-lg">
-                  <div className="w-32 h-32 rounded-full bg-noir-bg border border-noir-border flex items-center justify-center overflow-hidden shrink-0">
-                      <span className="text-4xl font-bold text-electric-lime italic">P1</span>
-                  </div>
-                  
-                  <div className="space-y-3">
-                      <div className="text-xs text-muted-text font-mono uppercase tracking-widest">It&apos;s recommended to use a picture that&apos;s at least 98 x 98 pixels.</div>
-                      <div className="flex gap-3">
-                        <Button variant="outline" className="text-foreground border-noir-border hover:bg-white hover:text-black">Change</Button>
-                        <Button variant="ghost" className="text-muted-text hover:text-signal-red">Remove</Button>
-                      </div>
-                  </div>
-               </div>
-            </div>
-          </>
-        )}
-
-        {activeTab === "Basic info" && (
-           <div className="space-y-8 max-w-3xl">
-              {/* Name */}
-              <div className="space-y-2">
-                 <label className="text-sm font-medium text-foreground">Name</label>
-                 <p className="text-xs text-muted-text">Choose a channel name that represents you and your content.</p>
-                 <div className="relative">
-                   <Input 
-                      defaultValue="John Doe" 
-                      className="bg-noir-bg border-noir-border focus:border-electric-lime h-12 text-foreground font-mono"
-                   />
-                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-text">13/50</div>
-                 </div>
-              </div>
-
-              {/* Handle */}
-              <div className="space-y-2">
-                 <label className="text-sm font-medium text-foreground">Handle</label>
-                 <p className="text-xs text-muted-text">Choose your unique handle by adding letters and numbers.</p>
-                 <div className="relative">
-                   <Input 
-                      defaultValue="@johndoe" 
-                      className="bg-noir-bg border-noir-border focus:border-electric-lime h-12 text-foreground font-mono"
-                   />
-                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-text">10/30</div>
-                 </div>
-                 <div className="text-[10px] text-muted-text font-mono">https://openstream.dev/@johndoe</div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                 <label className="text-sm font-medium text-foreground">Description</label>
-                 <textarea 
-                    className="w-full min-h-[150px] bg-noir-bg border border-noir-border rounded-md px-3 py-3 text-sm text-foreground focus:outline-none focus:border-electric-lime resize-none"
-                    placeholder="Tell viewers about your channel..."
-                 />
-                 <div className="text-right text-xs text-muted-text">0/1000</div>
-              </div>
-
-               {/* Channel URL */}
-               <div className="space-y-2 pt-4 border-t border-noir-border">
-                   <label className="text-sm font-medium text-foreground">Channel URL</label>
-                   <div className="flex items-center gap-2 bg-noir-terminal border border-noir-border p-3 rounded-md">
-                       <div className="flex-1 text-sm text-muted-text font-mono truncate">https://openstream.dev/channel/UC4rgYmM7...</div>
-                       <Button size="icon" variant="ghost" className="h-6 w-6 text-electric-lime"><Copy className="w-4 h-4" /></Button>
-                   </div>
-               </div>
-           </div>
-        )}
-
-        {/* Action Bar (Fixed Bottom) */}
-        <div className="fixed bottom-0 left-64 right-0 p-4 bg-noir-terminal border-t border-noir-border flex justify-end gap-3 z-20">
-             <Button variant="ghost" className="text-muted-text hover:text-foreground">Cancel</Button>
-             <Button className="bg-foreground text-background hover:bg-electric-lime hover:text-black">Publish</Button>
+    <div className="max-w-4xl mx-auto pb-24">
+      <div className="flex items-center justify-between mb-12 py-6 sticky top-0 bg-background/80 backdrop-blur-md z-50">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
+            <LayoutTemplate className="w-6 h-6 text-electric-lime" />
+            Channel Identity
+          </h1>
+          <p className="text-sm text-muted-text mt-1">Customize how viewers categorize and discover your content.</p>
         </div>
+        <Button
+          onClick={handlePublish}
+          disabled={isPublishing}
+          className="rounded-full bg-electric-lime text-black hover:bg-electric-lime/90 font-bold px-8 shadow-[0_0_20px_rgba(204,255,0,0.2)] transition-all hover:shadow-[0_0_30px_rgba(204,255,0,0.4)]"
+        >
+          {isPublishing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+          {isPublishing ? "Publishing..." : "Publish Changes"}
+        </Button>
+      </div>
+
+      <div className="space-y-6 max-w-5xl mx-auto">
+        {/* ROW 1: Visual Identity */}
+        <section className="space-y-2">
+          <h2 className="text-sm font-bold text-muted-text uppercase tracking-widest flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-electric-lime" />
+            Visual Identity
+          </h2>
+          <div className="bg-noir-terminal rounded-3xl overflow-hidden border border-white/5 shadow-2xl group relative">
+            <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={handleFileChange("banner")} />
+            <div onClick={handleBannerClick} className="h-32 md:h-46 bg-gradient-to-br from-neutral-900 to-black relative cursor-pointer group/banner transition-all hover:opacity-95">
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-opacity bg-black/40 backdrop-blur-sm">
+                <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-white border border-white/20 px-6 py-3 rounded-full bg-black/50 hover:bg-white/10 transition-colors">
+                  <Upload className="w-4 h-4" /> Change Banner
+                </span>
+              </div>
+            </div>
+
+            <div className="px-8 pb-8 relative">
+              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleFileChange("avatar")} />
+              <div className="relative -mt-16 mb-6 inline-block">
+                <div
+                  onClick={handleAvatarClick}
+                  className="w-32 h-32 rounded-3xl bg-black border-4 border-noir-terminal overflow-hidden shadow-2xl relative group/avatar cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                >
+                  {channel?.avatarUrl ? (
+                    <Image src={channel.avatarUrl} alt={name} width={128} height={128} className="object-cover w-full h-full" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-electric-lime font-bold text-4xl">{name[0]?.toUpperCase()}</div>
+                  )}
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                    <Upload className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                  <h2 className="text-3xl font-black text-white leading-tight tracking-tight">{name || "Channel Name"}</h2>
+                  <p className="text-base text-muted-text font-medium mt-1">@{handle || "handle"}</p>
+                </div>
+                <div className="flex gap-2 text-xs font-mono text-muted-text bg-white/5 py-2 px-4 rounded-lg border border-white/5">
+                  <span className="text-electric-lime">●</span> Live Preview
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ROW 2: Basic Info */}
+        <section className="space-y-2">
+          <h2 className="text-sm font-bold text-muted-text uppercase tracking-widest flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-electric-lime" />
+            Basic Info
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-text ml-1">Channel Name</label>
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="e.g. The Coding Den"
+                className="bg-noir-terminal border-white/10 focus:border-electric-lime h-14 text-lg font-medium px-4 rounded-xl transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-text ml-1">Handle</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text font-medium select-none">@</span>
+                <Input
+                  value={handle}
+                  onChange={e => setHandle(e.target.value.replace("@", ""))}
+                  placeholder="coding_den"
+                  className="bg-noir-terminal border-white/10 focus:border-electric-lime h-12 text-lg font-medium pl-9 pr-4 rounded-xl font-mono transition-all"
+                />
+              </div>
+              <p className="text-[10px] text-muted-text text-right font-mono mt-1.5">{origin ? `${origin}/@${handle}` : `openstream.dev/@${handle}`}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ROW 3: About */}
+        <section className="space-y-2">
+          <h2 className="text-sm font-bold text-muted-text uppercase tracking-widest flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-electric-lime" />
+            About
+          </h2>
+          <div className="space-y-2">
+            <Textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Welcome to my channel! Here I stream..."
+              className="bg-noir-terminal border-white/10 focus:border-electric-lime min-h-[200px] text-base p-6 rounded-2xl resize-none leading-relaxed transition-all"
+            />
+            <div className="text-[10px] text-muted-text uppercase tracking-widest text-right px-1">{description.length} / 1000</div>
+          </div>
+        </section>
       </div>
     </div>
   );

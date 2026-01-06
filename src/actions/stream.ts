@@ -50,15 +50,19 @@ export async function getIngestConfig() {
       }
     }
 
-    const data = await fetchApi<{ url: string }>("/streams/ingest", { cache: "no-store" }, token);
-
-    let url = data.url;
-    if (streamKey && url.includes("{streamKey}")) {
-      url = url.replace("{streamKey}", streamKey);
-
+    let cleanKey = streamKey;
+    if (cleanKey && cleanKey.startsWith("sk_live_")) {
+      cleanKey = cleanKey.replace("sk_live_", "");
     }
 
-    return { url, error: null };
+    if (process.env.NEXT_PUBLIC_SOCKET_URL && cleanKey) {
+      let baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+      baseUrl = baseUrl.replace(/\/$/, "");
+      return { url: `${baseUrl}?key=${cleanKey}`, error: null };
+    }
+
+    return { url: null, error: "Missing ingest configuration" };
+
   } catch (error) {
     console.error("getIngestConfig error:", error);
     return { url: null, error: "Failed to get ingest config" };

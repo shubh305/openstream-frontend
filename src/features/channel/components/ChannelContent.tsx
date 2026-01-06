@@ -35,7 +35,7 @@ export function ChannelContent({ channel, videos, liveStreams, playlists, isOwne
                     src={channel.avatarUrl || `https://api.dicebear.com/9.x/bottts/svg?seed=${channel.handle}`} 
                     alt={channel.name}
                     fill
-                    className="object-cover"
+                    className="object-cover grayscale"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
               </div>
@@ -98,7 +98,7 @@ export function ChannelContent({ channel, videos, liveStreams, playlists, isOwne
                     src={channel.avatarUrl || `https://api.dicebear.com/9.x/bottts/svg?seed=${channel.handle}`} 
                     alt={channel.name}
                     fill
-                    className="object-cover"
+                    className="object-cover grayscale"
                   />
               </div>
               <div className="min-w-0">
