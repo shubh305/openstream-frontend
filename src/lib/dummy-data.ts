@@ -64,10 +64,14 @@ export const DUMMY_STREAMS: Stream[] = [
     viewerCount: 1250,
     thumbnailUrl: "https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=800&q=80",
     hlsPlaybackUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    creator: {
+      username: "CodeNinja",
+      avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=CodeNinja",
+    },
     streamer: {
       username: "CodeNinja",
-      avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=CodeNinja"
-    }
+      avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=CodeNinja",
+    },
   },
   {
     id: "s2",
@@ -77,9 +81,13 @@ export const DUMMY_STREAMS: Stream[] = [
     viewerCount: 850,
     thumbnailUrl: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800&q=80",
     hlsPlaybackUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    creator: {
+      username: "EsportsChamp",
+      avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=EsportsChamp",
+    },
     streamer: {
       username: "EsportsChamp",
-      avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=EsportsChamp"
-    }
-  }
+      avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=EsportsChamp",
+    },
+  },
 ];
