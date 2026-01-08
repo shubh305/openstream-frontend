@@ -70,7 +70,12 @@ export interface Stream {
   startedAt?: string;
   hlsPlaybackUrl?: string;
   thumbnailUrl?: string;
-  streamer: {
+  creator: {
+    username: string;
+    avatarUrl?: string;
+    subscribers?: string;
+  };
+  streamer?: {
     username: string;
     avatarUrl?: string;
     subscribers?: string;

@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+const PLACEHOLDER_THUMBNAIL = "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=800&q=80";
+
 interface VideoCardProps {
   id: string;
   title: string;
@@ -27,12 +29,12 @@ export function VideoCard({
   isLive = false,
 }: VideoCardProps) {
   return (
-    <Link href={isLive ? `/live/${creator.username}` : `/watch/${id}`}>
+    <Link href={isLive ? `/live/${creator?.username || id}` : `/watch/${id}`}>
       <div className="group relative rounded-xl overflow-hidden bg-noir-terminal/40 hover:bg-noir-terminal transition-all duration-300">
         {/* Thumbnail Section */}
         <div className="relative aspect-video w-full overflow-hidden">
           <Image
-            src={thumbnailUrl || "/placeholder.jpg"}
+            src={thumbnailUrl || PLACEHOLDER_THUMBNAIL}
             alt={title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -51,13 +53,13 @@ export function VideoCard({
         {/* Metadata Section */}
         <div className="flex gap-3 p-3">
           <Avatar className="h-9 w-9 shrink-0">
-            <AvatarImage src={creator.avatarUrl} alt={creator.username} />
-            <AvatarFallback className="bg-noir-border text-white text-xs font-bold">{creator.username[0].toUpperCase()}</AvatarFallback>
+            <AvatarImage src={creator?.avatarUrl} alt={creator?.username || "Unknown"} />
+            <AvatarFallback className="bg-noir-border text-white text-xs font-bold">{(creator?.username || "U")[0].toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col gap-1 min-w-0">
             <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 group-hover:text-electric-lime transition-colors">{title}</h3>
             <div className="flex items-center gap-2 text-xs text-muted-text">
-              <span>{creator.username}</span>
+              <span>{creator?.username || "Unknown"}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-text">
               <span>{Intl.NumberFormat("en-US", { notation: "compact" }).format(views)} views</span>

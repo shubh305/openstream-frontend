@@ -288,7 +288,7 @@ function HubVideoCard({ video }: { video: Video }) {
 
 function HubStreamCard({ stream }: { stream: Stream }) {
     return (
-         <Link href={`/live/${stream.streamer.username}`} className="block">
+         <Link href={`/live/${stream.creator.username}`} className="block">
             <div className="group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden hover:border-electric-lime/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
                 {/* Thumbnail Area */}
                 <div className="aspect-video relative overflow-hidden">

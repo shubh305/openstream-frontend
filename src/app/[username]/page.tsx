@@ -35,7 +35,10 @@ export default async function ChannelPage({ params }: ChannelPageProps) {
   ]);
 
   const ownerUsername = channel.owner?.username || channel.handle;
-  const channelStreams = liveStreams.filter(s => s.streamer.username === channel.handle || s.streamer.username === ownerUsername);
+  const channelStreams = liveStreams.filter(s => {
+    const streamUsername = s.streamer?.username || s.creator?.username;
+    return streamUsername === channel.handle || streamUsername === ownerUsername;
+  });
 
   const isOwner = Boolean(
       channel.isOwner || 
