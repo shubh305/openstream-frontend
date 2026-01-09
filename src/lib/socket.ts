@@ -41,6 +41,8 @@ type MessageHandler = (event: ChatEvent) => void;
 class ChatSocket {
   private ws: WebSocket | null = null;
   private streamId: string | null = null;
+  private currentToken: string | null = null;
+  private consumers = 0;
   private handlers: Set<MessageHandler> = new Set();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -48,17 +50,29 @@ class ChatSocket {
   private pingInterval: ReturnType<typeof setInterval> | null = null;
 
   connect(streamId: string, token?: string) {
-    if (this.ws && this.streamId === streamId && this.ws.readyState === WebSocket.OPEN) {
-      return;
+    if (this.ws && this.streamId === streamId && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+      if (token && token !== this.currentToken) {
+        console.log("[ChatSocket] Upgrading connection with new token");
+        this.forceDisconnect();
+      } else {
+        this.consumers++;
+        console.log(`[ChatSocket] Reusing connection. Consumers: ${this.consumers}`);
+        return;
+      }
+    } else if (this.streamId !== streamId) {
+      if (this.ws) {
+        this.forceDisconnect();
+      }
     }
 
-    this.disconnect();
     this.streamId = streamId;
+    this.currentToken = token || null;
+    this.consumers = 1;
 
     const baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000";
     const url = new URL(`${baseUrl}/ws/chat`);
     url.searchParams.set("streamId", streamId);
-    
+
     if (token) {
       url.searchParams.set("token", token);
     }
@@ -71,16 +85,16 @@ class ChatSocket {
       this.startPing();
     };
 
-    this.ws.onmessage = (event) => {
+    this.ws.onmessage = event => {
       try {
         const data: ChatEvent = JSON.parse(event.data);
-        this.handlers.forEach((handler) => handler(data));
+        this.handlers.forEach(handler => handler(data));
       } catch (error) {
         console.error("[ChatSocket] Failed to parse message:", error);
       }
     };
 
-    this.ws.onerror = (error) => {
+    this.ws.onerror = error => {
       console.error("[ChatSocket] WebSocket error:", error);
     };
 
@@ -92,12 +106,23 @@ class ChatSocket {
   }
 
   disconnect() {
+    this.consumers--;
+    console.log(`[ChatSocket] Consumer disconnected. Remaining: ${this.consumers}`);
+
+    if (this.consumers <= 0) {
+      this.forceDisconnect();
+    }
+  }
+
+  private forceDisconnect() {
     this.stopPing();
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     this.streamId = null;
+    this.currentToken = null;
+    this.consumers = 0;
     this.reconnectAttempts = 0;
   }
 
@@ -107,10 +132,12 @@ class ChatSocket {
       return false;
     }
 
-    this.ws.send(JSON.stringify({
-      type: "message",
-      data: { text }
-    }));
+    this.ws.send(
+      JSON.stringify({
+        event: "message",
+        data: { text },
+      }),
+    );
     return true;
   }
 
@@ -146,9 +173,9 @@ class ChatSocket {
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-    
+
     console.log(`[ChatSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
+
     setTimeout(() => {
       if (this.streamId) {
         this.connect(this.streamId);
