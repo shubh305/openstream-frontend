@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Loader2, WifiOff } from "lucide-react";
 import { chatSocket, ChatEvent, ChatMessageEvent } from "@/lib/socket";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface ChatMessage {
   id: string;
@@ -68,6 +69,27 @@ export function LiveChat({ streamId, token }: LiveChatProps) {
       chatSocket.disconnect();
     };
   }, [streamId, token]);
+
+  // Fetch chat history on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/chat/${streamId}/history`);
+        if (response.ok) {
+          const history = await response.json();
+          setMessages(prev => {
+            const existingIds = new Set(prev.map(m => m.id));
+            const newHistory = history.filter((m: ChatMessage) => !existingIds.has(m.id));
+            return [...newHistory, ...prev];
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+      }
+    };
+
+    fetchHistory();
+  }, [streamId]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -136,14 +158,14 @@ export function LiveChat({ streamId, token }: LiveChatProps) {
           <Input
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
-            placeholder={isConnected ? "INPUT_MESSAGE..." : "DISCONNECTED..."}
-            disabled={!isConnected || isSending}
+            placeholder={!token ? "Please login to chat" : isConnected ? "INPUT_MESSAGE..." : "DISCONNECTED..."}
+            disabled={!isConnected || isSending || !token}
             className="bg-noir-terminal border-noir-border focus:border-electric-lime h-11 text-xs font-mono uppercase tracking-widest disabled:opacity-50"
           />
           <Button
             size="icon"
             type="submit"
-            disabled={!isConnected || !newMessage.trim() || isSending}
+            disabled={!isConnected || !newMessage.trim() || isSending || !token}
             className="bg-white text-black hover:bg-electric-lime transition-colors h-11 w-11 shrink-0 disabled:opacity-50"
           >
             {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
