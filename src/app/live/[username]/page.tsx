@@ -3,6 +3,9 @@ import { LiveVideoPlayer } from "@/components/LiveVideoPlayer";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { LiveChat } from "@/features/chat/components/LiveChat";
+import { LiveViewerCount } from "@/components/LiveViewerCount";
 
 interface LiveStreamPageProps {
   params: Promise<{
@@ -15,6 +18,9 @@ export const revalidate = 30;
 export default async function LiveStreamPage({ params }: LiveStreamPageProps) {
   const { username } = await params;
   const decodedUsername = decodeURIComponent(username);
+  
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session_token")?.value;
   
   // Find the stream for this user
   const streams = await getLiveStreams({ limit: 50 });
@@ -61,7 +67,7 @@ export default async function LiveStreamPage({ params }: LiveStreamPageProps) {
         {/* Stream Info */}
         <div className="mt-4 space-y-4">
           <h1 className="text-2xl font-bold text-white">{stream.title}</h1>
-          
+
           <div className="flex items-center justify-between">
             <Link href={`/${streamerInfo?.username}`} className="flex items-center gap-3 group">
               <div className="w-12 h-12 rounded-full overflow-hidden bg-noir-border">
@@ -94,11 +100,13 @@ export default async function LiveStreamPage({ params }: LiveStreamPageProps) {
               <div className="flex items-center gap-2 text-muted-text">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                    clipRule="evenodd"
+                  />
                 </svg>
-                <span className="font-medium">
-                  {Intl.NumberFormat("en-US", { notation: "compact" }).format(stream.viewerCount || 0)} watching
-                </span>
+                <LiveViewerCount streamId={stream.id} initialCount={stream.viewerCount || 0} />
               </div>
 
               {/* LIVE badge */}
@@ -111,15 +119,10 @@ export default async function LiveStreamPage({ params }: LiveStreamPageProps) {
         </div>
       </div>
 
-      {/* Chat Section (placeholder for now) */}
+      {/* Chat Section */}
       <div className="w-full lg:w-80 shrink-0">
-        <div className="bg-noir-terminal rounded-xl border border-noir-border h-[500px] lg:h-full flex flex-col">
-          <div className="p-4 border-b border-noir-border">
-            <h3 className="font-bold text-white">Stream Chat</h3>
-          </div>
-          <div className="flex-1 flex items-center justify-center text-muted-text text-sm">
-            <p>Chat coming soon...</p>
-          </div>
+        <div className="bg-noir-terminal rounded-xl border border-noir-border h-[500px] lg:h-full flex flex-col overflow-hidden">
+          <LiveChat streamId={stream.id} token={token} />
         </div>
       </div>
     </div>
