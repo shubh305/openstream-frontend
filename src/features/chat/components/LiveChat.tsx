@@ -158,7 +158,7 @@ export function LiveChat({ streamId, token }: LiveChatProps) {
           <Input
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
-            placeholder={!token ? "Please login to chat" : isConnected ? "INPUT_MESSAGE..." : "DISCONNECTED..."}
+            placeholder={!token ? "Login to chat" : isConnected ? "INPUT_MESSAGE..." : "DISCONNECTED..."}
             disabled={!isConnected || isSending || !token}
             className="bg-noir-terminal border-noir-border focus:border-electric-lime h-11 text-xs font-mono uppercase tracking-widest disabled:opacity-50"
           />
