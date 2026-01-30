@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Upload, Save, LayoutTemplate } from "lucide-react";
 import { getMyChannel, updateChannel } from "@/actions/channel";
+import { uploadChannelImage } from "@/actions/user";
 import { toast } from "sonner";
 import { Channel } from "@/types/api";
 
@@ -78,11 +79,30 @@ export default function CustomizationPage() {
     avatarInputRef.current?.click();
   };
 
-  const handleFileChange = (type: "banner" | "avatar") => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (type: "banner" | "avatar") => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      toast.info(`${type === "banner" ? "Banner" : "Avatar"} upload coming soon`);
-    }
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const promise = uploadChannelImage(formData, type);
+
+    toast.promise(promise, {
+      loading: `Uploading ${type}...`,
+      success: data => {
+        if (data.error) throw new Error(data.error);
+
+        if (channel) {
+          const updatedChannel = { ...channel };
+          if (type === "avatar") updatedChannel.avatarUrl = data.url;
+          if (type === "banner") updatedChannel.bannerUrl = data.url;
+          setChannel(updatedChannel);
+        }
+        return `${type === "banner" ? "Banner" : "Avatar"} updated successfully`;
+      },
+      error: err => `Failed to upload: ${err.message}`,
+    });
   };
 
   if (isLoading) {
@@ -122,7 +142,8 @@ export default function CustomizationPage() {
           </h2>
           <div className="bg-noir-terminal rounded-3xl overflow-hidden border border-white/5 shadow-2xl group relative">
             <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={handleFileChange("banner")} />
-            <div onClick={handleBannerClick} className="h-32 md:h-46 bg-gradient-to-br from-neutral-900 to-black relative cursor-pointer group/banner transition-all hover:opacity-95">
+            <div onClick={handleBannerClick} className="h-32 md:h-46 bg-gradient-to-br from-neutral-900 to-black relative cursor-pointer group/banner transition-all hover:opacity-95 overflow-hidden">
+              {channel?.bannerUrl && <Image src={channel.bannerUrl} alt="Channel Banner" fill className="object-cover transition-transform duration-700 group-hover/banner:scale-105" />}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-opacity bg-black/40 backdrop-blur-sm">
                 <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-white border border-white/20 px-6 py-3 rounded-full bg-black/50 hover:bg-white/10 transition-colors">
                   <Upload className="w-4 h-4" /> Change Banner
