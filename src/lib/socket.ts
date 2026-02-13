@@ -69,7 +69,16 @@ class ChatSocket {
     this.currentToken = token || null;
     this.consumers = 1;
 
-    const baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000";
+    let baseUrl = process.env.NEXT_PUBLIC_WS_URL;
+
+    if (!baseUrl && typeof window !== "undefined") {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      baseUrl = `${protocol}//${window.location.host}`;
+      console.log(`[ChatSocket] Inferring WS URL from window: ${baseUrl}`);
+    } else if (!baseUrl) {
+      baseUrl = "ws://localhost:4000";
+    }
+
     const url = new URL(`${baseUrl}/ws/chat`);
     url.searchParams.set("streamId", streamId);
 

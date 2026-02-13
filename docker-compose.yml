@@ -7,6 +7,7 @@ services:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
         - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
         - NEXT_PUBLIC_RTMP_URL=${NEXT_PUBLIC_RTMP_URL}
+        - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
     networks:
       - octane-net
     restart: always
@@ -19,6 +20,7 @@ services:
       - NEXT_PUBLIC_API_URL
       - NEXT_PUBLIC_SOCKET_URL
       - NEXT_PUBLIC_RTMP_URL
+      - NEXT_PUBLIC_WS_URL
 
 networks:
   octane-net:
