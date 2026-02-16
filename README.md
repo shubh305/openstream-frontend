@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OpenStream // PORTAL
 
-## Getting Started
+**Status:** `OPERATIONAL` // **Tier:** `UI_SPOKE` // **Platform:** `OCTANEBREW_HUB`
 
-First, run the development server:
+**OpenStream** is a high-fidelity, real-time video delivery interface. It provides an immersive, "Noir-inspired" experience for consuming live broadcasts, engaging in persistent high-frequency chat, and managing VOD archives.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Design Philosophy: The Noir Aesthetic
+
+The portal adheres to the **Noir Minimalist Authority**:
+*   **High-Contrast Interface**: Deep black backgrounds (`#050505`) with terminal-green highlights.
+*   **Brutalist Visuals**: CRT scanline overlays and chromatic aberration effects on critical system notifications.
+*   **Precision Layout**: Monospaced typography for technical data, ensuring an engineering-first UX.
+
+---
+
+## Directory Structure
+
+```text
+.
+├── app/               # Next.js App Router (Layouts & Pages)
+│   ├── (auth)/        # Authentication routes
+│   ├── dashboard/     # Streamer command center
+│   ├── watch/         # Video playback pages
+│   └── globals.css    # Noir base styles
+├── components/        # Reusable UI (VideoPlayer, Chat, etc.)
+├── hooks/             # Custom React Hooks (useSocket, useAuth)
+├── public/           # Static assets & OpenGraph images
+└── tailwind.config.ts # Theme & Noir tokens
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Delivery & Playback Flow
+```mermaid
+graph LR
+    subgraph "Playback Request"
+        V[Viewer] -->|GET .m3u8| NG[Nginx Gateway]
+        NG -->|Proxy| S3[MinIO Storage]
+        S3 -->|Manifest/TS| V
+    end
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    subgraph "Real-Time Hook"
+        V <-->|WebSockets| OSB[OpenStream Backend]
+    end
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Core Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+*   **Sub-Second Latency Playback**: Integrated **Video.js** player optimized for low-latency HLS fragments.
+*   **Fluidic Chat Engine**: Persistent, WebSocket-driven chat with real-time state synchronization across devices.
+*   **Uplink Monitor**: A terminal-style command deck for real-time stream diagnostics and bitrate monitoring.
+*   **Adaptive Theme Interpolation**: Leverages the shared platform design tokens for a consistent brand identity.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+*   **Framework**: Next.js 16 (App Router)
+*   **State Management**: React Context & Hooks for localized stream state.
+*   **Real-time**: Socket.IO Client for duplex chat communication.
+*   **Video**: Video.js with HLS enhancement.
+*   **Styling**: Vanilla CSS with HSL variables for dynamic theme switching.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Resilience & Deployment
+
+### CI/CD Pipeline
+This repository uses a **reusable platform-wide GitHub Actions workflow** located in the [octanebrew-platform](https://github.com/shubh305/octanebrew-platform).
+
+*   **Workflow**: `.github/workflows/deploy.yml`
+*   **Strategy**: Containerized deployments via Docker Compose over SSH.
+*   **Verification**: Automated build checks before pushing to production.
+
+### Local Development
+```bash
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+---
+
+## 🔒 Security & Optimization
+
+*   **Noir-Shield Integration**: All traffic is routed through the **OctaneBrew Nginx Gateway** with Cloudflare IP enforcement.
+*   **HTTP/2 Performance**: Fully optimized for H2 multiplexing to handle high-frequency asset loading and socket management.
+*   **Image Optimization**: Leverages Next.js `next/image` for high-fidelity thumbnails with minimal bandwidth impact.
