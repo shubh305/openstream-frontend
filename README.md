@@ -87,7 +87,7 @@ npm run dev
 
 ---
 
-## 🔒 Security & Optimization
+## Security & Optimization
 
 *   **Noir-Shield Integration**: All traffic is routed through the **OctaneBrew Nginx Gateway** with Cloudflare IP enforcement.
 *   **HTTP/2 Performance**: Fully optimized for H2 multiplexing to handle high-frequency asset loading and socket management.
