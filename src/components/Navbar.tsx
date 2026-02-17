@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/actions/auth";
+import { useSidebar } from "@/lib/sidebar-context";
 
 interface User {
     username: string;
@@ -96,7 +97,7 @@ function SearchForm() {
           onBlur={() => {
             setTimeout(() => setShowSuggestions(false), 200);
           }}
-          className="w-full bg-noir-bg border-noir-border focus:border-electric-lime pl-10 h-10 text-sm rounded-lg transition-all"
+          className="w-full md:w-full bg-noir-bg border-noir-border focus:border-electric-lime pl-10 h-10 text-xs md:text-sm rounded-lg transition-all"
         />
       </div>
 
@@ -121,10 +122,12 @@ function SearchForm() {
 }
 
 export function Navbar({ user }: NavbarProps) {
+  const { toggle } = useSidebar();
+
   return (
     <header className="sticky top-0 z-[60] flex h-16 items-center border-b border-noir-border bg-noir-terminal/80 backdrop-blur-md px-4 md:px-8">
       <div className="flex items-center gap-6">
-        <Button variant="ghost" size="icon" className="shrink-0 md:hidden text-white hover:bg-noir-border">
+        <Button variant="ghost" size="icon" className="shrink-0 md:hidden text-white hover:bg-noir-border" onClick={toggle}>
           <Menu className="h-5 w-5" />
         </Button>
         <Link href="/" className="flex items-center gap-3 group">

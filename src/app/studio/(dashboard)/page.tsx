@@ -21,8 +21,8 @@ export default async function StudioDashboardPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto space-y-8 p-4 md:p-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Channel dashboard</h1>
         <div className="flex gap-3">
           <Link href="/studio/stream">
@@ -44,44 +44,44 @@ export default async function StudioDashboardPage() {
         {/* Latest Video Performance */}
         <div className="rounded-xl border border-noir-border bg-noir-terminal p-6 space-y-6">
           <h2 className="text-lg font-medium text-foreground">Latest video performance</h2>
-          
+
           {realLatestVideo ? (
-             <>
-                <div className="relative aspect-video bg-noir-bg border border-noir-border rounded-lg overflow-hidden group">
-                    <Image src={realLatestVideo.thumbnailUrl} alt={realLatestVideo.title} fill className="object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Link href={`/watch/${realLatestVideo.id}`}>
-                            <Button variant="outline" size="sm" className="bg-background text-foreground hover:bg-electric-lime">Watch</Button>
-                        </Link>
-                    </div>
+            <>
+              <div className="relative aspect-video bg-noir-bg border border-noir-border rounded-lg overflow-hidden group">
+                <Image src={realLatestVideo.thumbnailUrl} alt={realLatestVideo.title} fill className="object-cover" />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Link href={`/watch/${realLatestVideo.id}`}>
+                    <Button variant="outline" size="sm" className="bg-background text-foreground hover:bg-electric-lime">
+                      Watch
+                    </Button>
+                  </Link>
                 </div>
-                <div className="text-center">
-                    <p className="text-sm font-bold text-white truncate">{realLatestVideo.title}</p>
-                    <p className="text-xs text-muted-text mt-1">Uploaded {realLatestVideo.uploadedAt}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-white truncate">{realLatestVideo.title}</p>
+                <p className="text-xs text-muted-text mt-1">Uploaded {realLatestVideo.uploadedAt}</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 text-center border-t border-noir-border pt-4">
+                <div>
+                  <div className="text-xl font-bold text-foreground">{realLatestVideo.views}</div>
+                  <div className="text-[10px] text-muted-text uppercase">Views</div>
                 </div>
-                
-                <div className="grid grid-cols-3 gap-4 text-center border-t border-noir-border pt-4">
-                    <div>
-                        <div className="text-xl font-bold text-foreground">{realLatestVideo.views}</div>
-                        <div className="text-[10px] text-muted-text uppercase">Views</div>
-                    </div>
-                     <div>
-                        <div className="text-xl font-bold text-foreground">{realLatestVideo.likes || 0}</div>
-                        <div className="text-[10px] text-muted-text uppercase">Likes</div>
-                    </div>
+                <div>
+                  <div className="text-xl font-bold text-foreground">{realLatestVideo.likes || 0}</div>
+                  <div className="text-[10px] text-muted-text uppercase">Likes</div>
                 </div>
-             </>
+              </div>
+            </>
           ) : (
-             <div className="h-40 flex items-center justify-center text-muted-text text-sm italic">
-                 No videos uploaded yet.
-             </div>
+            <div className="h-40 flex items-center justify-center text-muted-text text-sm italic">No videos uploaded yet.</div>
           )}
         </div>
 
         {/* Channel Analytics */}
         <div className="rounded-xl border border-noir-border bg-noir-terminal p-6 space-y-6">
           <h2 className="text-lg font-medium text-foreground">Channel analytics</h2>
-          
+
           <div className="space-y-1">
             <div className="text-sm text-muted-text">Current subscribers</div>
             <div className="text-4xl font-bold text-foreground tracking-tight">{channel?.subscriberCount || 0}</div>
@@ -93,7 +93,7 @@ export default async function StudioDashboardPage() {
               <div className="text-sm font-medium text-foreground">Summary</div>
               <div className="text-xs text-muted-text">Lifetime</div>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-text">Total Views</div>
@@ -104,7 +104,7 @@ export default async function StudioDashboardPage() {
 
               <div className="flex items-center justify-between pt-2">
                 <div className="text-sm text-muted-text">Total Videos</div>
-                  <span className="text-sm font-bold text-foreground">{channel?.videoCount || 0}</span>
+                <span className="text-sm font-bold text-foreground">{channel?.videoCount || 0}</span>
               </div>
             </div>
           </div>
@@ -112,9 +112,9 @@ export default async function StudioDashboardPage() {
 
         <div className="rounded-xl border border-noir-border bg-noir-terminal p-6 space-y-6">
           <h2 className="text-lg font-medium text-foreground">Recent subscribers</h2>
-          
+
           <div className="h-40 flex flex-col items-center justify-center text-center space-y-2">
-              <p className="text-sm text-muted-text">Real-time subscriber list coming soon.</p>
+            <p className="text-sm text-muted-text">Real-time subscriber list coming soon.</p>
           </div>
         </div>
       </div>

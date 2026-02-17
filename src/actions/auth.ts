@@ -41,12 +41,16 @@ export async function login(formData: FormData | Record<string, unknown>) {
       console.error("Login API error:", errorData);
 
       let errorMessage = "Invalid credentials";
-      if (typeof errorData.message === "string") {
-        errorMessage = errorData.message;
-      } else if (Array.isArray(errorData.message)) {
-        errorMessage = errorData.message.join(", ");
-      } else if (typeof errorData.message === "object") {
-        errorMessage = JSON.stringify(errorData.message);
+      if (errorData.message) {
+        if (typeof errorData.message === "string") {
+          errorMessage = errorData.message;
+        } else if (Array.isArray(errorData.message)) {
+          errorMessage = errorData.message.join(", ");
+        } else if (typeof errorData.message === "object") {
+          errorMessage = errorData.message.message || JSON.stringify(errorData.message);
+        }
+      } else if (errorData.error) {
+        errorMessage = errorData.error;
       }
 
       return { error: errorMessage };
@@ -133,12 +137,16 @@ export async function signup(formData: FormData | Record<string, unknown>) {
       console.error("Signup API failed:", errorData);
 
       let errorMessage = "Signup failed";
-      if (typeof errorData.message === "string") {
-        errorMessage = errorData.message;
-      } else if (Array.isArray(errorData.message)) {
-        errorMessage = errorData.message.join(", ");
-      } else if (typeof errorData.message === "object") {
-        errorMessage = JSON.stringify(errorData.message);
+      if (errorData.message) {
+        if (typeof errorData.message === "string") {
+          errorMessage = errorData.message;
+        } else if (Array.isArray(errorData.message)) {
+          errorMessage = errorData.message.join(", ");
+        } else if (typeof errorData.message === "object") {
+          errorMessage = errorData.message.message || JSON.stringify(errorData.message);
+        }
+      } else if (errorData.error) {
+        errorMessage = errorData.error;
       }
 
       return { error: errorMessage };
@@ -164,6 +172,49 @@ export async function logout() {
 }
 
 /**
+ * Refreshes the current access token.
+ * Only works if the current token is still valid (not expired).
+ */
+export async function refreshToken() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session_token")?.value;
+
+  if (!sessionToken) return null;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.warn("Refresh token failed, session may be expired");
+      return null;
+    }
+
+    const data = await response.json();
+    const newToken = data.access_token;
+
+    if (newToken) {
+      // Update cookie with new token
+      cookieStore.set("session_token", newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+      return newToken;
+    }
+  } catch (error) {
+    console.error("Refresh token error:", error);
+  }
+  return null;
+}
+
+/**
  * Retrieves the current user session server-side.
  * Returns null if no valid session token exists.
  */
@@ -176,41 +227,42 @@ export async function getSession() {
       headers: {
         Authorization: `Bearer ${sessionToken}`,
       },
+      cache: "no-store",
     });
 
+    if (response.status === 401) {
+      console.log("Token unauthorized, attempting refresh...");
+      const newToken = await refreshToken();
+      if (newToken) {
+        const retryResponse = await fetch(`${API_BASE_URL}/auth/profile`, {
+          headers: {
+            Authorization: `Bearer ${newToken}`,
+          },
+          cache: "no-store",
+        });
+        if (retryResponse.ok) {
+          const user = await retryResponse.json();
+          return { user: { ...user, avatarUrl: user.avatar || PLACEHOLDER_IMAGES.AVATAR_DEFAULT } };
+        }
+      }
+
+      const cookieStore = await cookies();
+      cookieStore.delete("session_token");
+      cookieStore.delete("stream_key");
+      cookieStore.delete("session_username");
+      return null;
+    }
+
     if (!response.ok) {
-      console.error(`getSession failed: ${response.status} ${response.statusText}`);
-      const text = await response.text();
-      console.error("getSession response body:", text);
       return null;
     }
 
     const user = await response.json();
-
-    if (!user.avatar) {
-      user.avatar = PLACEHOLDER_IMAGES.AVATAR_DEFAULT;
-    }
-    user.avatarUrl = user.avatar;
+    user.avatarUrl = user.avatar || PLACEHOLDER_IMAGES.AVATAR_DEFAULT;
 
     return { user };
   } catch (error) {
     console.error("Get session error:", error);
-
-    const cookieStore = await cookies();
-    const fallbackUsername = cookieStore.get("session_username")?.value;
-
-    if (fallbackUsername) {
-      console.warn("Using fallback session from cookies due to API error");
-      return {
-        user: {
-          username: fallbackUsername,
-          email: `${fallbackUsername}@example.com`,
-          avatarUrl: PLACEHOLDER_IMAGES.AVATAR_DEFAULT,
-          id: "fallback-id",
-        },
-      };
-    }
-
     return null;
   }
 }

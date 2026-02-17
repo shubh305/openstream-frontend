@@ -6,6 +6,7 @@ import { getSession } from "@/actions/auth";
 import { getSubscriptions } from "@/actions/subscription";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
+import { SessionGuard } from "@/components/SessionGuard";
 import { Toaster } from "@/components/ui/sonner";
 
 const interTight = Inter_Tight({
@@ -17,6 +18,8 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
+
+import { SidebarProvider } from "@/lib/sidebar-context";
 
 export const metadata: Metadata = {
   title: "OpenStream",
@@ -33,11 +36,14 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <body className={`${interTight.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground font-mono min-h-screen relative`}>
-        <Sidebar subscriptions={subscriptions} />
-        <div className="flex min-h-screen flex-col relative z-0 pl-16">
-          <Navbar user={session?.user} />
-          <main className="flex-1 flex flex-col">{children}</main>
-        </div>
+        <SidebarProvider>
+          <SessionGuard />
+          <Sidebar subscriptions={subscriptions} isAuthenticated={!!session?.user} />
+          <div className="flex min-h-screen flex-col relative z-0 md:pl-16">
+            <Navbar user={session?.user} />
+            <main className="flex-1 flex flex-col">{children}</main>
+          </div>
+        </SidebarProvider>
         <Toaster />
       </body>
     </html>

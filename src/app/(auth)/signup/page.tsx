@@ -95,13 +95,19 @@ export default function SignupPage() {
             />
           </div>
 
-          {error && <div className="border border-signal-red/30 bg-signal-red/5 text-signal-red text-xs p-3 rounded-lg text-center">{error}</div>}
+          {error && (
+            <div className="border border-signal-red/30 bg-signal-red/5 p-4 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="h-5 w-5 rounded-full bg-signal-red/10 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-signal-red text-[10px] font-bold font-mono">!</span>
+              </div>
+              <p className="text-signal-red text-[11px] font-medium leading-relaxed">{error}</p>
+            </div>
+          )}
 
           {/* Sign Up Button */}
           <Button className="w-full h-12 bg-electric-lime text-black hover:bg-electric-lime/90 transition-all duration-300 font-semibold text-sm rounded-lg" disabled={isLoading}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
           </Button>
-
         </form>
       </div>
     </div>

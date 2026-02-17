@@ -5,17 +5,25 @@ export function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get("session_token")?.value;
   const { pathname, searchParams } = request.nextUrl;
 
-  const protectedPaths = ["/studio", "/upload", "/subscriptions"];
+  const protectedRoutes = ["/studio", "/upload", "/subscriptions", "/library", "/settings", "/playlist"];
+  const authRoutes = ["/login", "/signup"];
 
-  const isProtectedPath = protectedPaths.some(route => pathname.startsWith(route));
-  const isWatchLater = pathname === "/playlist" && searchParams.get("list") === "WL";
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
 
-  if (isProtectedPath || isWatchLater) {
+  if (isProtectedRoute) {
     if (!sessionToken) {
       const url = new URL("/login", request.url);
       url.searchParams.set("from", pathname);
+      if (searchParams.toString()) {
+        url.searchParams.set("query", searchParams.toString());
+      }
       return NextResponse.redirect(url);
     }
+  }
+
+  if (isAuthRoute && sessionToken) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
