@@ -6,18 +6,14 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getMyChannel } from "@/actions/channel";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  Video, 
-  BarChart2, 
-  Settings, 
-  Radio,
-} from "lucide-react";
+import { WIP_LIMITS } from "@/lib/wip-limits";
+import { LayoutDashboard, Video, BarChart2, Settings, Radio, PenTool } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/studio", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/studio/dashboard", icon: LayoutDashboard, wipKey: "showStudioDashboard" as const },
   { label: "Content", href: "/studio/content", icon: Video },
-  { label: "Analytics", href: "/studio/analytics", icon: BarChart2 },
+  { label: "Analytics", href: "/studio/analytics", icon: BarChart2, wipKey: "showStudioAnalytics" as const },
+  { label: "Customization", href: "/studio/customization", icon: PenTool },
   { label: "Go Live", href: "/studio/stream", icon: Radio, highlight: true },
 ];
 
@@ -69,6 +65,7 @@ export function StudioSidebar() {
       {/* Main Nav */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {NAV_ITEMS.map(item => {
+          if (item.wipKey && !WIP_LIMITS[item.wipKey]) return null;
           const isActive = pathname === item.href;
           return (
             <Link

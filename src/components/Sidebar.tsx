@@ -7,12 +7,13 @@ import { Home, PlusSquare, Library, Tv, Clock, Settings, LayoutDashboard, PenToo
 import { Subscription } from "@/actions/subscription";
 import { useSidebar } from "@/lib/sidebar-context";
 import { Button } from "./ui/button";
+import { WIP_LIMITS } from "@/lib/wip-limits";
 
 const NAV_ITEMS = [
   { icon: Home, href: "/", label: "Home" },
-  { icon: LayoutDashboard, href: "/studio", label: "Studio", authRequired: true },
+  { icon: LayoutDashboard, href: "/studio/dashboard", label: "Studio", authRequired: true, wipKey: "showStudioDashboard" as const },
   { icon: PlusSquare, href: "/upload", label: "Upload", authRequired: true },
-  { icon: Library, href: "/library", label: "Library", authRequired: true },
+  { icon: Library, href: "/library", label: "Library", authRequired: true, wipKey: "showLibrary" as const },
   { icon: Tv, href: "/subscriptions", label: "Subscriptions", authRequired: true },
   { icon: Clock, href: "/playlist?list=WL", label: "Watch Later", authRequired: true },
   { icon: PenTool, href: "/studio/customization", label: "Customize", authRequired: true },
@@ -58,6 +59,7 @@ export function Sidebar({ subscriptions = [], isAuthenticated = false }: Sidebar
         <nav className="flex-1 flex flex-col items-center gap-2 overflow-y-auto no-scrollbar w-full">
           {NAV_ITEMS.map(item => {
             if (item.authRequired && !isAuthenticated) return null;
+            if (item.wipKey && !WIP_LIMITS[item.wipKey]) return null;
 
             const Icon = item.icon;
             const active = isActive(item.href);

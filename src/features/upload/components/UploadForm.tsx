@@ -3,8 +3,10 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, FileVideo, Check, Copy, Globe, Lock, Users, ArrowLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Upload, FileVideo, Check, Copy, Globe, Lock, Users, ArrowLeft, ChevronRight, Loader2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WIP_LIMITS } from "@/lib/wip-limits";
+import { toast } from "@/components/ui/sonner";
 
 type UploadStatus = "idle" | "uploading" | "processing" | "complete";
 type Visibility = "public" | "unlisted" | "private";
@@ -268,7 +270,19 @@ export function UploadForm() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <Button disabled={status !== "complete"} className="bg-foreground text-background hover:bg-electric-lime h-10 px-6">
+            <Button
+              disabled={status !== "complete"}
+              onClick={() => {
+                if (!WIP_LIMITS.showPublishFeature) {
+                  toast.info("Feature in development", {
+                    description: "Recording and publishing your own videos is coming soon!",
+                    icon: <Info className="w-4 h-4 text-electric-lime" />,
+                  });
+                  return;
+                }
+              }}
+              className="bg-foreground text-background hover:bg-electric-lime h-10 px-6"
+            >
               {status === "complete" ? "Publish" : "Save"}
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
