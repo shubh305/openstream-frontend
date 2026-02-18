@@ -83,7 +83,7 @@ function SearchForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="ml-auto w-full max-w-sm relative md:mx-auto z-50">
+    <form onSubmit={handleSubmit} className="hidden md:flex flex-1 max-w-md relative mx-auto">
       <div className="relative w-full group">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-text group-focus-within:text-electric-lime transition-colors" />
         <Input
@@ -97,13 +97,13 @@ function SearchForm() {
           onBlur={() => {
             setTimeout(() => setShowSuggestions(false), 200);
           }}
-          className="w-full md:w-full bg-noir-bg border-noir-border focus:border-electric-lime pl-10 h-10 text-xs md:text-sm rounded-lg transition-all"
+          className="w-full bg-noir-bg border-noir-border focus:border-electric-lime pl-10 h-10 text-sm rounded-lg transition-all"
         />
       </div>
 
       {/* Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-12 left-0 right-0 bg-noir-terminal border border-noir-border rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute top-12 left-0 right-0 bg-noir-terminal border border-noir-border rounded-lg shadow-xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
           {suggestions.map((suggestion, idx) => (
             <button
               key={idx}
@@ -125,12 +125,12 @@ export function Navbar({ user }: NavbarProps) {
   const { toggle } = useSidebar();
 
   return (
-    <header className="sticky top-0 z-[60] flex h-16 items-center border-b border-noir-border bg-noir-terminal/80 backdrop-blur-md px-4 md:px-8">
+    <header className="sticky top-0 z-[60] flex h-16 items-center justify-between border-b border-noir-border bg-noir-terminal/80 backdrop-blur-md px-4 md:px-8">
       <div className="flex items-center gap-6">
         <Button variant="ghost" size="icon" className="shrink-0 md:hidden text-white hover:bg-noir-border" onClick={toggle}>
           <Menu className="h-5 w-5" />
         </Button>
-        <Link href="/" className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-3 group shrink-0">
           <div className="flex h-10 w-10 items-center justify-center bg-noir-border border border-noir-border group-hover:border-electric-lime transition-all duration-300 rounded-lg">
             <span className="text-electric-lime font-bold tracking-tighter text-xl italic cursor-default">OS</span>
           </div>
@@ -138,9 +138,11 @@ export function Navbar({ user }: NavbarProps) {
         </Link>
       </div>
 
-      <SearchForm />
+      <div className="flex-1 max-w-lg px-4 hidden md:block">
+        <SearchForm />
+      </div>
 
-      <div className="ml-auto flex items-center gap-4">
+      <div className="flex items-center gap-4 shrink-0 relative z-[70]">
         {user ? (
           <>
             <Button variant="ghost" size="icon" asChild className="hidden sm:inline-flex text-muted-text hover:text-white hover:bg-noir-border rounded-lg">
@@ -194,16 +196,10 @@ export function Navbar({ user }: NavbarProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="hover:bg-noir-border focus:bg-noir-border cursor-pointer">
-                  <Link href="/upload" className="w-full text-xs font-mono uppercase tracking-widest py-2">
-                    Upload Video
+                  <Link href="/studio/customization" className="w-full text-xs font-mono uppercase tracking-widest py-2">
+                    Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="hover:bg-noir-border focus:bg-noir-border cursor-pointer">
-                  <Link href="/studio/stream" className="w-full text-xs font-mono uppercase tracking-widest py-2 text-signal-red">
-                    Go Live
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-noir-border focus:bg-noir-border cursor-pointer text-xs font-mono uppercase tracking-widest py-2">Settings</DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-noir-border" />
                 <DropdownMenuItem className="text-signal-red hover:bg-noir-border focus:bg-noir-border cursor-pointer text-xs font-mono uppercase tracking-widest py-2" onClick={() => logout()}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -215,10 +211,10 @@ export function Navbar({ user }: NavbarProps) {
         ) : (
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild className="text-xs font-mono uppercase tracking-widest hover:text-electric-lime text-white">
-              <Link href="/login">Auth_Login</Link>
+              <Link href="/login">Login</Link>
             </Button>
             <Button size="sm" asChild className="bg-white text-black hover:bg-electric-lime transition-colors text-xs font-mono uppercase tracking-widest px-4">
-              <Link href="/signup">Auth_Register</Link>
+              <Link href="/signup">Sign up</Link>
             </Button>
           </div>
         )}
