@@ -53,7 +53,9 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
    */
   const validateWithServer = useCallback(
     async (file: File) => {
-      const res = await fetch(`${API_BASE_URL}/v1/upload/validate`, {
+      // Ensure we hit the /api base even if NEXT_PUBLIC_API_URL doesn't include it
+      const base = API_BASE_URL?.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`;
+      const res = await fetch(`${base}/vod-upload/validate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,9 +70,7 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(
-          err.message || `Server validation failed (${res.status})`,
-        );
+        throw new Error(err.message || `Server validation failed (${res.status})`);
       }
 
       return res.json() as Promise<{
@@ -78,7 +78,7 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
         videoId: string;
         uploadUrl: string;
       }>;
-    },
+    };,
     [],
   );
 
@@ -105,8 +105,9 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
         }));
 
         // TUS upload
+        const base = API_BASE_URL?.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`;
         const upload = new tus.Upload(file, {
-          endpoint: `${API_BASE_URL}/v1/upload/tus`,
+          endpoint: `${base}/vod-upload/tus`,
           chunkSize: chunkSizeMB * 1024 * 1024,
           retryDelays: [0, 1000, 3000, 5000, 10000],
           parallelUploads,
@@ -120,7 +121,7 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
           },
           onProgress: (bytesUploaded: number, bytesTotal: number) => {
             const progress = Math.round((bytesUploaded / bytesTotal) * 100);
-            setState((s) => ({
+            setState(s => ({
               ...s,
               progress,
               bytesUploaded,
@@ -128,14 +129,14 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
             }));
           },
           onSuccess: () => {
-            setState((s) => ({
+            setState(s => ({
               ...s,
               status: "complete",
               progress: 100,
             }));
           },
           onError: (error: Error | tus.DetailedError) => {
-            setState((s) => ({
+            setState(s => ({
               ...s,
               status: "error",
               error: error.message || "Upload failed",
