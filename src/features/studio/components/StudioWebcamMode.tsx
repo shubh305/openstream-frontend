@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, Loader2, Settings2 } from "lucide-react";
 import { getIngestConfig, updateStreamSettings } from "@/actions/stream";
@@ -29,18 +29,32 @@ type WebcamStep = "SETUP" | "READY" | "LIVE";
 
 export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isValid }: StudioWebcamModeProps) {
   const [step, setStep] = useState<WebcamStep>("SETUP");
-  
+
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isLocallyBroadcasting, setIsLocallyBroadcasting] = useState(false);
   const [duration, setDuration] = useState(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
+
+  const stopBroadcast = useCallback(() => {
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.stop();
+    }
+    if (wsRef.current) {
+      wsRef.current.close(1000, "Stream ended by user");
+      wsRef.current = null;
+    }
+    setIsLive(false);
+    setIsLocallyBroadcasting(false);
+    setStep("READY");
+  }, [setIsLive, setIsLocallyBroadcasting, setStep]);
 
   // Stats for graphs
   const [stats, setStats] = useState({
@@ -60,41 +74,39 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
   });
 
   useEffect(() => {
-    if (isLive) {
-        setStep("LIVE");
-    } else if (step === "LIVE") {
-        setStep("READY");
+    if (!isLive && isLocallyBroadcasting) {
+      stopBroadcast();
     }
-  }, [isLive, step]);
+  }, [isLive, isLocallyBroadcasting, stopBroadcast]);
 
   useEffect(() => {
-    if (!isLive) return;
+    if (!isLocallyBroadcasting) return;
 
     const interval = setInterval(() => {
       const currentBitrate = Math.round(2500 + Math.random() * 500 - 250);
       const currentFps = Math.round(30 + Math.random() * 2 - 1);
       const currentLatency = Math.round(15 + Math.random() * 5);
 
-        setStats({
-          bitrate: currentBitrate,
-          fps: currentFps,
-          latency: currentLatency,
-        });
+      setStats({
+        bitrate: currentBitrate,
+        fps: currentFps,
+        latency: currentLatency,
+      });
 
-        setHistory(prev => ({
-          bitrate: [...prev.bitrate.slice(1), currentBitrate],
-          fps: [...prev.fps.slice(1), currentFps],
-          latency: [...prev.latency.slice(1), currentLatency],
-        }));
+      setHistory(prev => ({
+        bitrate: [...prev.bitrate.slice(1), currentBitrate],
+        fps: [...prev.fps.slice(1), currentFps],
+        latency: [...prev.latency.slice(1), currentLatency],
+      }));
 
-        setDuration(prev => prev + 1);
-      }, 1000);
+      setDuration(prev => prev + 1);
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [isLive]);
+  }, [isLocallyBroadcasting]);
 
   useEffect(() => {
-    if (!isLive) {
+    if (!isLocallyBroadcasting) {
       setStats({ bitrate: 0, fps: 0, latency: 0 });
       setHistory({
         bitrate: Array(30).fill(0),
@@ -103,7 +115,7 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
       });
       setDuration(0);
     }
-  }, [isLive]);
+  }, [isLocallyBroadcasting]);
 
   const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -186,15 +198,15 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
   const startBroadcast = async () => {
     if (!stream) return;
     if (!isValid) {
-        setStep("SETUP");
-        return;
+      setStep("SETUP");
+      return;
     }
-    
+
     setIsConnecting(true);
     setError(null);
 
     try {
-      const updateRes = await updateStreamSettings(settings) as { error?: string };
+      const updateRes = (await updateStreamSettings(settings)) as { error?: string };
       if (updateRes.error) {
         throw new Error(updateRes.error);
       }
@@ -212,6 +224,7 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
       ws.onopen = () => {
         console.log("[Studio] WebSocket connected");
         setIsLive(true);
+        setIsLocallyBroadcasting(true);
         setIsConnecting(false);
         setStep("LIVE");
 
@@ -224,13 +237,13 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
             videoBitsPerSecond: 1500000,
           });
 
-          recorder.ondataavailable = (event) => {
+          recorder.ondataavailable = event => {
             if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
               ws.send(event.data);
             }
           };
-          
-          recorder.onerror = (e) => {
+
+          recorder.onerror = e => {
             console.error("[Studio] MediaRecorder error:", e);
             setError("Encoder error");
             stopBroadcast();
@@ -246,16 +259,17 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
         }
       };
 
-      ws.onerror = (e) => {
+      ws.onerror = e => {
         console.error("[Studio] WebSocket error:", e);
       };
 
-      ws.onclose = (e) => {
+      ws.onclose = e => {
         console.log(`[Studio] WebSocket closed: ${e.code} ${e.reason}`);
-        if (e.code !== 1000 && isLive) {
-            setError(`Connection lost (${e.code})`);
+        if (e.code !== 1000 && isLocallyBroadcasting) {
+          setError(`Connection lost (${e.code})`);
         }
         setIsLive(false);
+        setIsLocallyBroadcasting(false);
         setStep("READY");
       };
     } catch (e) {
@@ -265,23 +279,12 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
     }
   };
 
-  const stopBroadcast = () => {
-    if (recorderRef.current && recorderRef.current.state !== "inactive") {
-      recorderRef.current.stop();
-    }
-    if (wsRef.current) {
-      wsRef.current.close(1000, "Stream ended by user");
-      wsRef.current = null;
-    }
-    setIsLive(false);
-    setStep("READY");
-  };
+
 
   return (
     <div className="h-full flex flex-col gap-4 w-full mx-auto transition-all duration-300">
       {/* Video Preview Container - Flex Grow to fill space */}
       <div className="flex-1 relative w-full bg-noir-bg border border-noir-border rounded-xl overflow-hidden group shadow-2xl min-h-0">
-        
         {/* Loading State */}
         {isLoading && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-noir-terminal z-50">
@@ -303,9 +306,9 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
 
         {/* Video Element */}
         <div className={`transition-all duration-500 w-full h-full ${step === "SETUP" ? "blur-md scale-105 opacity-50" : "blur-0 scale-100 opacity-100"}`}>
-            {!isLoading && !error && <VideoPreview videoRef={videoRef} camOn={camOn} />}
+          {!isLoading && !error && <VideoPreview videoRef={videoRef} camOn={camOn} />}
         </div>
-        
+
         {/* Cam Off State */}
         {!camOn && !isLoading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -318,171 +321,149 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
 
         {/* SETUP OVERLAY: Form */}
         {step === "SETUP" && !isLoading && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center p-4 sm:p-8 animate-in fade-in zoom-in-95 duration-300">
-                <div className="bg-noir-terminal/95 border border-noir-border shadow-2xl rounded-2xl p-8 max-w-2xl w-full backdrop-blur-xl relative overflow-hidden">
-                    {/* Decorative glow */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-electric-lime to-transparent opacity-50" />
-                    
-                    <h2 className="text-2xl font-bold text-foreground mb-8 text-center tracking-tight">Setup Your Stream</h2>
-                    
-                    <StudioSettings 
-                        settings={settings} 
-                        onChange={setSettings} 
-                        className="border-none bg-transparent p-0 shadow-none !space-y-6"
-                    />
+          <div className="absolute inset-0 z-40 flex items-center justify-center p-4 sm:p-8 animate-in fade-in zoom-in-95 duration-300">
+            <div className="bg-noir-terminal/95 border border-noir-border shadow-2xl rounded-2xl p-8 max-w-2xl w-full backdrop-blur-xl relative overflow-hidden">
+              {/* Decorative glow */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-electric-lime to-transparent opacity-50" />
 
-                    <div className="mt-8 flex justify-end">
-                        <Button 
-                            onClick={handleNextStep}
-                            disabled={!isValid}
-                            className={`w-full font-bold h-14 text-base transition-all ${
-                                isValid 
-                                ? "bg-electric-lime hover:bg-electric-lime/90 text-black shadow-[0_0_20px_rgba(163,230,53,0.3)] hover:shadow-[0_0_30px_rgba(163,230,53,0.4)]" 
-                                : "bg-noir-border text-muted-text cursor-not-allowed"
-                            }`}
-                        >
-                            Next: Preview Stream
-                        </Button>
-                    </div>
-                </div>
+              <h2 className="text-2xl font-bold text-foreground mb-8 text-center tracking-tight">Setup Your Stream</h2>
+
+              <StudioSettings settings={settings} onChange={setSettings} className="border-none bg-transparent p-0 shadow-none !space-y-6" />
+
+              <div className="mt-8 flex justify-end">
+                <Button
+                  onClick={handleNextStep}
+                  disabled={!isValid}
+                  className={`w-full font-bold h-14 text-base transition-all ${
+                    isValid
+                      ? "bg-electric-lime hover:bg-electric-lime/90 text-black shadow-[0_0_20px_rgba(163,230,53,0.3)] hover:shadow-[0_0_30px_rgba(163,230,53,0.4)]"
+                      : "bg-noir-border text-muted-text cursor-not-allowed"
+                  }`}
+                >
+                  Next: Preview Stream
+                </Button>
+              </div>
             </div>
+          </div>
         )}
 
         {/* READY OVERLAY: Clean view */}
         {step === "READY" && !isLoading && !isConnecting && (
-             <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-center items-center">
-                {/* Clean video preview, controls at bottom */}
-             </div>
+          <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-center items-center">{/* Clean video preview, controls at bottom */}</div>
         )}
 
         {/* LIVE OVERLAY: Stats */}
         {step === "LIVE" && (
           <div className="absolute top-4 left-4 right-4 z-20 pointer-events-none">
-             <div className="flex justify-between items-start">
-                <div className="flex gap-2">
-                   <div className="bg-signal-red/90 text-white px-3 py-1.5 rounded-md text-xs font-bold animate-pulse uppercase tracking-wider flex items-center gap-2 shadow-lg ring-1 ring-white/20">
-                      <span className="w-2 h-2 bg-white rounded-full" />
-                      LIVE
-                   </div>
-                   <div className="bg-black/60 backdrop-blur px-3 py-1.5 rounded-md text-xs font-mono text-white border border-white/10 shadow-lg">
-                      {formatDuration(duration)}
-                   </div>
+            <div className="flex justify-between items-start">
+              <div className="flex gap-2">
+                <div className="bg-signal-red/90 text-white px-3 py-1.5 rounded-md text-xs font-bold animate-pulse uppercase tracking-wider flex items-center gap-2 shadow-lg ring-1 ring-white/20">
+                  <span className="w-2 h-2 bg-white rounded-full" />
+                  LIVE
                 </div>
+                <div className="bg-black/60 backdrop-blur px-3 py-1.5 rounded-md text-xs font-mono text-white border border-white/10 shadow-lg">{formatDuration(duration)}</div>
+              </div>
 
-                <div className="grid grid-cols-3 gap-2 w-64">
-                  <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
-                    <div>
-                      <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">Bitrate</p>
-                      <p className="text-[10px] font-mono text-green-400">{stats.bitrate} kbps</p>
-                    </div>
-                    <Sparkline data={history.bitrate} color="#a3e635" height={20} />
+              <div className="grid grid-cols-3 gap-2 w-64">
+                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
+                  <div>
+                    <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">Bitrate</p>
+                    <p className="text-[10px] font-mono text-green-400">{stats.bitrate} kbps</p>
                   </div>
-                  <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
-                    <div>
-                      <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">FPS</p>
-                      <p className="text-[10px] font-mono text-blue-400">{stats.fps}</p>
-                    </div>
-                    <Sparkline data={history.fps} color="#60a5fa" height={20} />
-                  </div>
-                  <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
-                    <div>
-                      <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">Latency</p>
-                      <p className="text-[10px] font-mono text-purple-400">{stats.latency} ms</p>
-                    </div>
-                    <Sparkline data={history.latency} color="#c084fc" height={20} />
-                  </div>
+                  <Sparkline data={history.bitrate} color="#a3e635" height={20} />
                 </div>
-             </div>
+                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
+                  <div>
+                    <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">FPS</p>
+                    <p className="text-[10px] font-mono text-blue-400">{stats.fps}</p>
+                  </div>
+                  <Sparkline data={history.fps} color="#60a5fa" height={20} />
+                </div>
+                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
+                  <div>
+                    <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">Latency</p>
+                    <p className="text-[10px] font-mono text-purple-400">{stats.latency} ms</p>
+                  </div>
+                  <Sparkline data={history.latency} color="#c084fc" height={20} />
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
       {/* Stream Info & Controls Bar - Fixed height at bottom */}
       <div className="shrink-0 space-y-4">
-          
         {/* Stream Info Card - Visible in READY and LIVE */}
         {(step === "READY" || step === "LIVE") && (
-            <div className="bg-noir-terminal/50 border border-noir-border rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
-                <div>
-                    <h1 className="text-xl font-bold text-foreground tracking-tight mb-1">{settings.title}</h1>
-                    <div className="flex items-center gap-3 text-muted-text text-xs">
-                        <span className="flex items-center gap-1.5 bg-noir-bg px-2 py-0.5 rounded-full border border-noir-border">
-                            <span className={`w-1.5 h-1.5 rounded-full ${settings.visibility === 'public' ? 'bg-electric-lime' : 'bg-muted-text'}`} />
-                            <span className="capitalize">{settings.visibility}</span>
-                        </span>
-                        <span className="flex items-center gap-1.5 bg-noir-bg px-2 py-0.5 rounded-full border border-noir-border">
-                            {settings.category}
-                        </span>
-                    </div>
-                </div>
-                
-                {step === "READY" && !isLoading && !isConnecting && (
-                    <Button 
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setStep("SETUP")}
-                        className="text-muted-text hover:text-foreground shrink-0 h-8"
-                    >
-                        <Settings2 className="w-3.5 h-3.5 mr-2" />
-                        Edit
-                    </Button>
-                )}
+          <div className="bg-noir-terminal/50 border border-noir-border rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+            <div>
+              <h1 className="text-xl font-bold text-foreground tracking-tight mb-1">{settings.title}</h1>
+              <div className="flex items-center gap-3 text-muted-text text-xs">
+                <span className="flex items-center gap-1.5 bg-noir-bg px-2 py-0.5 rounded-full border border-noir-border">
+                  <span className={`w-1.5 h-1.5 rounded-full ${settings.visibility === "public" ? "bg-electric-lime" : "bg-muted-text"}`} />
+                  <span className="capitalize">{settings.visibility}</span>
+                </span>
+                <span className="flex items-center gap-1.5 bg-noir-bg px-2 py-0.5 rounded-full border border-noir-border">{settings.category}</span>
+              </div>
             </div>
+
+            {step === "READY" && !isLoading && !isConnecting && (
+              <Button variant="ghost" size="sm" onClick={() => setStep("SETUP")} className="text-muted-text hover:text-foreground shrink-0 h-8">
+                <Settings2 className="w-3.5 h-3.5 mr-2" />
+                Edit
+              </Button>
+            )}
+          </div>
         )}
 
         {/* Controls Bar */}
         <div className="flex items-center justify-between bg-noir-terminal/80 p-4 rounded-2xl border border-noir-border backdrop-blur-md shadow-lg">
-            
-            {/* Left: Device Controls */}
-            <div className="flex items-center gap-2">
-                <Button
-                variant={micOn ? "secondary" : "destructive"}
-                size="icon"
-                onClick={toggleMic}
-                className={`rounded-xl h-10 w-10 transition-all ${!micOn ? "bg-signal-red/10 text-signal-red border border-signal-red/20 hover:bg-signal-red/20" : "bg-noir-bg border border-noir-border text-foreground hover:bg-white/10"}`}
-                    title={micOn ? "Mute Microphone" : "Unmute Microphone"}
-                >
-                {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                </Button>
+          {/* Left: Device Controls */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={micOn ? "secondary" : "destructive"}
+              size="icon"
+              onClick={toggleMic}
+              className={`rounded-xl h-10 w-10 transition-all ${!micOn ? "bg-signal-red/10 text-signal-red border border-signal-red/20 hover:bg-signal-red/20" : "bg-noir-bg border border-noir-border text-foreground hover:bg-white/10"}`}
+              title={micOn ? "Mute Microphone" : "Unmute Microphone"}
+            >
+              {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+            </Button>
 
-                <Button
-                variant={camOn ? "secondary" : "destructive"}
-                size="icon"
-                onClick={toggleCam}
-                    className={`rounded-xl h-10 w-10 transition-all ${!camOn ? "bg-signal-red/10 text-signal-red border border-signal-red/20 hover:bg-signal-red/20" : "bg-noir-bg border border-noir-border text-foreground hover:bg-white/10"}`}
-                    title={camOn ? "Turn Camera Off" : "Turn Camera On"}
-                >
-                {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                </Button>
-            </div>
+            <Button
+              variant={camOn ? "secondary" : "destructive"}
+              size="icon"
+              onClick={toggleCam}
+              className={`rounded-xl h-10 w-10 transition-all ${!camOn ? "bg-signal-red/10 text-signal-red border border-signal-red/20 hover:bg-signal-red/20" : "bg-noir-bg border border-noir-border text-foreground hover:bg-white/10"}`}
+              title={camOn ? "Turn Camera Off" : "Turn Camera On"}
+            >
+              {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+            </Button>
+          </div>
 
-            {/* Center: Main Actions */}
-            <div className="flex-1 flex justify-center">
-                {step === "READY" && !isLoading && !isConnecting && (
-                    <Button
-                        onClick={startBroadcast}
-                        className="bg-signal-red hover:bg-signal-red/90 text-white font-bold h-12 px-10 rounded-xl text-base shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all scale-100 hover:scale-105 active:scale-95"
-                    >
-                        Go Live
-                    </Button>
-                )}
-                
-                {step === "LIVE" && (
-                    <Button
-                    onClick={stopBroadcast}
-                    className="bg-noir-bg border border-signal-red/30 text-signal-red hover:bg-signal-red hover:text-white font-bold h-12 px-8 rounded-xl transition-all"
-                    >
-                    End Stream
-                    </Button>
-                )}
+          {/* Center: Main Actions */}
+          <div className="flex-1 flex justify-center">
+            {step === "READY" && !isLoading && !isConnecting && (
+              <Button
+                onClick={startBroadcast}
+                className="bg-signal-red hover:bg-signal-red/90 text-white font-bold h-12 px-10 rounded-xl text-base shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all scale-100 hover:scale-105 active:scale-95"
+              >
+                Go Live
+              </Button>
+            )}
 
-                {step === "SETUP" && (
-                    <p className="text-muted-text text-sm font-medium">Configure stream details</p>
-                )}
-            </div>
-            
-            {/* Right: Spacer */}
-            <div className="w-[88px]"></div> 
+            {step === "LIVE" && (
+              <Button onClick={stopBroadcast} className="bg-noir-bg border border-signal-red/30 text-signal-red hover:bg-signal-red hover:text-white font-bold h-12 px-8 rounded-xl transition-all">
+                End Stream
+              </Button>
+            )}
+
+            {step === "SETUP" && <p className="text-muted-text text-sm font-medium">Configure stream details</p>}
+          </div>
+
+          {/* Right: Spacer */}
+          <div className="w-[88px]"></div>
         </div>
       </div>
     </div>

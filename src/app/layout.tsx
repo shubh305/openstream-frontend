@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-import { getSession } from "@/actions/auth";
+import { getSession } from "@/lib/auth";
 import { getSubscriptions } from "@/actions/subscription";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
@@ -20,6 +20,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 import { SidebarProvider } from "@/lib/sidebar-context";
+import { User } from "@/types/api";
 
 export const metadata: Metadata = {
   title: "OpenStream",
@@ -31,16 +32,18 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [session, subscriptions] = await Promise.all([getSession(), getSubscriptions()]);
+  const sessionData = (await getSession()) as { user: User; accessToken: string } | null;
+  const session = sessionData?.user;
+  const subscriptions = session ? await getSubscriptions() : [];
 
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${interTight.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground font-mono min-h-screen relative`}>
         <SidebarProvider>
-          <SessionGuard />
-          <Sidebar subscriptions={subscriptions} isAuthenticated={!!session?.user} />
+          <SessionGuard isAuthenticated={!!session} />
+          <Sidebar subscriptions={subscriptions} isAuthenticated={!!session} />
           <div className="flex min-h-screen flex-col relative z-0 md:pl-16">
-            <Navbar user={session?.user} />
+            <Navbar user={session} />
             <main className="flex-1 flex flex-col">{children}</main>
           </div>
         </SidebarProvider>

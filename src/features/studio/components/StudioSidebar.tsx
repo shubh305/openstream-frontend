@@ -17,9 +17,7 @@ const NAV_ITEMS = [
   { label: "Go Live", href: "/studio/stream", icon: Radio, highlight: true },
 ];
 
-const BOTTOM_ITEMS = [
-  { label: "Settings", href: "/studio/settings", icon: Settings },
-];
+const BOTTOM_ITEMS = [{ label: "Settings", href: "/studio/customization", icon: Settings }];
 
 export function StudioSidebar() {
   const pathname = usePathname();

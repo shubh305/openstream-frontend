@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, FileVideo, Check, Copy, Globe, Lock, Users, ArrowLeft, ChevronRight, Loader2, Info } from "lucide-react";
+import { Upload, FileVideo, Check, Copy, Globe, Lock, Users, ArrowLeft, ChevronRight, Loader2, Info, Pause, Play, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WIP_LIMITS } from "@/lib/wip-limits";
 import { toast } from "@/components/ui/sonner";
+import { fetchApi } from "@/lib/api-client";
+import { getAccessToken } from "@/actions/auth";
+import { useFileValidator } from "@/hooks/useFileValidator";
+import { useChunkedUpload } from "@/hooks/useChunkedUpload";
 
-type UploadStatus = "idle" | "uploading" | "processing" | "complete";
 type Visibility = "public" | "unlisted" | "private";
 
 const CATEGORIES = ["Gaming", "Music", "Entertainment", "Education", "Sports", "Tech", "Vlogs", "Other"];
@@ -16,17 +19,49 @@ const CATEGORIES = ["Gaming", "Music", "Entertainment", "Education", "Sports", "
 export function UploadForm() {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [status, setStatus] = useState<UploadStatus>("idle");
   const [visibility, setVisibility] = useState<Visibility>("private");
   const [category, setCategory] = useState("Gaming");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [copied, setCopied] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [videoId] = useState(() => "os_" + Math.random().toString(36).substring(2, 10));
 
-  const videoUrl = `https://openstream.octanebrew.dev/watch/${videoId}`;
+  // File validation hook
+  const { validate } = useFileValidator();
+
+  // TUS chunked upload hook
+  // TODO: Pass real JWT token from auth context
+  const upload = useChunkedUpload({
+    token: "",
+  });
+
+  // Handle upload errors via toast
+  useEffect(() => {
+    if (upload.error) {
+      toast.error("Upload failed", {
+        description: upload.error.length > 80 ? "The server encountered an error. Please try again." : upload.error,
+      });
+    }
+  }, [upload.error]);
+
+  const videoUrl = upload.sessionId ? `https://openstream.octanebrew.dev/watch/${upload.sessionId}` : "";
+
+  const handleFile = async (selectedFile: File) => {
+    const result = await validate(selectedFile);
+    if (!result.valid) {
+      toast.error("Invalid file", {
+        description: result.error,
+        icon: <AlertCircle className="w-4 h-4 text-signal-red" />,
+      });
+      return;
+    }
+
+    setFile(selectedFile);
+    setTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
+
+    upload.startUpload(selectedFile);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -41,53 +76,82 @@ export function UploadForm() {
     e.preventDefault();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile?.type.startsWith("video/")) {
-      setFile(droppedFile);
-      setTitle(droppedFile.name.replace(/\.[^/.]+$/, ""));
-      startUpload();
+    if (droppedFile) {
+      handleFile(droppedFile);
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
-      setTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
-      startUpload();
+      handleFile(selectedFile);
     }
   };
 
-  const startUpload = () => {
-    setStatus("uploading");
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 15 + 5;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-        setUploadProgress(100);
-        setStatus("processing");
-        setTimeout(() => setStatus("complete"), 2000);
-      } else {
-        setUploadProgress(Math.round(progress));
-      }
-    }, 400);
-  };
-
   const copyLink = async () => {
+    if (!videoUrl) return;
     await navigator.clipboard.writeText(videoUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const resetForm = () => {
+    upload.cancelUpload();
     setFile(null);
-    setStatus("idle");
-    setUploadProgress(0);
     setTitle("");
     setDescription("");
     setVisibility("private");
+    setIsPublishing(false);
   };
+
+  const handlePublish = async () => {
+    if (!upload.videoId) return;
+
+    setIsPublishing(true);
+    try {
+      const token = await getAccessToken();
+      await fetchApi(
+        `/videos/${upload.videoId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            title,
+            description,
+            visibility,
+            category,
+            status: "published",
+          }),
+        },
+        token || undefined,
+      );
+
+      toast.success("Video published successfully!", {
+        description: "Your video is now available for viewers.",
+      });
+
+      resetForm();
+    } catch (err) {
+      toast.error("Failed to publish video", {
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+      });
+      console.error(err);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
+  const isUploading = upload.status === "uploading" || upload.status === "validating";
+  const isPaused = upload.status === "paused";
+  const isComplete = upload.status === "complete";
+  const isError = upload.status === "error";
 
   // Initial drag-drop state
   if (!file) {
@@ -172,9 +236,24 @@ export function UploadForm() {
                 <label className="text-sm text-muted-text mb-3 block">Visibility</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { id: "private", label: "Private", desc: "Only you", icon: Lock },
-                    { id: "unlisted", label: "Unlisted", desc: "Anyone with link", icon: Users },
-                    { id: "public", label: "Public", desc: "Everyone", icon: Globe },
+                    {
+                      id: "private",
+                      label: "Private",
+                      desc: "Only you",
+                      icon: Lock,
+                    },
+                    {
+                      id: "unlisted",
+                      label: "Unlisted",
+                      desc: "Anyone with link",
+                      icon: Users,
+                    },
+                    {
+                      id: "public",
+                      label: "Public",
+                      desc: "Everyone",
+                      icon: Globe,
+                    },
                   ].map(opt => (
                     <button
                       key={opt.id}
@@ -211,15 +290,20 @@ export function UploadForm() {
               <div className="bg-noir-terminal border border-noir-border rounded-lg overflow-hidden sticky top-6">
                 {/* Preview Area */}
                 <div className="aspect-video bg-noir-bg flex items-center justify-center">
-                  {status === "complete" ? (
+                  {isComplete ? (
                     <div className="text-center">
                       <FileVideo className="w-12 h-12 text-electric-lime mx-auto mb-2" />
-                      <p className="text-sm text-muted-text">Preview available</p>
+                      <p className="text-sm text-muted-text">Upload complete</p>
+                    </div>
+                  ) : isError ? (
+                    <div className="text-center">
+                      <AlertCircle className="w-8 h-8 text-signal-red mx-auto mb-2" />
+                      <p className="text-sm text-signal-red">Upload failed</p>
                     </div>
                   ) : (
                     <div className="text-center">
                       <Loader2 className="w-8 h-8 text-muted-text animate-spin mx-auto mb-2" />
-                      <p className="text-sm text-muted-text">{status === "uploading" ? "Uploading..." : "Processing..."}</p>
+                      <p className="text-sm text-muted-text">{isPaused ? "Paused" : upload.status === "validating" ? "Validating..." : "Uploading..."}</p>
                     </div>
                   )}
                 </div>
@@ -231,15 +315,32 @@ export function UploadForm() {
                     <div className="text-sm text-foreground truncate">{file?.name}</div>
                   </div>
 
-                  <div>
-                    <div className="text-xs text-muted-text mb-1">Video link</div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 text-sm text-electric-lime truncate">{videoUrl}</div>
-                      <button onClick={copyLink} className="text-muted-text hover:text-foreground transition-colors">
-                        {copied ? <Check className="w-4 h-4 text-electric-lime" /> : <Copy className="w-4 h-4" />}
-                      </button>
+                  {/* Upload Progress Bar */}
+                  {(isUploading || isPaused) && (
+                    <div>
+                      <div className="flex items-center justify-between text-xs text-muted-text mb-1">
+                        <span>
+                          {formatBytes(upload.bytesUploaded)} / {formatBytes(upload.bytesTotal)}
+                        </span>
+                        <span>{upload.progress}%</span>
+                      </div>
+                      <div className="w-full bg-noir-bg rounded-full h-1.5 overflow-hidden">
+                        <div className={cn("h-full rounded-full transition-all duration-300", isPaused ? "bg-amber-500" : "bg-electric-lime")} style={{ width: `${upload.progress}%` }} />
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {videoUrl && (
+                    <div>
+                      <div className="text-xs text-muted-text mb-1">Video link</div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 text-sm text-electric-lime truncate">{videoUrl}</div>
+                        <button onClick={copyLink} className="text-muted-text hover:text-foreground transition-colors">
+                          {copied ? <Check className="w-4 h-4 text-electric-lime" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -250,18 +351,38 @@ export function UploadForm() {
       {/* Fixed Bottom Bar */}
       <div className="border-t border-noir-border bg-noir-terminal px-6 py-4 shrink-0">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          {/* Left: Progress */}
+          {/* Left: Progress & Controls */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Upload className="w-4 h-4 text-muted-text" />
               <span className="text-xs font-medium text-muted-text border border-noir-border px-2 py-0.5 rounded">HD</span>
-              {status === "complete" ? <Check className="w-4 h-4 text-electric-lime" /> : <Loader2 className="w-4 h-4 text-muted-text animate-spin" />}
+              {isComplete ? (
+                <Check className="w-4 h-4 text-electric-lime" />
+              ) : isError ? (
+                <AlertCircle className="w-4 h-4 text-signal-red" />
+              ) : (
+                <Loader2 className="w-4 h-4 text-muted-text animate-spin" />
+              )}
             </div>
             <span className="text-sm text-muted-text">
-              {status === "uploading" && `Uploading ${uploadProgress}%...`}
-              {status === "processing" && "Processing..."}
-              {status === "complete" && "Upload complete"}
+              {upload.status === "validating" && "Validating..."}
+              {upload.status === "uploading" && `Uploading ${upload.progress}%...`}
+              {isPaused && `Paused at ${upload.progress}%`}
+              {isComplete && "Upload complete"}
+              {isError && "Upload failed"}
             </span>
+
+            {/* Pause / Resume buttons */}
+            {isUploading && upload.status !== "validating" && (
+              <Button variant="ghost" size="sm" onClick={upload.pauseUpload} className="h-8 w-8 p-0">
+                <Pause className="w-4 h-4" />
+              </Button>
+            )}
+            {isPaused && (
+              <Button variant="ghost" size="sm" onClick={upload.resumeUpload} className="h-8 w-8 p-0">
+                <Play className="w-4 h-4" />
+              </Button>
+            )}
           </div>
 
           {/* Right: Actions */}
@@ -271,7 +392,7 @@ export function UploadForm() {
               Back
             </Button>
             <Button
-              disabled={status !== "complete"}
+              disabled={!isComplete || isPublishing}
               onClick={() => {
                 if (!WIP_LIMITS.showPublishFeature) {
                   toast.info("Feature in development", {
@@ -280,11 +401,21 @@ export function UploadForm() {
                   });
                   return;
                 }
+                handlePublish();
               }}
               className="bg-foreground text-background hover:bg-electric-lime h-10 px-6"
             >
-              {status === "complete" ? "Publish" : "Save"}
-              <ChevronRight className="w-4 h-4 ml-2" />
+              {isPublishing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Publishing...
+                </>
+              ) : isComplete ? (
+                "Publish"
+              ) : (
+                "Save"
+              )}
+              {!isPublishing && <ChevronRight className="w-4 h-4 ml-2" />}
             </Button>
           </div>
         </div>

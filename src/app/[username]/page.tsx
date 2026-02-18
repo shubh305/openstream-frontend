@@ -29,9 +29,9 @@ export default async function ChannelPage({ params }: ChannelPageProps) {
 
   // Fetch videos for this channel
   const [videosResponse, liveStreams, playlists] = await Promise.all([
-     getVideos({ channelId: channel.id, limit: 30, sort: "latest" }),
-     getLiveStreams(),
-     getChannelPlaylists(channel.id)
+    getVideos({ channelId: channel.id, limit: 30, sort: "latest", isLive: false }),
+    getLiveStreams(),
+    getChannelPlaylists(channel.id),
   ]);
 
   const ownerUsername = channel.owner?.username || channel.handle;

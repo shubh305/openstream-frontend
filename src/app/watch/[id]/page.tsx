@@ -3,7 +3,7 @@ import { VideoPlayer } from "@/features/video/components/VideoPlayer";
 import { CommentSection } from "@/features/video/components/CommentSection";
 import { SidebarCard } from "@/features/video/components/SidebarCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { VideoInteractions } from "@/features/video/components/VideoInteractions";
 import { getVideo, getRelatedVideos } from "@/actions/video";
 import { getComments } from "@/actions/comment";
 import { getSession } from "@/actions/auth";
@@ -51,7 +51,7 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
           <div className="space-y-4">
             {/* Video Player */}
             <div className="relative sm:rounded-2xl overflow-hidden bg-noir-terminal aspect-video">
-              <VideoPlayer videoId={video.id} posterUrl={video.posterUrl} videoUrl={video.videoUrl} />
+              <VideoPlayer videoId={video.id} posterUrl={video.posterUrl} videoUrl={video.videoUrl} resolutions={video.resolutions} />
             </div>
 
             {/* Title Row */}
@@ -59,13 +59,7 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
               <div className="flex items-start justify-between gap-4">
                 <h1 className="text-lg md:text-xl font-bold text-white leading-tight">{video.title}</h1>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-noir-terminal hover:bg-noir-border transition-colors">
-                    <ThumbsUp className="w-3.5 h-3.5 text-white" />
-                    <span className="text-[10px] md:text-xs font-bold">{video.views > 0 ? Intl.NumberFormat("en-US", { notation: "compact" }).format(video.views) : 0}</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-noir-terminal hover:bg-noir-border transition-colors">
-                    <ThumbsDown className="w-3.5 h-3.5 text-white" />
-                  </button>
+                  <VideoInteractions videoId={video.id} initialLikes={video.likes || 0} initialUserInteraction={video.userInteraction} />
                 </div>
               </div>
 
@@ -97,9 +91,11 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
             </div>
 
             {/* Comments */}
-            <div className="px-4 sm:px-0">
-              <CommentSection videoId={video.id} initialComments={comments} currentUser={session?.user} />
-            </div>
+            {video.visibility !== "private" && (
+              <div className="px-4 sm:px-0">
+                <CommentSection videoId={video.id} initialComments={comments} currentUser={session?.user} />
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
