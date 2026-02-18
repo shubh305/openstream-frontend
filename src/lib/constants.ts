@@ -1,5 +1,6 @@
 export const APP_NAME = "OpenStream";
-export const API_BASE_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
+const rawApiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
+export const API_BASE_URL = rawApiUrl?.endsWith("/api") ? rawApiUrl : `${rawApiUrl}/api`;
 export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL;
 export const RTMP_INGEST_URL = process.env.NEXT_PUBLIC_RTMP_URL;
 

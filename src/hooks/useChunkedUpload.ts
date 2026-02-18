@@ -52,8 +52,7 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
    * Step 1: Validate file with backend and get a TUS session.
    */
   const validateWithServer = useCallback(async (file: File) => {
-    const base = API_BASE_URL?.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`;
-    const res = await fetch(`${base}/vod-upload/validate`, {
+    const res = await fetch(`${API_BASE_URL}/vod-upload/validate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -93,7 +92,7 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
       try {
         const { sessionId, videoId } = await validateWithServer(file);
 
-        setState((s) => ({
+        setState(s => ({
           ...s,
           sessionId,
           videoId,
@@ -101,9 +100,8 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
         }));
 
         // TUS upload
-        const base = API_BASE_URL?.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`;
         const upload = new tus.Upload(file, {
-          endpoint: `${base}/vod-upload/tus`,
+          endpoint: `${API_BASE_URL}/vod-upload/tus`,
           chunkSize: chunkSizeMB * 1024 * 1024,
           retryDelays: [0, 1000, 3000, 5000, 10000],
           parallelUploads,
