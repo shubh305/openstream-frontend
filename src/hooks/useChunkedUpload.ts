@@ -51,36 +51,32 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
   /**
    * Step 1: Validate file with backend and get a TUS session.
    */
-  const validateWithServer = useCallback(
-    async (file: File) => {
-      // Ensure we hit the /api base even if NEXT_PUBLIC_API_URL doesn't include it
-      const base = API_BASE_URL?.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`;
-      const res = await fetch(`${base}/vod-upload/validate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${await getAccessToken()}`,
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          sizeBytes: file.size,
-          mimeType: file.type,
-        }),
-      });
+  const validateWithServer = useCallback(async (file: File) => {
+    const base = API_BASE_URL?.endsWith("/api") ? API_BASE_URL : `${API_BASE_URL}/api`;
+    const res = await fetch(`${base}/vod-upload/validate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await getAccessToken()}`,
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        sizeBytes: file.size,
+        mimeType: file.type,
+      }),
+    });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `Server validation failed (${res.status})`);
-      }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Server validation failed (${res.status})`);
+    }
 
-      return res.json() as Promise<{
-        sessionId: string;
-        videoId: string;
-        uploadUrl: string;
-      }>;
-    };,
-    [],
-  );
+    return res.json() as Promise<{
+      sessionId: string;
+      videoId: string;
+      uploadUrl: string;
+    }>;
+  }, []);
 
   /**
    * Step 2: Start TUS upload to the backend endpoint.
