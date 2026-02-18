@@ -10,4 +10,5 @@ export const WIP_LIMITS = {
 
   // Features
   showPublishFeature: true,
+  showStreamLatency: false,
 };

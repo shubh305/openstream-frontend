@@ -66,7 +66,9 @@ export interface Video {
 export interface Stream {
   id: string;
   title: string;
+  description?: string;
   category: string;
+  visibility?: "public" | "private" | "unlisted";
   status: "live" | "offline";
   viewerCount: number;
   startedAt?: string;

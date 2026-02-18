@@ -321,11 +321,10 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
 
         {/* SETUP OVERLAY: Form */}
         {step === "SETUP" && !isLoading && (
-          <div className="absolute inset-0 z-40 flex items-center justify-center p-4 sm:p-8 animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-noir-terminal/95 border border-noir-border shadow-2xl rounded-2xl p-8 max-w-2xl w-full backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute inset-0 z-40 flex items-center justify-center p-2 sm:p-8 animate-in fade-in zoom-in-95 duration-300">
+            <div className="bg-noir-terminal/95 border border-noir-border shadow-2xl rounded-2xl p-4 sm:p-8 max-w-2xl w-full backdrop-blur-xl relative overflow-hidden">
               {/* Decorative glow */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-electric-lime to-transparent opacity-50" />
-
               <h2 className="text-2xl font-bold text-foreground mb-8 text-center tracking-tight">Setup Your Stream</h2>
 
               <StudioSettings settings={settings} onChange={setSettings} className="border-none bg-transparent p-0 shadow-none !space-y-6" />

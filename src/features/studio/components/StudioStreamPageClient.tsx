@@ -7,7 +7,7 @@ import Link from "next/link";
 import { LiveChat } from "@/features/chat/components/LiveChat";
 import { StudioWebcamMode } from "@/features/studio/components/StudioWebcamMode";
 import { StudioStreamMode } from "@/features/studio/components/StudioStreamMode";
-import { StudioSettings, type StreamSettingsData } from "@/features/studio/components/StudioSettings";
+import { StudioSettings, type StreamSettingsData, type Visibility } from "@/features/studio/components/StudioSettings";
 import { getMyStream } from "@/actions/stream";
 
 type StudioMode = "webcam" | "stream";
@@ -22,6 +22,7 @@ export function StudioStreamPageClient({ token }: StudioStreamPageClientProps) {
   const [isLive, setIsLive] = useState(false);
   const [settings, setSettings] = useState<StreamSettingsData>({
     title: "",
+    description: "",
     category: "Gaming",
     visibility: "public",
   });
@@ -37,6 +38,12 @@ export function StudioStreamPageClient({ token }: StudioStreamPageClientProps) {
             setStreamId(stream.id);
             const isStreamLive = stream.status === "live";
             setIsLive(isStreamLive);
+            setSettings({
+              title: stream.title,
+              description: stream.description || "",
+              category: stream.category || "Gaming",
+              visibility: (stream.visibility as Visibility) || "public",
+            });
         }
     };
 

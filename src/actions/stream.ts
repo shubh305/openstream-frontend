@@ -67,13 +67,31 @@ export async function getIngestConfig() {
   }
 }
 
-export async function updateStreamSettings(settings: { title: string; category: string; visibility: string }) {
+export async function updateStreamSettings(settings: { title: string; description?: string; category: string; visibility: string }) {
   try {
     const res = await api.put("/streams/settings", settings);
     return res;
   } catch (error) {
     console.error("updateSettings error (Ignored to unblock stream):", error);
     return { success: true };
+  }
+}
+
+export async function goLive() {
+  try {
+    return await api.post("/streams/go-live", {});
+  } catch (error) {
+    console.error("goLive error:", error);
+    return { error: error instanceof Error ? error.message : "Failed to go live" };
+  }
+}
+
+export async function endStream() {
+  try {
+    return await api.post("/streams/end", {});
+  } catch (error) {
+    console.error("endStream error:", error);
+    return { error: error instanceof Error ? error.message : "Failed to end stream" };
   }
 }
 

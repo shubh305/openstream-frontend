@@ -29,7 +29,7 @@ export function VideoCard({
   isLive = false,
 }: VideoCardProps) {
   return (
-    <Link href={isLive ? `/live/${creator?.username || id}` : `/watch/${id}`}>
+    <Link href={`/watch/${id}`}>
       <div className="group relative rounded-xl overflow-hidden bg-noir-terminal/40 hover:bg-noir-terminal transition-all duration-300">
         {/* Thumbnail Section */}
         <div className="relative aspect-video w-full overflow-hidden">
@@ -41,9 +41,8 @@ export function VideoCard({
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           {isLive ? (
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-signal-red px-2.5 py-1 rounded-md">
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              <span className="text-xs font-bold text-white uppercase">Live</span>
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-noir-border/80 border border-white/20 backdrop-blur-md px-2.5 py-1 rounded-md">
+              <span className="text-[10px] font-bold text-white uppercase tracking-widest">Stream</span>
             </div>
           ) : (
             <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs font-medium text-white">{duration}</div>
