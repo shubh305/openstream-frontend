@@ -1,6 +1,6 @@
 "use server";
 
-import { fetchApi } from "@/lib/api-client";
+import { api } from "@/lib/api";
 import { Video, Channel } from "@/types/api";
 
 interface SearchResponse {
@@ -14,15 +14,15 @@ interface SearchResponse {
 
 export async function search(query: string, type: "video" | "channel" | "all" = "all") {
   const queryString = new URLSearchParams({ q: query, limit: "50" });
-  
+
   try {
-    const response = await fetchApi<SearchResponse>(`/search?${queryString.toString()}`, {
+    const response = await api.get<SearchResponse>(`/search?${queryString.toString()}`, {
       next: { revalidate: 0 },
     });
-    
+
     const videos = response?.results?.videos || [];
     const channels = response?.results?.channels || [];
-    
+
     if (type === "video") return { videos, channels: [] };
     if (type === "channel") return { videos: [], channels };
     return { videos, channels };
@@ -34,9 +34,9 @@ export async function search(query: string, type: "video" | "channel" | "all" = 
 
 export async function getSuggestions(query: string) {
   if (!query.trim()) return [];
-  
+
   try {
-    const response = await fetchApi<{ suggestions: string[] }>(`/search/suggestions?q=${encodeURIComponent(query)}`, {
+    const response = await api.get<{ suggestions: string[] }>(`/search/suggestions?q=${encodeURIComponent(query)}`, {
       next: { revalidate: 60 },
     });
     return response?.suggestions || [];

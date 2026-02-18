@@ -43,6 +43,7 @@ export interface Video {
   views: number;
   likes?: number;
   dislikes?: number;
+  commentsCount?: number;
   uploadedAt: string;
   publishedAt?: string;
   visibility?: "public" | "private" | "unlisted";
@@ -59,6 +60,7 @@ export interface Video {
     disliked: boolean;
     subscribed: boolean;
   };
+  resolutions?: string[];
 }
 
 export interface Stream {

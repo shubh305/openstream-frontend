@@ -1,7 +1,6 @@
 "use server";
 
-import { fetchApi } from "@/lib/api-client";
-import { cookies } from "next/headers";
+import { api } from "@/lib/api";
 import { revalidatePath } from "next/cache";
 
 export interface Subscription {
@@ -16,22 +15,11 @@ export interface Subscription {
 }
 
 export async function getSubscriptions() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-
-  if (!token) {
-    return [];
-  }
-
   try {
-    const response = await fetchApi<{ subscriptions: Subscription[] }>(
-      "/subscriptions",
-      {
-        cache: "no-store",
-      },
-      token,
-    );
-    return response.subscriptions;
+    const response = await api.get<{ subscriptions: Subscription[] }>("/subscriptions", {
+      cache: "no-store",
+    });
+    return response.subscriptions || [];
   } catch (error) {
     console.error("getSubscriptions error:", error);
     return [];
@@ -39,25 +27,20 @@ export async function getSubscriptions() {
 }
 
 export async function toggleSubscription(channelId: string, isSubscribed: boolean) {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("session_token")?.value;
-
-    if (!token) return { success: false, error: "Unauthorized" };
-
-    try {
-        if (isSubscribed) {
-            await fetchApi(`/subscriptions/${channelId}`, { method: "DELETE" }, token);
-        } else {
-            await fetchApi(`/subscriptions/${channelId}`, { method: "POST" }, token);
-        }
-        revalidatePath("/subscriptions");
-        revalidatePath("/");
-        return { success: true };
-    } catch (error) {
-        console.error("toggleSubscription error:", error);
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : "Action failed",
-        };
+  try {
+    if (isSubscribed) {
+      await api.delete(`/subscriptions/${channelId}`);
+    } else {
+      await api.post(`/subscriptions/${channelId}`, {});
     }
+    revalidatePath("/subscriptions");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("toggleSubscription error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Action failed",
+    };
+  }
 }

@@ -8,7 +8,11 @@ import { getSession } from "@/actions/auth";
  * SessionGuard is a client component that periodically checks if the session is still valid.
  * This handles cases where a user stays on a page while their session expires (idle logout).
  */
-export function SessionGuard() {
+interface SessionGuardProps {
+  isAuthenticated?: boolean;
+}
+
+export function SessionGuard({ isAuthenticated = false }: SessionGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -19,15 +23,17 @@ export function SessionGuard() {
     if (!isProtectedRoute) return;
 
     try {
+      if (!isProtectedRoute && !isAuthenticated) return;
+
       const session = await getSession();
-      if (!session) {
-        console.log("SessionGuard: Session expired, redirecting to login");
-        router.refresh();
+      if (!session && isAuthenticated) {
+        console.log("SessionGuard: Session lost, redirecting to login");
+        router.push("/login");
       }
     } catch (error) {
-       console.error("SessionGuard: Error checking session", error);
+      console.error("SessionGuard: Error checking session", error);
     }
-  }, [pathname, router]);
+  }, [pathname, router, isAuthenticated]);
 
   useEffect(() => {
     checkSession();

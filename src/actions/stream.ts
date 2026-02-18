@@ -1,7 +1,8 @@
 "use server";
 
-import { fetchApi } from "@/lib/api-client";
+import { api } from "@/lib/api";
 import { Stream, StreamListResponse } from "@/types/api";
+import { cookies } from "next/headers";
 
 export async function getLiveStreams(
   params: {
@@ -16,10 +17,10 @@ export async function getLiveStreams(
   if (params.category) queryString.append("category", params.category);
 
   try {
-    const response = await fetchApi<StreamListResponse>(`/streams?${queryString.toString()}`, {
-      next: { revalidate: 0 }, 
+    const response = await api.get<StreamListResponse>(`/streams?${queryString.toString()}`, {
+      cache: "no-store",
     });
-    return response.streams;
+    return response.streams || [];
   } catch (error) {
     console.error("getLiveStreams error:", error);
     return [];
@@ -28,23 +29,20 @@ export async function getLiveStreams(
 
 export async function getStream(id: string) {
   try {
-    return await fetchApi<Stream>(`/streams/${id}`, { cache: "no-store" });
+    return await api.get<Stream>(`/streams/${id}`, { cache: "no-store" });
   } catch (error) {
     console.error(`getStream(${id}) error:`, error);
     return null;
   }
 }
 
-import { cookies } from "next/headers";
-
 export async function getIngestConfig() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
   let streamKey = cookieStore.get("stream_key")?.value;
 
   try {
-    if (!streamKey && token) {
-      const keyData = await fetchApi<{ streamKey: string }>("/streams/key", { cache: "no-store" }, token);
+    if (!streamKey) {
+      const keyData = await api.get<{ streamKey: string }>("/streams/key", { cache: "no-store" });
       if (keyData?.streamKey) {
         streamKey = keyData.streamKey;
       }
@@ -70,20 +68,8 @@ export async function getIngestConfig() {
 }
 
 export async function updateStreamSettings(settings: { title: string; category: string; visibility: string }) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-
-  if (!token) return { error: "Not authenticated" };
-
   try {
-    const res = await fetchApi(
-      "/streams/settings",
-      {
-        method: "PUT",
-        body: JSON.stringify(settings),
-      },
-      token,
-    );
+    const res = await api.put("/streams/settings", settings);
     return res;
   } catch (error) {
     console.error("updateSettings error (Ignored to unblock stream):", error);
@@ -93,13 +79,10 @@ export async function updateStreamSettings(settings: { title: string; category: 
 
 export async function getStreamKey() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
   const cookieKey = cookieStore.get("stream_key")?.value;
 
-  if (!token) return { error: "Not authenticated" };
-
   try {
-    const data = await fetchApi<{ streamKey: string }>("/streams/key", { cache: "no-store" }, token);
+    const data = await api.get<{ streamKey: string }>("/streams/key", { cache: "no-store" });
     let streamKey = data?.streamKey;
     if (streamKey && streamKey.startsWith("sk_live_")) {
       streamKey = streamKey.replace("sk_live_", "");
@@ -126,17 +109,9 @@ export async function getStreamKey() {
 
 export async function regenerateStreamKey() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-  if (!token) return { error: "Not authenticated" };
 
   try {
-    const data = await fetchApi<{ streamKey?: string; key?: string }>(
-      "/streams/key/regenerate",
-      {
-        method: "POST",
-      },
-      token,
-    );
+    const data = await api.post<{ streamKey?: string; key?: string }>("/streams/key/regenerate", {});
 
     let newKey = data.streamKey || data.key;
 
@@ -163,12 +138,8 @@ export async function regenerateStreamKey() {
 }
 
 export async function getMyStream() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-  if (!token) return null;
-
   try {
-    return await fetchApi<Stream>("/streams/me", { cache: "no-store" }, token);
+    return await api.get<Stream>("/streams/me", { cache: "no-store" });
   } catch {
     return null;
   }

@@ -16,33 +16,44 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}, t
     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    // Attempt to parse error message
-    const errorData = await response.json().catch(() => ({}));
-    let message = errorData.message || response.statusText;
-
-    if (typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-
-    throw new Error(`API Error ${response.status}: ${message}`);
-  }
-
-  // Handle 204 No Content or empty body
-  const contentType = response.headers.get("content-type");
-  if (response.status === 204 || !contentType || !contentType.includes("application/json")) {
-    return {} as T;
-  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    return await response.json();
-  } catch (e) {
-    console.warn("Failed to parse JSON response:", e);
-    return {} as T;
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      let message = errorData.message || response.statusText;
+
+      if (Array.isArray(message)) {
+        message = message.join(". ");
+      } else if (typeof message === "object") {
+        message = message.message || JSON.stringify(message);
+      }
+
+      throw new Error(`Status ${response.status}: ${message}`);
+    }
+
+    // Handle 204 No Content or empty body
+    const contentType = response.headers.get("content-type");
+    if (response.status === 204 || !contentType || !contentType.includes("application/json")) {
+      return {} as T;
+    }
+
+    try {
+      return await response.json();
+    } catch (e) {
+      console.warn("Failed to parse JSON response:", e);
+      return {} as T;
+    }
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
 }

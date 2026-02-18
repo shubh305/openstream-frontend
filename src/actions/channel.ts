@@ -1,16 +1,13 @@
 "use server";
 
-import { fetchApi } from "@/lib/api-client";
+import { api } from "@/lib/api";
 import { Channel } from "@/types/api";
-import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 export async function getChannelByHandle(handle: string) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-
   try {
     const cleanHandle = handle.replace("@", "");
-    return await fetchApi<Channel>(`/channels/${cleanHandle}`, { cache: "no-store" }, token);
+    return await api.get<Channel>(`/channels/${cleanHandle}`, { cache: "no-store" });
   } catch (error) {
     console.error(`getChannelByHandle(${handle}) error:`, error);
     return null;
@@ -18,13 +15,8 @@ export async function getChannelByHandle(handle: string) {
 }
 
 export async function getMyChannel() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-
-  if (!token) return null;
-
   try {
-    return await fetchApi<Channel>("/channels/me", { next: { revalidate: 60 } }, token);
+    return await api.get<Channel>("/channels/me", { next: { revalidate: 60 } });
   } catch (error) {
     console.error("getMyChannel error:", error);
     return null;
@@ -32,50 +24,29 @@ export async function getMyChannel() {
 }
 
 export async function subscribeToChannel(channelId: string) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-  
-  if (!token) return { error: "Login required" };
-
   try {
-    await fetchApi(`/subscriptions/${channelId}`, { method: "POST" }, token);
+    await api.post(`/subscriptions/${channelId}`, {});
     return { success: true };
-  } catch {
-    return { error: "Failed to subscribe" };
+  } catch (error) {
+    console.error("subscribeToChannel error:", error);
+    return { error: error instanceof Error ? error.message : "Failed to subscribe" };
   }
 }
 
 export async function unsubscribeFromChannel(channelId: string) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-
-  if (!token) return { error: "Login required" };
-
   try {
-    await fetchApi(`/subscriptions/${channelId}`, { method: "DELETE" }, token);
+    await api.delete(`/subscriptions/${channelId}`);
     return { success: true };
-  } catch {
-    return { error: "Failed to unsubscribe" };
+  } catch (error) {
+    console.error("unsubscribeFromChannel error:", error);
+    return { error: error instanceof Error ? error.message : "Failed to unsubscribe" };
   }
 }
 
 export async function updateChannel(data: { name?: string; handle?: string; description?: string }) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session_token")?.value;
-
-  if (!token) return { error: "Login required" };
-
   try {
-    await fetchApi(
-      "/channels/me",
-      {
-        method: "PUT",
-        body: JSON.stringify(data),
-      },
-      token,
-    );
+    await api.put("/channels/me", data);
 
-    const { revalidatePath } = await import("next/cache");
     revalidatePath("/studio/customization");
     revalidatePath("/channels/me");
     return { success: true };

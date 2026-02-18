@@ -9,5 +9,5 @@ export const WIP_LIMITS = {
   showLibrary: false,
 
   // Features
-  showPublishFeature: false,
+  showPublishFeature: true,
 };
