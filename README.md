@@ -2,93 +2,56 @@
 
 **Status:** `OPERATIONAL` // **Tier:** `UI_SPOKE` // **Platform:** `OCTANEBREW_HUB`
 
-**OpenStream** is a high-fidelity, real-time video delivery interface. It provides an immersive, "Noir-inspired" experience for consuming live broadcasts, engaging in persistent high-frequency chat, and managing VOD archives.
+**OpenStream** is a high-fidelity video portal built for the **Noir Aesthetic** - an immersive, cinema-grade interface designed for content creators and viewers options. Engineered for speed and responsiveness, it features a robust **Smart Upload Wizard**, sub-second latency playback, and a persistent, high-frequency chat engine. As a UI Spoke, it integrates seamlessly with the OctaneBrew Hub while maintaining a distinct, performance-optimized identity.
+
+## Quick Start
+
+1. **Setup**:
+   ```bash
+   npm install
+   ```
+2. **Launch**:
+   ```bash
+   npm run dev
+   ```
+3. **Access**: `http://localhost:3000` (ensure `openstream-backend` is running).
+
+### Prerequisites
+- **Node.js**: v22 or later
+- **Backend**: `openstream-backend` running on port 3001
+- **Gateway**: OctaneBrew Nginx Gateway for asset routing
+
+## Architecture
+OpenStream Frontend implements the following core philosophies:
+- **Vertical Feature Slices**: Modular architecture separating Auth, Chat, Player, and Upload domains.
+- **Hybrid State Management**: Zeta for local high-frequency state, Context for global auth.
+- **Noir Design System**: Strict adherence to the platform's dark-mode industrial aesthetic.
+
+## Technical Documentation Suite
+
+The authoritative documentation for the frontend platform is available in the `docs` directory:
+
+| Document | Description |
+| :--- | :--- |
+| [**Architecture**](./docs/architecture.md) | Component hierarchy, state strategies, and hooks. |
+| [**Frontend Deep Dive**](./docs/frontend.md) | Tech stack, performance optimizations.
+| [**Operations**](./docs/operations.md) | Build strategies, Docker deployment, and env vars. |
+| [**User Flows**](./docs/flows.md) | Visual sequence diagrams for Upload, Playback, and Chat. |
 
 ---
 
-## Design Philosophy: The Noir Aesthetic
-
-The portal adheres to the **Noir Minimalist Authority**:
-*   **High-Contrast Interface**: Deep black backgrounds (`#050505`) with terminal-green highlights.
-*   **Brutalist Visuals**: CRT scanline overlays and chromatic aberration effects on critical system notifications.
-*   **Precision Layout**: Monospaced typography for technical data, ensuring an engineering-first UX.
-
----
-
-## Directory Structure
-
-```text
-.
-├── app/               # Next.js App Router (Layouts & Pages)
-│   ├── (auth)/        # Authentication routes
-│   ├── dashboard/     # Streamer command center
-│   ├── watch/         # Video playback pages
-│   └── globals.css    # Noir base styles
-├── components/        # Reusable UI (VideoPlayer, Chat, etc.)
-├── hooks/             # Custom React Hooks (useSocket, useAuth)
-├── public/           # Static assets & OpenGraph images
-└── tailwind.config.ts # Theme & Noir tokens
-```
+## Primary Capabilities
+- **Smart Upload Wizard**: Client-side validation, TUS integration, and real-time processing feedback.
+- **Instant Playback**: Auto-switching HLS player that adapts to "Fast Lane" availability.
+- **Real-Time Chat**: Persistent WebSocket connection for high-frequency engagement.
+- **Dashboard**: Command center for managing VOD assets and stream keys.
 
 ---
 
-## Delivery & Playback Flow
-```mermaid
-graph LR
-    subgraph "Playback Request"
-        V[Viewer] -->|GET .m3u8| NG[Nginx Gateway]
-        NG -->|Proxy| S3[MinIO Storage]
-        S3 -->|Manifest/TS| V
-    end
-
-    subgraph "Real-Time Hook"
-        V <-->|WebSockets| OSB[OpenStream Backend]
-    end
-```
-
----
-
-## Core Features
-
-*   **Sub-Second Latency Playback**: Integrated **Video.js** player optimized for low-latency HLS fragments.
-*   **Fluidic Chat Engine**: Persistent, WebSocket-driven chat with real-time state synchronization across devices.
-*   **Uplink Monitor**: A terminal-style command deck for real-time stream diagnostics and bitrate monitoring.
-*   **Adaptive Theme Interpolation**: Leverages the shared platform design tokens for a consistent brand identity.
-
----
-
-## Tech Stack
-
-*   **Framework**: Next.js 16 (App Router)
-*   **State Management**: React Context & Hooks for localized stream state.
-*   **Real-time**: Socket.IO Client for duplex chat communication.
-*   **Video**: Video.js with HLS enhancement.
-*   **Styling**: Vanilla CSS with HSL variables for dynamic theme switching.
-
----
-
-## Resilience & Deployment
-
-### CI/CD Pipeline
-This repository uses a **reusable platform-wide GitHub Actions workflow** located in the [octanebrew-platform](https://github.com/shubh305/octanebrew-platform).
-
-*   **Workflow**: `.github/workflows/deploy.yml`
-*   **Strategy**: Containerized deployments via Docker Compose over SSH.
-*   **Verification**: Automated build checks before pushing to production.
-
-### Local Development
-```bash
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-```
-
----
-
-## Security & Optimization
-
-*   **Noir-Shield Integration**: All traffic is routed through the **OctaneBrew Nginx Gateway** with Cloudflare IP enforcement.
-*   **HTTP/2 Performance**: Fully optimized for H2 multiplexing to handle high-frequency asset loading and socket management.
-*   **Image Optimization**: Leverages Next.js `next/image` for high-fidelity thumbnails with minimal bandwidth impact.
+## Technology Stack
+- **Framework**: [Next.js 16](https://nextjs.org) (App Router)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com) + Noir Variables
+- **Player**: [Video.js](https://videojs.com/)
+- **Uploads**: [tus-js-client](https://github.com/tus/tus-js-client)
+- **Real-time**: [Socket.IO Client](https://socket.io/)
+- **Icons**: [Lucide React](https://lucide.dev)
