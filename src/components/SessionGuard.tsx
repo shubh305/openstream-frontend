@@ -20,15 +20,17 @@ export function SessionGuard({ isAuthenticated = false }: SessionGuardProps) {
     const protectedRoutes = ["/studio", "/upload", "/subscriptions", "/library", "/settings", "/playlist"];
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-    if (!isProtectedRoute) return;
+    if (!isProtectedRoute && !isAuthenticated) return;
 
     try {
-      if (!isProtectedRoute && !isAuthenticated) return;
-
       const session = await getSession();
-      if (!session && isAuthenticated) {
-        console.log("SessionGuard: Session lost, redirecting to login");
-        router.push("/login");
+
+      if (!session) {
+        if (isAuthenticated || isProtectedRoute) {
+          console.log("SessionGuard: Session lost/invalid, redirecting to login");
+          router.push("/login");
+          router.refresh();
+        }
       }
     } catch (error) {
       console.error("SessionGuard: Error checking session", error);

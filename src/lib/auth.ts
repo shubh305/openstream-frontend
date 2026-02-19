@@ -71,6 +71,15 @@ export async function refreshToken(): Promise<string | null> {
 
       if (!response.ok) {
         console.warn("[Auth] Refresh token failed, session expired");
+        try {
+          const cookieStore = await cookies();
+          cookieStore.delete("session_token");
+          cookieStore.delete("stream_key");
+          cookieStore.delete("session_username");
+          cookieStore.delete("refresh_token");
+        } catch (e) {
+          console.error("Failed to clear cookies on refresh fail", e);
+        }
         return null;
       }
 
