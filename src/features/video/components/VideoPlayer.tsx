@@ -33,6 +33,9 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
   const [isBuffering, setIsBuffering] = useState(false);
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl);
   const [posterUrl, setPosterUrl] = useState(initialPosterUrl);
+  const [buffered, setBuffered] = useState<{ start: number; end: number }[]>([]);
+  const [resolvedQuality, setResolvedQuality] = useState<string>("");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -115,23 +118,21 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
           }
         });
 
-        hls.on(Hls.Events.LEVEL_SWITCHED, () => {
-          console.log("[HLS] Level switched");
+        hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+          if (data.level !== -1 && hls.levels[data.level]) {
+            setResolvedQuality(`${hls.levels[data.level].height}p`);
+          }
         });
 
-        hls.on(Hls.Events.ERROR, (_, data) => {
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                hls.startLoad();
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                hls.recoverMediaError();
-                break;
-              default:
-                hls.destroy();
-                break;
-            }
+        hls.on(Hls.Events.LEVEL_LOADED, (_, data) => {
+          if (hls.levels[data.level]) {
+            setResolvedQuality(`${hls.levels[data.level].height}p`);
+          }
+        });
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (hls.loadLevel !== -1 && hls.levels[hls.loadLevel]) {
+            setResolvedQuality(`${hls.levels[hls.loadLevel].height}p`);
           }
         });
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -176,36 +177,44 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
     setHasEnded(false);
   }, [hasEnded, isPlaying]);
  
-  const handleQualityChange = useCallback((quality: string) => {
-    setCurrentQuality(quality);
-    if (!hlsRef.current) return;
- 
-    // Trigger visual buffering feedback immediately
-    setIsBuffering(true);
- 
-    if (quality === "auto") {
-      hlsRef.current.currentLevel = -1;
-    } else {
-      const height = parseInt(quality);
-      const levelIndex = hlsRef.current.levels.findIndex(l => l.height === height);
- 
-      if (levelIndex !== -1) {
-        hlsRef.current.currentLevel = levelIndex;
-        hlsRef.current.loadLevel = levelIndex;
+  const handleQualityChange = useCallback(
+    (quality: string) => {
+      if (quality === currentQuality) {
+        setCurrentQuality("auto");
+        if (hlsRef.current) hlsRef.current.currentLevel = -1;
+        return;
+      }
+
+      setCurrentQuality(quality);
+      if (!hlsRef.current) return;
+
+      setIsBuffering(true);
+
+      if (quality === "auto") {
+        hlsRef.current.currentLevel = -1;
       } else {
-        if (videoUrl && !videoUrl.includes("?t=")) {
-          const separator = videoUrl.includes("?") ? "&" : "?";
-          const newUrl = `${videoUrl}${separator}t=${Date.now()}`;
-          setVideoUrl(newUrl);
+        const height = parseInt(quality);
+        const levelIndex = hlsRef.current.levels.findIndex(l => l.height === height);
+
+        if (levelIndex !== -1) {
+          hlsRef.current.currentLevel = levelIndex;
+          hlsRef.current.loadLevel = levelIndex;
+        } else {
+          if (videoUrl && !videoUrl.includes("?t=")) {
+            const separator = videoUrl.includes("?") ? "&" : "?";
+            const newUrl = `${videoUrl}${separator}t=${Date.now()}`;
+            setVideoUrl(newUrl);
+          }
         }
       }
-    }
-  }, [videoUrl, setVideoUrl]);
+    },
+    [currentQuality, videoUrl, setVideoUrl],
+  );
  
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
  
   const handleVolumeChange = useCallback((value: number[]) => {
@@ -251,17 +260,17 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
       ref={containerRef}
       className="group relative h-full w-full overflow-hidden bg-black flex items-center justify-center cursor-default"
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
+      onMouseLeave={() => {
+        if (isPlaying) setShowControls(false);
+      }}
     >
       <video
         ref={videoRef}
         className="h-full w-full max-h-full object-contain cursor-pointer"
         onClick={handlePlayPause}
         onTimeUpdate={() => {
-          if (videoRef.current) {
-            if (!isBuffering) {
-              setCurrentTime(videoRef.current.currentTime);
-            }
+          if (videoRef.current && !isBuffering) {
+            setCurrentTime(videoRef.current.currentTime);
           }
         }}
         onLoadedMetadata={() => setDuration(videoRef.current?.duration || 0)}
@@ -278,6 +287,18 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
           setHasEnded(true);
           setShowControls(true);
           setIsBuffering(false);
+        }}
+        onProgress={() => {
+          if (videoRef.current) {
+            const ranges = [];
+            for (let i = 0; i < videoRef.current.buffered.length; i++) {
+              ranges.push({
+                start: videoRef.current.buffered.start(i),
+                end: videoRef.current.buffered.end(i),
+              });
+            }
+            setBuffered(ranges);
+          }
         }}
         playsInline
       />
@@ -299,7 +320,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
           {currentTime === 0 && posterUrl && <Image src={posterUrl} alt="Poster" fill className="object-cover -z-10 opacity-70" priority />}
           <Button
             size="icon"
-            className="h-20 w-20 rounded-full bg-electric-lime text-black hover:bg-electric-lime/90 hover:scale-110 transition-all shadow-2xl shadow-electric-lime/20"
+            className="h-20 w-20 rounded-full bg-electric-lime text-black hover:bg-electric-lime/90 hover:scale-110 transition-all shadow-2xl shadow-electric-lime/20 cursor-pointer"
             onClick={handlePlayPause}
           >
             {hasEnded ? <RotateCcw className="h-10 w-10" /> : <Play className="h-10 w-10 ml-1.5" />}
@@ -315,17 +336,54 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
         )}
       >
         {/* Progress Bar */}
-        <div className="mb-4">
-          <Slider
-            value={[currentTime]}
-            min={0}
-            max={duration || 100}
-            step={0.1}
-            onValueChange={val => {
-              if (videoRef.current) videoRef.current.currentTime = val[0];
+        <div className="group/progress-container mb-4 px-2">
+          <div
+            className="relative h-1 group-hover/progress-container:h-2 transition-all duration-150 cursor-pointer flex items-center"
+            onMouseDown={e => {
+              const handleScrub = (moveEvent: MouseEvent) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const percent = Math.min(Math.max((moveEvent.clientX - rect.left) / rect.width, 0), 1);
+                const newTime = percent * duration;
+                if (videoRef.current) videoRef.current.currentTime = newTime;
+                setCurrentTime(newTime);
+              };
+
+              handleScrub(e.nativeEvent);
+
+              const onMouseMove = (moveEvent: MouseEvent) => handleScrub(moveEvent);
+              const onMouseUp = () => {
+                window.removeEventListener("mousemove", onMouseMove);
+                window.removeEventListener("mouseup", onMouseUp);
+              };
+
+              window.addEventListener("mousemove", onMouseMove);
+              window.addEventListener("mouseup", onMouseUp);
             }}
-            className="cursor-pointer"
-          />
+          >
+            {/* Background */}
+            <div className="absolute inset-0 bg-white/20 rounded-full" />
+
+            {/* Buffered Ranges */}
+            {buffered.map((range, i) => (
+              <div
+                key={i}
+                className="absolute inset-y-0 bg-white/30 rounded-full"
+                style={{
+                  left: `${(range.start / duration) * 100}%`,
+                  width: `${((range.end - range.start) / duration) * 100}% `,
+                }}
+              />
+            ))}
+
+            {/* Progress */}
+            <div className="absolute inset-y-0 bg-electric-lime rounded-full" style={{ width: `${(currentTime / duration) * 100}%` }} />
+
+            {/* Scrubber Thumb */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-electric-lime rounded-full shadow-lg scale-0 group-hover/progress-container:scale-100 transition-transform duration-150"
+              style={{ left: `calc(${(currentTime / duration) * 100}% - 6px)` }}
+            />
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-4">
@@ -351,26 +409,53 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Quality Selector */}
             {availableQualities.length > 1 && (
-              <DropdownMenu>
+              <DropdownMenu onOpenChange={setIsSettingsOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 h-10 gap-2 px-3">
+                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 h-10 gap-2 px-3 relative cursor-pointer group">
                     <Settings className="h-5 w-5" />
-                    <span className="text-xs font-bold hidden sm:inline uppercase">{currentQuality}</span>
+                    <span className="text-xs font-bold hidden sm:inline uppercase">
+                      {currentQuality === "auto" ? (isSettingsOpen ? "Auto" : `Auto${resolvedQuality ? ` (${resolvedQuality})` : ""}`) : currentQuality}
+                    </span>
+                    {((currentQuality === "auto" ? resolvedQuality : currentQuality).includes("720") || (currentQuality === "auto" ? resolvedQuality : currentQuality).includes("1080")) && (
+                      <span className="absolute -top-1 -right-1 px-1 bg-signal-red text-[10px] font-black leading-tight rounded-sm text-white shadow-lg z-10 border border-black/20 font-black">
+                        HD
+                      </span>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-noir-terminal border-white/10 text-white min-w-[120px]">
+                <DropdownMenuContent align="end" className="bg-noir-terminal border-white/10 text-white min-w-[160px]">
                   <DropdownMenuLabel className="text-[10px] uppercase text-muted-text">Quality</DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/5" />
-                  {availableQualities.map(q => (
-                    <DropdownMenuItem
-                      key={q}
-                      className={cn("flex items-center justify-between gap-4 focus:bg-white/10 focus:text-white cursor-pointer", currentQuality === q && "text-electric-lime")}
-                      onClick={() => handleQualityChange(q)}
-                    >
-                      <span className="text-xs font-bold uppercase">{q}</span>
-                      {currentQuality === q && <Check className="h-3 w-3" />}
-                    </DropdownMenuItem>
-                  ))}
+
+                  {/* Resolution Options */}
+                  {availableQualities
+                    .filter(q => q !== "auto")
+                    .map(q => {
+                      const isActive = currentQuality === q;
+                      return (
+                        <DropdownMenuItem
+                          key={q}
+                          className={cn("flex items-center justify-between gap-4 focus:bg-white/10 focus:text-white cursor-pointer", isActive && "text-electric-lime")}
+                          onClick={() => handleQualityChange(q)}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold uppercase">{q}</span>
+                            {(q.includes("720") || q.includes("1080")) && <span className="text-[8px] opacity-70 font-black leading-none">HD</span>}
+                          </div>
+                          {isActive && <Check className="h-3 w-3" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
+
+                  <DropdownMenuSeparator className="bg-white/5" />
+
+                  <DropdownMenuItem
+                    className={cn("flex items-center justify-between gap-4 focus:bg-white/10 focus:text-white cursor-pointer", currentQuality === "auto" && "text-electric-lime")}
+                    onClick={() => handleQualityChange("auto")}
+                  >
+                    <span className="text-xs font-bold uppercase">Auto</span>
+                    {currentQuality === "auto" && <Check className="h-3 w-3" />}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -380,6 +465,22 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
             </Button>
           </div>
         </div>
+      </div>
+      {/* Mini Progress Bar*/}
+      <div className={cn("absolute bottom-0 left-0 right-0 h-1 bg-white/10 transition-opacity duration-300 z-10", !showControls && isPlaying ? "opacity-100" : "opacity-0")}>
+        {/* Buffered */}
+        {buffered.map((range, i) => (
+          <div
+            key={i}
+            className="absolute inset-y-0 bg-white/20"
+            style={{
+              left: `${(range.start / duration) * 100}%`,
+              width: `${((range.end - range.start) / duration) * 100}%`,
+            }}
+          />
+        ))}
+        {/* Progress */}
+        <div className="absolute inset-y-0 bg-electric-lime" style={{ width: `${(currentTime / duration) * 100}%` }} />
       </div>
     </div>
   );

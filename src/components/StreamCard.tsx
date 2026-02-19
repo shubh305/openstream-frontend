@@ -16,12 +16,12 @@ export function StreamCard({ stream }: StreamCardProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // Only show video if it's a real HLS stream
-  const hasRealHlsUrl = stream.hlsPlaybackUrl?.endsWith(".m3u8") ?? false;
+  // Only show video if it's a real HLS stream and status is live
+  const canLivePreview = stream.status === "live" && (stream.hlsPlaybackUrl?.endsWith(".m3u8") ?? false);
 
   const initPlayer = useCallback(
     async (shouldPlay = false) => {
-      if (!videoRef.current || !hasRealHlsUrl || playerRef.current) return;
+      if (!videoRef.current || !canLivePreview || playerRef.current) return;
 
       try {
         const videojs = (await import("video.js")).default;
@@ -58,19 +58,21 @@ export function StreamCard({ stream }: StreamCardProps) {
 
         player.on("error", () => {
           setIsVideoReady(false);
+          player.dispose();
+          playerRef.current = null;
         });
       } catch (e) {
         console.error("Failed to initialize video player:", e);
       }
     },
-    [hasRealHlsUrl, stream.hlsPlaybackUrl],
+    [canLivePreview, stream.hlsPlaybackUrl],
   );
 
   // Intersection Observer to lazy-load video player in background
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !hasRealHlsUrl) return;
+    if (typeof window === "undefined" || !canLivePreview) return;
 
     const observer = new IntersectionObserver(
       entries => {
@@ -86,8 +88,27 @@ export function StreamCard({ stream }: StreamCardProps) {
       observer.observe(containerRef.current);
     }
 
-    return () => observer.disconnect();
-  }, [hasRealHlsUrl, initPlayer]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [canLivePreview, initPlayer]);
+
+  useEffect(() => {
+    if (!canLivePreview && playerRef.current) {
+      playerRef.current.dispose();
+      playerRef.current = null;
+      setIsVideoReady(false);
+    }
+  }, [canLivePreview]);
+
+  useEffect(() => {
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleMouseEnter = useCallback(() => {
     setIsHovering(true);
@@ -107,7 +128,7 @@ export function StreamCard({ stream }: StreamCardProps) {
       <div ref={containerRef} className="relative aspect-video w-full rounded-lg overflow-hidden bg-noir-terminal">
         <StreamThumbnail url={stream.thumbnailUrl} title={stream.title} className={`transition-opacity duration-300 ${isVideoReady ? "opacity-0" : "opacity-100"}`} />
 
-        {hasRealHlsUrl && (
+        {canLivePreview && (
           <div className={`stream-card-player absolute inset-0 transition-opacity duration-500 ${isVideoReady ? "opacity-100" : "opacity-0"}`}>
             <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
             <video ref={videoRef} className="video-js vjs-fluid" playsInline muted />

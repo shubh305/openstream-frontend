@@ -128,15 +128,10 @@ export function LiveVideoPlayer({
     <div className={`relative w-full ${className}`}>
       {/* Video.js CSS */}
       <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-      
+
       {/* Video Element */}
       <div data-vjs-player>
-        <video
-          ref={videoRef}
-          className="video-js vjs-big-play-centered vjs-theme-noir"
-          poster={poster}
-          playsInline
-        >
+        <video ref={videoRef} className="video-js vjs-big-play-centered vjs-theme-noir" poster={poster} playsInline>
           <p className="vjs-no-js">
             To view this video please enable JavaScript, and consider upgrading to a web browser that{" "}
             <a href="https://videojs.com/html5-video-support/" target="_blank" rel="noreferrer">
@@ -175,9 +170,7 @@ export function LiveVideoPlayer({
             </div>
             <div className="space-y-2">
               <p className="text-xl font-bold text-white">Stream Ended</p>
-              <p className="text-sm text-muted-text max-w-xs">
-                This stream has ended. Thanks for watching!
-              </p>
+              <p className="text-sm text-muted-text max-w-xs">This stream has ended. Thanks for watching!</p>
             </div>
           </div>
         </div>
@@ -189,7 +182,12 @@ export function LiveVideoPlayer({
           <div className="flex flex-col items-center gap-3 text-center p-6">
             <div className="w-16 h-16 rounded-full bg-noir-terminal flex items-center justify-center">
               <svg className="w-8 h-8 text-muted-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
             </div>
             <div className="space-y-1">
@@ -210,10 +208,51 @@ export function LiveVideoPlayer({
           --vjs-theme-noir--secondary: #1e1e1e;
         }
         .vjs-theme-noir .vjs-control-bar {
-          background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-          height: 4em;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.5), transparent);
+          height: 4.5em;
+          padding-bottom: 0.5em;
+          padding-left: 0.5em;
+          padding-right: 0.5em;
+          display: flex;
+          align-items: center;
         }
-        .vjs-theme-noir .vjs-play-progress,
+        .vjs-theme-noir .vjs-progress-control {
+          position: absolute;
+          bottom: 4.5em;
+          left: 0;
+          right: 0;
+          width: 100%;
+          height: 0.3em;
+          transition: height 0.1s ease-in-out;
+        }
+        .vjs-theme-noir .vjs-progress-control:hover {
+          height: 0.5em;
+        }
+        .vjs-theme-noir .vjs-progress-holder {
+          margin: 0;
+          height: 100%;
+          background: rgba(255, 255, 255, 0.2);
+        }
+        .vjs-theme-noir .vjs-play-progress {
+          background: var(--vjs-theme-noir--primary);
+        }
+        .vjs-theme-noir .vjs-play-progress:before {
+          font-size: 1.2em;
+          top: -0.35em;
+          color: var(--vjs-theme-noir--primary);
+          opacity: 0;
+          transition: opacity 0.1s ease-in-out;
+        }
+        .vjs-theme-noir .vjs-progress-control:hover .vjs-play-progress:before {
+          opacity: 1;
+        }
+        .vjs-theme-noir .vjs-load-progress {
+          background: rgba(255, 255, 255, 0.3);
+        }
+        .vjs-theme-noir .vjs-load-progress div {
+          background: transparent;
+        }
+
         .vjs-theme-noir .vjs-volume-level {
           background: var(--vjs-theme-noir--primary);
         }
@@ -225,10 +264,16 @@ export function LiveVideoPlayer({
           height: 80px;
           line-height: 80px;
           font-size: 40px;
+          box-shadow: 0 0 30px rgba(232, 255, 30, 0.2);
+          cursor: pointer;
         }
         .vjs-theme-noir .vjs-big-play-button:hover {
           background: var(--vjs-theme-noir--primary);
-          opacity: 0.9;
+          transform: scale(1.1);
+          transition: all 0.2s;
+        }
+        .vjs-theme-noir .vjs-control {
+          cursor: pointer;
         }
         .vjs-theme-noir .vjs-big-play-button .vjs-icon-placeholder:before {
           color: #000;
