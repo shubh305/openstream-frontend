@@ -1,7 +1,8 @@
 import { search } from "@/actions/search";
 import Image from "next/image";
 import Link from "next/link";
-import { SearchIcon, Users, Video as VideoIcon } from "lucide-react";
+import { SearchIcon, Users, Video as VideoIcon, Radio } from "lucide-react";
+import { StreamCard } from "@/components/StreamCard";
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string }>;
@@ -17,14 +18,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <SearchIcon className="w-16 h-16 text-muted-text mb-4" />
           <h1 className="text-2xl font-bold text-foreground mb-2">Search OpenStream</h1>
-          <p className="text-muted-text">Enter a search term to find videos and channels.</p>
+          <p className="text-muted-text">Enter a search term to find videos, channels, and live streams.</p>
         </div>
       </div>
     );
   }
 
   const results = await search(query);
-  const totalResults = results.videos.length + results.channels.length;
+  const totalResults = results.videos.length + results.channels.length + results.streams.length;
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-8">
@@ -43,7 +44,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <p className="text-muted-text">Try different keywords or check your spelling.</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-12">
+          {/* Live Streams Section */}
+          {results.streams.length > 0 && (
+            <section>
+              <h2 className="flex items-center gap-2 text-sm font-bold tracking-widest text-signal-red mb-4 uppercase">
+                <Radio className="w-4 h-4 animate-pulse" />
+                Live Streams ({results.streams.length})
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {results.streams.map(stream => (
+                  <StreamCard key={stream.id} stream={stream} />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Channels Section */}
           {results.channels.length > 0 && (
             <section>

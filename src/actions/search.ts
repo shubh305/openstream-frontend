@@ -1,18 +1,19 @@
 "use server";
 
 import { api } from "@/lib/api";
-import { Video, Channel } from "@/types/api";
+import { Video, Channel, Stream } from "@/types/api";
 
 interface SearchResponse {
   results: {
     videos: Video[];
     channels: Channel[];
+    streams: Stream[];
   };
   query: string;
   totalResults: number;
 }
 
-export async function search(query: string, type: "video" | "channel" | "all" = "all") {
+export async function search(query: string, type: "video" | "channel" | "stream" | "all" = "all") {
   const queryString = new URLSearchParams({ q: query, limit: "50" });
 
   try {
@@ -22,13 +23,15 @@ export async function search(query: string, type: "video" | "channel" | "all" = 
 
     const videos = response?.results?.videos || [];
     const channels = response?.results?.channels || [];
+    const streams = response?.results?.streams || [];
 
-    if (type === "video") return { videos, channels: [] };
-    if (type === "channel") return { videos: [], channels };
-    return { videos, channels };
+    if (type === "video") return { videos, channels: [], streams: [] };
+    if (type === "channel") return { videos: [], channels, streams: [] };
+    if (type === "stream") return { videos: [], channels: [], streams };
+    return { videos, channels, streams };
   } catch (error) {
     console.error("search error:", error);
-    return { videos: [], channels: [] };
+    return { videos: [], channels: [], streams: [] };
   }
 }
 
