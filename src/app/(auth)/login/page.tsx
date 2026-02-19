@@ -4,29 +4,32 @@ import { login } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import { Loader2, Mail, Lock } from "lucide-react";
 import Link from "next/link";
-
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
+
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
-    const result = await login(data);
 
-    if (result?.error) {
-      setError(result.error);
-      toast.error("Login failed", {
-        description: result.error,
-      });
-      setIsLoading(false);
-    }
+    startTransition(async () => {
+      const result = await login(data);
+
+      if (result?.error) {
+        setError(result.error);
+        toast.error("Login failed", {
+          description: result.error,
+        });
+        setIsLoading(false);
+      }
+    });
   };
 
   return (

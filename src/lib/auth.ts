@@ -77,8 +77,8 @@ export async function refreshToken(): Promise<string | null> {
           cookieStore.delete("stream_key");
           cookieStore.delete("session_username");
           cookieStore.delete("refresh_token");
-        } catch (e) {
-          console.error("Failed to clear cookies on refresh fail", e);
+        } catch {
+          // Ignore error
         }
         return null;
       }

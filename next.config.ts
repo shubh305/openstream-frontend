@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    domains: ["localhost", "127.0.0.1", "129.154.43.166", "storage.octanebrew.dev"],
     remotePatterns: [
       {
         protocol: "https",
@@ -31,6 +30,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "129.154.43.166",
+      },
+      {
+        protocol: "http",
+        hostname: "storage.octanebrew.dev",
       },
       {
         protocol: "https",

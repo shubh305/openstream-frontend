@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Play } from "lucide-react";
+import { MoreVertical, Play, Eye } from "lucide-react";
 import Link from "next/link";
 import { SubscribeButton } from "@/features/video/components/SubscribeButton";
+import { StreamThumbnail } from "@/components/StreamThumbnail";
 import { Channel, Video, Stream, Playlist } from "@/types/api";
 
 interface ChannelContentProps {
@@ -241,75 +242,67 @@ export function ChannelContent({ channel, videos, liveStreams, playlists, isOwne
 
 function HubVideoCard({ video }: { video: Video }) {
     return (
-        <Link href={`/watch/${video.id}`} className="block">
-            <div className="group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                {/* Thumbnail Area */}
-                <div className="aspect-video relative overflow-hidden">
-                     <Image 
-                        src={video.thumbnailUrl} 
-                        alt={video.title} 
-                        fill 
-                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-60" />
-                    
-                    {/* Duration Badge */}
-                    <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-[10px] font-bold font-mono border border-white/10">
-                        {video.duration}
-                    </div>
-                    
-                    {/* Play Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                            <Play className="w-5 h-5 text-white fill-white" />
-                        </div>
-                    </div>
-                </div>
+      <Link href={`/watch/${video.id}`} className="block">
+        <div className="group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+          {/* Thumbnail Area */}
+          <div className="aspect-video relative overflow-hidden">
+            <StreamThumbnail url={video.thumbnailUrl} title={video.title} className="w-full h-full" />
 
-                {/* Content Area */}
-                <div className="p-4 relative">
-                    <h3 className="font-bold text-white leading-snug line-clamp-2 mb-2 group-hover:text-electric-lime transition-colors">
-                        {video.title}
-                    </h3>
-                    <div className="flex items-center justify-between text-xs text-white/40">
-                        <div className="flex items-center gap-2">
-                            <span>{video.views ? video.views.toLocaleString() : 0} views</span>
-                            <span className="w-0.5 h-0.5 rounded-full bg-white/40" />
-                            <span>{video.uploadedAt}</span>
-                        </div>
-                        <MoreVertical className="w-4 h-4 hover:text-white cursor-pointer" />
-                    </div>
-                </div>
+            {/* Duration Badge */}
+            <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-[10px] font-bold font-mono border border-white/10">{video.duration}</div>
+
+            {/* Play Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                <Play className="w-5 h-5 text-white fill-white" />
+              </div>
             </div>
-        </Link>
+          </div>
+
+          {/* Content Area */}
+          <div className="p-4 relative">
+            <h3 className="font-bold text-white leading-snug line-clamp-2 mb-2 group-hover:text-electric-lime transition-colors">{video.title}</h3>
+            <div className="flex items-center justify-between text-xs text-white/40">
+              <div className="flex items-center gap-2">
+                <span>{video.views ? video.views.toLocaleString() : 0} views</span>
+                <span className="w-0.5 h-0.5 rounded-full bg-white/40" />
+                <span>{video.uploadedAt}</span>
+              </div>
+              <MoreVertical className="w-4 h-4 hover:text-white cursor-pointer" />
+            </div>
+          </div>
+        </div>
+      </Link>
     );
 }
 
 function HubStreamCard({ stream }: { stream: Stream }) {
     return (
-         <Link href={`/live/${stream.creator.username}`} className="block">
-            <div className="group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden hover:border-electric-lime/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                {/* Thumbnail Area */}
-                <div className="aspect-video relative overflow-hidden">
-                     <Image 
-                        src={stream.thumbnailUrl || "/placeholder.jpg"} 
-                        alt={stream.title} 
-                        fill 
-                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                     />
-                    <div className="absolute top-3 left-3 bg-signal-red px-2 py-1 rounded text-xs font-bold text-white uppercase animate-pulse">Live</div>
-                </div>
+      <Link href={`/live/${stream.creator.username}`} className="block">
+        <div className="group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden hover:border-electric-lime/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+          {/* Thumbnail Area */}
+          <div className="aspect-video relative overflow-hidden bg-noir-terminal">
+            <StreamThumbnail url={stream.thumbnailUrl} title={stream.title} />
 
-                {/* Content Area */}
-                <div className="p-4">
-                    <h3 className="font-bold text-white leading-snug line-clamp-2 mb-2 group-hover:text-electric-lime transition-colors">
-                        {stream.title}
-                    </h3>
-                    <p className="text-white/40 text-xs">{stream.viewerCount} watching</p>
-                </div>
+            {/* Live Badge */}
+            <div className="absolute top-3 left-3 bg-signal-red px-2.5 py-1 rounded-md text-[10px] font-bold text-white uppercase tracking-wider animate-pulse flex items-center gap-1.5 shadow-lg shadow-signal-red/20 z-10">
+              <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+              Live
             </div>
-        </Link>
+
+            {/* Viewers Overlay */}
+            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-bold font-mono text-white border border-white/10 flex items-center gap-2 z-10">
+              <Eye className="w-3 h-3 text-white/70" />
+              <span className="text-white">{stream.viewerCount || 0} viewers</span>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="p-4">
+            <h3 className="font-bold text-white leading-snug line-clamp-2 group-hover:text-electric-lime transition-colors">{stream.title}</h3>
+            <p className="text-xs text-white/40 mt-1 line-clamp-1">{stream.category || "Just Chatting"}</p>
+          </div>
+        </div>
+      </Link>
     );
 }

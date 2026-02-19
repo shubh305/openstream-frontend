@@ -10,6 +10,7 @@ export interface StreamSettingsData {
   description: string;
   category: string;
   visibility: Visibility;
+  thumbnailUrl?: string;
 }
 
 interface StudioSettingsProps {
@@ -60,6 +61,7 @@ export function StudioSettings({ settings, onChange, disabled, className }: Stud
           rows={4}
           className="w-full bg-noir-bg border border-noir-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-text/50 focus:border-electric-lime focus:outline-none resize-none transition-colors"
         />
+        <p className="text-[10px] text-muted-text mt-1.5 flex justify-end">{settings.description.length}/500</p>
       </div>
 
       {/* Visibility */}

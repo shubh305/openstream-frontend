@@ -123,7 +123,7 @@ export function LiveChat({ streamId, token }: LiveChatProps) {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 min-h-0 p-6" ref={scrollRef}>
+      <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollRef}>
         <div className="space-y-6">
           {messages.length === 0 && <div className="text-center text-muted-text text-sm py-8">{isConnected ? "No messages yet. Be the first to chat!" : "Connecting to chat..."}</div>}
           {messages.map(msg => (
@@ -153,7 +153,7 @@ export function LiveChat({ streamId, token }: LiveChatProps) {
       </ScrollArea>
 
       {/* Input */}
-      <div className="border-t border-noir-border p-6 bg-noir-bg/50">
+      <div className="border-t border-noir-border p-4 bg-noir-bg/50">
         <form className="flex gap-3" onSubmit={handleSubmit}>
           <Input
             value={newMessage}

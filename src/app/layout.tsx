@@ -38,13 +38,15 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${interTight.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground font-mono min-h-screen relative`}>
+      <body className={`${interTight.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground font-mono min-h-screen relative overflow-x-hidden`}>
         <SidebarProvider>
           <SessionGuard isAuthenticated={!!session} />
-          <Sidebar subscriptions={subscriptions} isAuthenticated={!!session} />
-          <div className="flex min-h-screen flex-col relative z-0 md:pl-16">
-            <Navbar user={session} />
-            <main className="flex-1 flex flex-col">{children}</main>
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar subscriptions={subscriptions} isAuthenticated={!!session} />
+            <div className="flex-1 flex flex-col relative z-0 overflow-y-auto h-full w-full">
+              <Navbar user={session} />
+              <div className="flex-1 flex flex-col min-h-0">{children}</div>
+            </div>
           </div>
         </SidebarProvider>
         <Toaster />

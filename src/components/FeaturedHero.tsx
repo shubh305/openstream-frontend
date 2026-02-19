@@ -5,7 +5,7 @@ import Image from "next/image";
 import type { Stream, Video } from "@/types/api";
 import { LiveVideoPlayer } from "@/components/LiveVideoPlayer";
 
-const PLACEHOLDER_THUMBNAIL = "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=800&q=80";
+import { StreamThumbnail } from "@/components/StreamThumbnail";
 
 interface FeaturedHeroProps {
   content: Stream | Video;
@@ -32,8 +32,8 @@ export function FeaturedHero({ content }: FeaturedHeroProps) {
   // If it's a live stream with a REAL HLS URL, show the video player
   if (isCurrentlyLive && hasRealHlsUrl) {
     return (
-      <div className="relative rounded-2xl overflow-hidden border border-noir-border bg-noir-terminal group">
-        <LiveVideoPlayer hlsUrl={playbackUrl!} poster={content.thumbnailUrl || PLACEHOLDER_THUMBNAIL} autoplay={true} />
+      <div className="relative rounded-2xl overflow-hidden border border-noir-border bg-noir-terminal group h-full w-full">
+        <LiveVideoPlayer hlsUrl={playbackUrl!} poster={content.thumbnailUrl || ""} autoplay={true} />
         {/* Creator info overlay */}
         <Link href={href} className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 z-20 hover:from-black/95 transition-colors">
           <div className="flex items-center gap-3">
@@ -48,14 +48,13 @@ export function FeaturedHero({ content }: FeaturedHeroProps) {
     );
   }
 
-  // Fallback to static thumbnail for VODs or streams without playback URL
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-noir-border bg-noir-terminal group">
-      <Link href={href}>
-        <div className="aspect-video relative">
-          <Image src={content.thumbnailUrl || PLACEHOLDER_THUMBNAIL} alt={content.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+    <div className="relative rounded-2xl overflow-hidden border border-noir-border bg-noir-terminal group h-full w-full">
+      <Link href={href} className="block h-full w-full">
+        <div className="h-full w-full relative">
+          <StreamThumbnail url={content.thumbnailUrl} title={content.title} className="w-full h-full" />
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
 
           {/* Live Badge */}
           {isCurrentlyLive ? (

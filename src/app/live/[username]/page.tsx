@@ -7,6 +7,8 @@ import { cookies } from "next/headers";
 import { LiveChat } from "@/features/chat/components/LiveChat";
 import { LiveViewerCount } from "@/components/LiveViewerCount";
 
+import { SubscribeButton } from "@/features/video/components/SubscribeButton";
+
 interface LiveStreamPageProps {
   params: Promise<{
     username: string;
@@ -37,91 +39,74 @@ export default async function LiveStreamPage({ params }: LiveStreamPageProps) {
   const hasRealHlsUrl = stream.hlsPlaybackUrl?.endsWith('.m3u8') ?? false;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-6">
-      {/* Main Video Section */}
-      <div className="flex-1">
-        {/* Video Player */}
-        <div className="aspect-video bg-noir-terminal rounded-xl overflow-hidden">
-          {hasRealHlsUrl ? (
-            <LiveVideoPlayer
-              hlsUrl={stream.hlsPlaybackUrl!}
-              poster={stream.thumbnailUrl}
-              autoplay={true}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full bg-noir-border flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-muted-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+    <div className="h-[calc(100vh-64px)] w-full flex flex-col lg:flex-row bg-noir-bg overflow-hidden">
+      {/* Main Video & Info Section */}
+      <div className="flex-1 w-full flex flex-col min-h-0 overflow-y-auto lg:overflow-visible no-scrollbar">
+        <div className="flex-1 min-h-0 flex flex-col lg:p-6 gap-4 lg:gap-6">
+          {/* Video Player */}
+          <div className="w-full aspect-video bg-black shrink-0 lg:rounded-xl overflow-hidden shadow-2xl border-b lg:border border-noir-border relative group">
+            {hasRealHlsUrl ? (
+              <LiveVideoPlayer hlsUrl={stream.hlsPlaybackUrl!} poster={stream.thumbnailUrl} autoplay={true} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-noir-terminal/50 backdrop-blur-sm">
+                <div className="text-center space-y-4">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-noir-border/30 flex items-center justify-center animate-pulse">
+                    <div className="w-10 h-10 border-2 border-muted-text/30 border-t-electric-lime rounded-full animate-spin" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold tracking-wide">STREAM STARTING</p>
+                    <p className="text-muted-text text-xs font-mono mt-1">Status check: {stream.status}</p>
+                  </div>
                 </div>
-                <p className="text-white font-medium">Stream Starting...</p>
-                <p className="text-muted-text text-sm">Please wait for the stream to begin</p>
+              </div>
+            )}
+          </div>
+
+          {/* Stream Info */}
+          <div className="px-4 pb-4 lg:px-0 space-y-4 lg:space-y-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1 min-w-0">
+                <h1 className="text-lg md:text-2xl font-bold text-white tracking-tight line-clamp-2">{stream.title}</h1>
+                <p className="text-electric-lime text-xs font-mono font-medium uppercase tracking-wider">{stream.category || "Just Chatting"}</p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 bg-signal-red/10 border border-signal-red/20 px-2 py-1 rounded-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-signal-red animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+                  <span className="text-[10px] font-bold text-signal-red uppercase tracking-wider">Live</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-noir-terminal border border-noir-border px-2 py-1 rounded-md">
+                  <LiveViewerCount streamId={stream.id} initialCount={stream.viewerCount || 0} />
+                </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Stream Info */}
-        <div className="mt-4 space-y-4">
-          <h1 className="text-2xl font-bold text-white">{stream.title}</h1>
-
-          <div className="flex items-center justify-between">
-            <Link href={`/${streamerInfo?.username}`} className="flex items-center gap-3 group">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-noir-border">
-                {streamerInfo?.avatarUrl ? (
-                  <Image
-                    src={streamerInfo.avatarUrl}
-                    alt={streamerInfo.username || "Streamer"}
-                    width={48}
-                    height={48}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
-                    {(streamerInfo?.username || "U")[0].toUpperCase()}
+            <div className="flex items-center justify-between p-3 lg:p-4 bg-noir-terminal/50 backdrop-blur-sm rounded-xl border border-noir-border">
+              <Link href={`/${streamerInfo?.username}`} className="flex items-center gap-3 group min-w-0">
+                <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden bg-noir-border border-2 border-transparent group-hover:border-electric-lime transition-all p-0.5 shrink-0">
+                  <div className="w-full h-full rounded-full overflow-hidden relative bg-noir-bg">
+                    {streamerInfo?.avatarUrl ? (
+                      <Image src={streamerInfo.avatarUrl} alt={streamerInfo.username || "Streamer"} fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white font-bold">{(streamerInfo?.username || "U")[0].toUpperCase()}</div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div>
-                <p className="font-semibold text-white group-hover:text-electric-lime transition-colors">
-                  {streamerInfo?.username || "Unknown"}
-                </p>
-                <p className="text-sm text-muted-text">
-                  {stream.category || "Just Chatting"}
-                </p>
-              </div>
-            </Link>
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm lg:text-base text-white group-hover:text-electric-lime transition-colors truncate">{streamerInfo?.username || "Unknown"}</p>
+                  <p className="text-xs text-muted-text truncate">@{streamerInfo?.username}</p>
+                </div>
+              </Link>
 
-            <div className="flex items-center gap-4">
-              {/* Viewer count */}
-              <div className="flex items-center gap-2 text-muted-text">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <LiveViewerCount streamId={stream.id} initialCount={stream.viewerCount || 0} />
-              </div>
-
-              {/* LIVE badge */}
-              <div className="flex items-center gap-1.5 bg-signal-red px-3 py-1.5 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                <span className="text-xs font-bold text-white uppercase">Live</span>
-              </div>
+              <SubscribeButton channelId={stream.userId} channelName={streamerInfo?.username || "Channel"} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Chat Section */}
-      <div className="w-full lg:w-80 shrink-0">
-        <div className="bg-noir-terminal rounded-xl border border-noir-border h-[500px] lg:h-full flex flex-col overflow-hidden">
+      <div className="w-full lg:w-96 shrink-0 h-[45vh] lg:h-full lg:border-l border-t lg:border-t-0 border-noir-border bg-noir-terminal flex flex-col shadow-2xl z-10">
+        <div className="flex-1 min-h-0 bg-noir-terminal flex flex-col">
           <LiveChat streamId={stream.id} token={token} />
         </div>
       </div>

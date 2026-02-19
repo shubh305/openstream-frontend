@@ -7,7 +7,7 @@ import Link from "next/link";
 import { LiveChat } from "@/features/chat/components/LiveChat";
 import { StudioWebcamMode } from "@/features/studio/components/StudioWebcamMode";
 import { StudioStreamMode } from "@/features/studio/components/StudioStreamMode";
-import { StudioSettings, type StreamSettingsData, type Visibility } from "@/features/studio/components/StudioSettings";
+import { type StreamSettingsData, type Visibility } from "@/features/studio/components/StudioSettings";
 import { getMyStream } from "@/actions/stream";
 
 type StudioMode = "webcam" | "stream";
@@ -27,32 +27,50 @@ export function StudioStreamPageClient({ token }: StudioStreamPageClientProps) {
     visibility: "public",
   });
 
+  const [, setHasLoadedSettings] = useState(false);
   const isSettingsValid = settings.title.trim().length > 0;
 
   // Poll for live status
   useEffect(() => {
     let mounted = true;
     const checkStatus = async () => {
-        const stream = await getMyStream();
-        if (mounted && stream) {
-            setStreamId(stream.id);
-            const isStreamLive = stream.status === "live";
-            setIsLive(isStreamLive);
+      const stream = await getMyStream();
+      if (mounted && stream) {
+        setStreamId(stream.id);
+        const isActuallyLive = stream.status === "live";
+        const isStarting = stream.status === "starting";
+
+        setIsLive(prev => {
+          if (isActuallyLive) return true;
+          if (stream.status === "offline") return false;
+          if (isStarting) {
+            return prev;
+          }
+          return isActuallyLive;
+        });
+
+        setHasLoadedSettings(prev => {
+          if (!prev) {
+            const isActive = stream.status === "live" || stream.status === "starting";
             setSettings({
-              title: stream.title,
-              description: stream.description || "",
-              category: stream.category || "Gaming",
-              visibility: (stream.visibility as Visibility) || "public",
+              title: isActive ? stream.title : "",
+              description: isActive ? stream.description || "" : "",
+              category: isActive ? stream.category || "Gaming" : "Gaming",
+              visibility: isActive ? (stream.visibility as Visibility) || "public" : "public",
             });
-        }
+            return true;
+          }
+          return prev;
+        });
+      }
     };
 
     checkStatus();
-    const interval = setInterval(checkStatus, 5000);
+    const interval = setInterval(checkStatus, 10000);
 
     return () => {
-        mounted = false;
-        clearInterval(interval);
+      mounted = false;
+      clearInterval(interval);
     };
   }, []);
 
@@ -74,15 +92,12 @@ export function StudioStreamPageClient({ token }: StudioStreamPageClientProps) {
             </span>
           )}
         </div>
-
         {/* Mode Tabs */}
         <div className="flex items-center gap-1 bg-noir-bg p-1 rounded-lg border border-noir-border">
           <button
             onClick={() => setMode("webcam")}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              mode === "webcam"
-                ? "bg-noir-terminal text-foreground border border-noir-border"
-                : "text-muted-text hover:text-foreground"
+              mode === "webcam" ? "bg-noir-terminal text-foreground border border-noir-border" : "text-muted-text hover:text-foreground"
             }`}
           >
             <Video className="w-4 h-4" />
@@ -91,17 +106,14 @@ export function StudioStreamPageClient({ token }: StudioStreamPageClientProps) {
           <button
             onClick={() => setMode("stream")}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              mode === "stream"
-                ? "bg-noir-terminal text-foreground border border-noir-border"
-                : "text-muted-text hover:text-foreground"
+              mode === "stream" ? "bg-noir-terminal text-foreground border border-noir-border" : "text-muted-text hover:text-foreground"
             }`}
           >
             <Radio className="w-4 h-4" />
             Stream
           </button>
         </div>
-
-        <div className="w-20" /> {/* Spacer for balance */}
+        <div className="w-20" />
       </header>
 
       {/* Main Content */}
@@ -110,31 +122,9 @@ export function StudioStreamPageClient({ token }: StudioStreamPageClientProps) {
         <div className="flex-1 flex flex-col p-6 gap-6 overflow-y-auto">
           {/* Mode-specific content */}
           {mode === "webcam" ? (
-            <StudioWebcamMode 
-                isLive={isLive} 
-                setIsLive={setIsLive} 
-                settings={settings}
-                setSettings={setSettings}
-                isValid={isSettingsValid}
-            />
+            <StudioWebcamMode isLive={isLive} setIsLive={setIsLive} settings={settings} setSettings={setSettings} isValid={isSettingsValid} />
           ) : (
-            <StudioStreamMode 
-                isLive={isLive} 
-                settings={settings}
-                isValid={isSettingsValid}
-            />
-          )}
-
-          {/* Shared Settings - Only show in Stream mode (Webcam mode has internal settings) */}
-          {mode === "stream" && (
-            <div className="flex-1 flex flex-col">
-                <StudioSettings 
-                settings={settings} 
-                onChange={setSettings} 
-                disabled={isLive}
-                className="flex-1"
-                />
-            </div>
+            <StudioStreamMode isLive={isLive} settings={settings} isValid={isSettingsValid} onSettingsChange={setSettings} />
           )}
         </div>
 

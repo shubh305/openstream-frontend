@@ -3,6 +3,7 @@
 import { api } from "@/lib/api";
 import { Stream, StreamListResponse } from "@/types/api";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 export async function getLiveStreams(
   params: {
@@ -67,7 +68,7 @@ export async function getIngestConfig() {
   }
 }
 
-export async function updateStreamSettings(settings: { title: string; description?: string; category: string; visibility: string }) {
+export async function updateStreamSettings(settings: { title: string; description?: string; category: string; visibility: string; thumbnailUrl?: string }) {
   try {
     const res = await api.put("/streams/settings", settings);
     return res;
@@ -79,7 +80,10 @@ export async function updateStreamSettings(settings: { title: string; descriptio
 
 export async function goLive() {
   try {
-    return await api.post("/streams/go-live", {});
+    const res = await api.post("/streams/go-live", {});
+    revalidatePath("/");
+    revalidatePath("/live");
+    return res;
   } catch (error) {
     console.error("goLive error:", error);
     return { error: error instanceof Error ? error.message : "Failed to go live" };
@@ -88,7 +92,10 @@ export async function goLive() {
 
 export async function endStream() {
   try {
-    return await api.post("/streams/end", {});
+    const res = await api.post("/streams/end", {});
+    revalidatePath("/");
+    revalidatePath("/live");
+    return res;
   } catch (error) {
     console.error("endStream error:", error);
     return { error: error instanceof Error ? error.message : "Failed to end stream" };

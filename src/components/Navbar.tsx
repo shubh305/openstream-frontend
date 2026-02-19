@@ -127,7 +127,7 @@ export function Navbar({ user }: NavbarProps) {
   return (
     <header className="sticky top-0 z-[60] flex h-16 items-center justify-between border-b border-noir-border bg-noir-terminal/80 backdrop-blur-md px-4 md:px-8">
       <div className="flex items-center gap-6">
-        <Button variant="ghost" size="icon" className="shrink-0 md:hidden text-white hover:bg-noir-border" onClick={toggle}>
+        <Button variant="ghost" size="icon" className="shrink-0 md:hidden text-white hover:bg-noir-border cursor-pointer" onClick={toggle}>
           <Menu className="h-5 w-5" />
         </Button>
         <Link href="/" className="flex items-center gap-3 group shrink-0">
@@ -201,7 +201,14 @@ export function Navbar({ user }: NavbarProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-noir-border" />
-                <DropdownMenuItem className="text-signal-red hover:bg-noir-border focus:bg-noir-border cursor-pointer text-xs font-mono uppercase tracking-widest py-2" onClick={() => logout()}>
+                <DropdownMenuItem
+                  className="text-signal-red hover:bg-noir-border focus:bg-noir-border cursor-pointer text-xs font-mono uppercase tracking-widest py-2"
+                  onClick={() => {
+                    import("react").then(({ startTransition }) => {
+                      startTransition(() => logout());
+                    });
+                  }}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Terminate Session
                 </DropdownMenuItem>
@@ -209,11 +216,11 @@ export function Navbar({ user }: NavbarProps) {
             </DropdownMenu>
           </>
         ) : (
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild className="text-xs font-mono uppercase tracking-widest hover:text-electric-lime text-white">
+          <div className="flex items-center gap-3 relative z-50 pointer-events-auto">
+            <Button variant="ghost" size="sm" asChild className="text-xs font-mono uppercase tracking-widest hover:text-electric-lime text-white cursor-pointer">
               <Link href="/login">Login</Link>
             </Button>
-            <Button size="sm" asChild className="bg-white text-black hover:bg-electric-lime transition-colors text-xs font-mono uppercase tracking-widest px-4">
+            <Button size="sm" asChild className="bg-white text-black hover:bg-electric-lime transition-colors text-xs font-mono uppercase tracking-widest px-4 cursor-pointer">
               <Link href="/signup">Sign up</Link>
             </Button>
           </div>

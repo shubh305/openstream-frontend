@@ -1,8 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-const PLACEHOLDER_THUMBNAIL = "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=800&q=80";
+import { StreamThumbnail } from "@/components/StreamThumbnail";
 
 interface VideoCardProps {
   id: string;
@@ -18,34 +16,19 @@ interface VideoCardProps {
   isLive?: boolean;
 }
 
-export function VideoCard({
-  id,
-  title,
-  thumbnailUrl,
-  duration,
-  views,
-  uploadedAt,
-  creator,
-  isLive = false,
-}: VideoCardProps) {
+export function VideoCard({ id, title, thumbnailUrl, duration, views, uploadedAt, creator, isLive = false }: VideoCardProps) {
   return (
     <Link href={`/watch/${id}`}>
       <div className="group relative rounded-xl overflow-hidden bg-noir-terminal/40 hover:bg-noir-terminal transition-all duration-300">
         {/* Thumbnail Section */}
         <div className="relative aspect-video w-full overflow-hidden">
-          <Image
-            src={thumbnailUrl || PLACEHOLDER_THUMBNAIL}
-            alt={title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
+          <StreamThumbnail url={thumbnailUrl} title={title} className="w-full h-full" />
           {isLive ? (
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-noir-border/80 border border-white/20 backdrop-blur-md px-2.5 py-1 rounded-md">
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-noir-border/80 border border-white/20 backdrop-blur-md px-2.5 py-1 rounded-md z-20">
               <span className="text-[10px] font-bold text-white uppercase tracking-widest">Stream</span>
             </div>
           ) : (
-            <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs font-medium text-white">{duration}</div>
+            <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs font-medium text-white z-20">{duration}</div>
           )}
         </div>
 
@@ -71,4 +54,3 @@ export function VideoCard({
     </Link>
   );
 }
-

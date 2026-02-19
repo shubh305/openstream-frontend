@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, Loader2, Settings2 } from "lucide-react";
-import { getIngestConfig, updateStreamSettings } from "@/actions/stream";
+import { getIngestConfig, updateStreamSettings, goLive, endStream } from "@/actions/stream";
 import { StudioSettings, type StreamSettingsData } from "./StudioSettings";
 
 interface StudioWebcamModeProps {
@@ -43,17 +43,24 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
   const wsRef = useRef<WebSocket | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
 
-  const stopBroadcast = useCallback(() => {
-    if (recorderRef.current && recorderRef.current.state !== "inactive") {
-      recorderRef.current.stop();
+  const stopBroadcast = useCallback(async () => {
+    try {
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      }
+      if (wsRef.current) {
+        wsRef.current.close(1000, "Stream ended by user");
+        wsRef.current = null;
+      }
+
+      await endStream();
+    } catch (e) {
+      console.error("Failed to cleanly end stream session:", e);
+    } finally {
+      setIsLive(false);
+      setIsLocallyBroadcasting(false);
+      setStep("READY");
     }
-    if (wsRef.current) {
-      wsRef.current.close(1000, "Stream ended by user");
-      wsRef.current = null;
-    }
-    setIsLive(false);
-    setIsLocallyBroadcasting(false);
-    setStep("READY");
   }, [setIsLive, setIsLocallyBroadcasting, setStep]);
 
   // Stats for graphs
@@ -210,6 +217,8 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
       if (updateRes.error) {
         throw new Error(updateRes.error);
       }
+
+      await goLive();
 
       const config = await getIngestConfig();
       if (config.error || !config.url) {

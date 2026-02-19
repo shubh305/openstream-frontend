@@ -65,21 +65,24 @@ export interface Video {
 
 export interface Stream {
   id: string;
+  userId: string;
   title: string;
   description?: string;
   category: string;
   visibility?: "public" | "private" | "unlisted";
-  status: "live" | "offline";
+  status: "live" | "offline" | "starting";
   viewerCount: number;
   startedAt?: string;
   hlsPlaybackUrl?: string;
   thumbnailUrl?: string;
   creator: {
+    id: string;
     username: string;
     avatarUrl?: string;
     subscribers?: string;
   };
   streamer?: {
+    id: string;
     username: string;
     avatarUrl?: string;
     subscribers?: string;

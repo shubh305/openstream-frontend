@@ -22,18 +22,25 @@ export function SubscribeButton({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubscribe = async () => {
+    if (!channelId) {
+      toast.error("Invalid channel ID");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       const result = await toggleSubscription(channelId, isSubscribed);
-      
-      if (!result.success) {
+
+      console.log("Subscription toggle result:", result);
+
+      if (!result || !result.success) {
         throw new Error(result.error || "Failed to update subscription");
       }
 
       const newIsSubscribed = !isSubscribed;
       setIsSubscribed(newIsSubscribed);
-      
+
       if (newIsSubscribed) {
         toast.success(`Subscribed to ${channelName}`, {
           description: "You'll be notified when they go live",
