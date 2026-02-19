@@ -110,6 +110,16 @@ export function StreamCard({ stream }: StreamCardProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (playerRef.current && stream.hlsPlaybackUrl) {
+      playerRef.current.src({
+        src: stream.hlsPlaybackUrl,
+        type: "application/x-mpegURL",
+      });
+      setIsVideoReady(false);
+    }
+  }, [stream.hlsPlaybackUrl]);
+
   const handleMouseEnter = useCallback(() => {
     setIsHovering(true);
     playerRef.current?.play()?.catch(() => {});
@@ -137,7 +147,7 @@ export function StreamCard({ stream }: StreamCardProps) {
 
         <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-signal-red px-2 py-0.5 rounded z-20">
           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-          <span className="text-[10px] font-bold text-white uppercase tracking-wide">Live</span>
+          <span className="text-[10px] font-bold text-white tracking-wide">Live</span>
         </div>
 
         <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/70 px-2 py-0.5 rounded text-xs text-white z-20">
@@ -151,7 +161,7 @@ export function StreamCard({ stream }: StreamCardProps) {
         <div className={`absolute inset-0 ring-2 ring-electric-lime rounded-lg transition-opacity duration-200 z-30 ${isHovering ? "opacity-100" : "opacity-0"}`} />
       </div>
 
-      <div className="flex gap-3 mt-2">
+      <div className="flex gap-4 mt-3">
         <div className="w-10 h-10 rounded-full overflow-hidden bg-noir-border shrink-0">
           {streamerInfo?.avatarUrl ? (
             <Image src={streamerInfo.avatarUrl} alt={streamerInfo.username || "Streamer"} width={40} height={40} className="object-cover w-full h-full" />
@@ -160,9 +170,9 @@ export function StreamCard({ stream }: StreamCardProps) {
           )}
         </div>
         <div className="flex flex-col min-w-0">
-          <h3 className="text-sm font-semibold text-white leading-tight line-clamp-1 group-hover:text-electric-lime transition-colors">{stream.title}</h3>
-          <p className="text-xs text-muted-text mt-0.5 line-clamp-1">{streamerInfo?.username || "Unknown"}</p>
-          <p className="text-xs text-muted-text line-clamp-1">{stream.category || "Just Chatting"}</p>
+          <h3 className="text-base font-semibold text-white leading-tight line-clamp-1 group-hover:text-electric-lime transition-colors">{stream.title}</h3>
+          <p className="text-sm text-muted-text mt-1 line-clamp-1">{streamerInfo?.username || "Unknown"}</p>
+          <p className="text-xs text-muted-text mt-0.5 line-clamp-1">{stream.category || "Just Chatting"}</p>
         </div>
       </div>
 

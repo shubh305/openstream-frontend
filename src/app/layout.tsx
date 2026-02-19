@@ -24,7 +24,26 @@ import { User } from "@/types/api";
 
 export const metadata: Metadata = {
   title: "OpenStream",
-  description: "Open-source video streaming architecture",
+  description: "Watch, Stream, Follow Popular Creators",
+  openGraph: {
+    type: "website",
+    url: "https://openstream.octanebrew.dev/",
+    title: "OpenStream",
+    description: "Watch, Stream, Follow Popular Creators",
+    images: [
+      {
+        url: "/logo.svg",
+        width: 1200,
+        height: 630,
+        alt: "OpenStream Platform",
+      },
+    ],
+  },
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default async function RootLayout({

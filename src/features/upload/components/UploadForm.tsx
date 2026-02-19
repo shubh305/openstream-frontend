@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, FileVideo, Check, Copy, Globe, Lock, Users, ArrowLeft, ChevronRight, Loader2, Info, Pause, Play, AlertCircle } from "lucide-react";
+import { Upload, FileVideo, Check, Copy, Globe, Lock, Users, ArrowLeft, ChevronRight, Loader2, Info, Pause, Play, AlertCircle, Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WIP_LIMITS } from "@/lib/wip-limits";
 import { toast } from "@/components/ui/sonner";
@@ -17,6 +18,7 @@ type Visibility = "public" | "unlisted" | "private";
 const CATEGORIES = ["Gaming", "Music", "Entertainment", "Education", "Sports", "Tech", "Vlogs", "Other"];
 
 export function UploadForm() {
+  const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [visibility, setVisibility] = useState<Visibility>("private");
@@ -25,6 +27,7 @@ export function UploadForm() {
   const [description, setDescription] = useState("");
   const [copied, setCopied] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [showProcessingDialog, setShowProcessingDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // File validation hook
@@ -45,7 +48,7 @@ export function UploadForm() {
     }
   }, [upload.error]);
 
-  const videoUrl = upload.sessionId ? `https://openstream.octanebrew.dev/watch/${upload.sessionId}` : "";
+  const videoUrl = upload.videoId ? `${typeof window !== "undefined" ? window.location.origin : ""}/watch/${upload.videoId}` : "";
 
   const handleFile = async (selectedFile: File) => {
     const result = await validate(selectedFile);
@@ -125,10 +128,7 @@ export function UploadForm() {
         token || undefined,
       );
 
-      toast.success("Video published successfully!", {
-        description: "Your video is now available for viewers.",
-      });
-
+      setShowProcessingDialog(true);
       resetForm();
     } catch (err) {
       toast.error("Failed to publish video", {
@@ -138,6 +138,12 @@ export function UploadForm() {
     } finally {
       setIsPublishing(false);
     }
+  };
+
+  const handleProcessingDialogClose = () => {
+    setShowProcessingDialog(false);
+    resetForm();
+    router.push("/studio/content");
   };
 
   const formatBytes = (bytes: number) => {
@@ -157,6 +163,24 @@ export function UploadForm() {
   if (!file) {
     return (
       <div className="flex flex-col h-full">
+        {/* Processing Dialog */}
+        {showProcessingDialog && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+            <div className="bg-noir-terminal border border-noir-border rounded-2xl p-8 shadow-2xl w-full max-w-md mx-4 flex flex-col gap-6">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-electric-lime/10 border border-electric-lime/30 flex items-center justify-center">
+                  <Clapperboard className="w-8 h-8 text-electric-lime" />
+                </div>
+                <h2 className="text-lg font-bold text-foreground">Your video is being processed</h2>
+                <p className="text-sm text-muted-text leading-relaxed">Your video has been uploaded and is now being processed. This usually takes a few minutes depending on the video length.</p>
+                <p className="text-xs text-muted-text/60">You can check the status in your channel&apos;s Videos tab.</p>
+              </div>
+              <Button className="w-full h-11 bg-foreground text-background hover:bg-electric-lime font-bold cursor-pointer" onClick={handleProcessingDialogClose}>
+                Go to My Videos
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="flex-1 flex items-center justify-center p-8">
           <div
             onDragOver={handleDragOver}
@@ -178,7 +202,7 @@ export function UploadForm() {
             <p className="text-sm text-muted-text mb-8">Your videos will be private until you publish them</p>
 
             <div className="relative">
-              <Button onClick={() => fileInputRef.current?.click()} className="bg-foreground text-background hover:bg-electric-lime px-8 h-12 font-medium">
+              <Button onClick={() => fileInputRef.current?.click()} className="bg-foreground text-background hover:bg-electric-lime px-8 h-12 font-medium cursor-pointer">
                 Select files
               </Button>
               <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileSelect} className="hidden" />

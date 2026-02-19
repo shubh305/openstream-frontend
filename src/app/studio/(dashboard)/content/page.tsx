@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { StreamThumbnail } from "@/components/StreamThumbnail";
 import { Input } from "@/components/ui/input";
 import { Search, Globe, Lock, EyeOff, ListVideo, Pencil, Trash2 } from "lucide-react";
 import { getVideos } from "@/actions/video";
@@ -155,8 +156,12 @@ export default function ContentPage() {
                 <div className="col-span-12 md:col-span-5 flex items-start gap-4">
                   <input type="checkbox" className="mt-4 rounded border-noir-border bg-noir-bg text-electric-lime focus:ring-electric-lime" />
                   <Link href={`/watch/${video.id}`} className="w-32 aspect-video bg-noir-bg border border-noir-border rounded overflow-hidden shrink-0 relative block">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={video.thumbnailUrl || "/placeholder.jpg"} alt="" className="w-full h-full object-cover" />
+                    <StreamThumbnail
+                      url={video.thumbnailUrl}
+                      title={video.title}
+                      avatarUrl={video.creator?.avatarUrl}
+                      avatarFallback={(video.creator?.username || video.title || "V")[0].toUpperCase()}
+                    />
                   </Link>
                   <div className="min-w-0">
                     <Link href={`/watch/${video.id}`} className="text-sm font-medium text-foreground truncate hover:text-electric-lime transition-colors block">

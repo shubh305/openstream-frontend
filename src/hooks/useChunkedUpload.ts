@@ -168,11 +168,18 @@ export function useChunkedUpload(options: UseChunkedUploadOptions) {
     }
   }, []);
 
-  const resumeUpload = useCallback(() => {
-    if (uploadRef.current) {
-      uploadRef.current.start();
-      setState((s) => ({ ...s, status: "uploading" }));
+  const resumeUpload = useCallback(async () => {
+    if (!uploadRef.current) return;
+    try {
+      const prevUploads = await uploadRef.current.findPreviousUploads();
+      if (prevUploads.length > 0) {
+        uploadRef.current.resumeFromPreviousUpload(prevUploads[0]);
+      }
+    } catch {
+      // Ignore
     }
+    uploadRef.current.start();
+    setState(s => ({ ...s, status: "uploading" }));
   }, []);
 
   const cancelUpload = useCallback(() => {

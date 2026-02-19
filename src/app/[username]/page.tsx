@@ -28,8 +28,9 @@ export default async function ChannelPage({ params }: ChannelPageProps) {
   }
 
   // Fetch videos for this channel
-  const [videosResponse, liveStreams, playlists] = await Promise.all([
+  const [videosResponse, liveRecordingsResponse, liveStreams, playlists] = await Promise.all([
     getVideos({ channelId: channel.id, limit: 30, sort: "latest", isLive: false }),
+    getVideos({ channelId: channel.id, limit: 30, sort: "latest", isLive: true }),
     getLiveStreams(),
     getChannelPlaylists(channel.id),
   ]);
@@ -55,13 +56,5 @@ export default async function ChannelPage({ params }: ChannelPageProps) {
   }
   const channelWithStatus = { ...channel, isSubscribed };
 
-  return (
-    <ChannelContent 
-      channel={channelWithStatus} 
-      videos={videosResponse.videos} 
-      liveStreams={channelStreams}
-      playlists={playlists}
-      isOwner={isOwner}
-    />
-  );
+  return <ChannelContent channel={channelWithStatus} videos={videosResponse.videos} pastStreams={liveRecordingsResponse.videos} liveStreams={channelStreams} playlists={playlists} isOwner={isOwner} />;
 }

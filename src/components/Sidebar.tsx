@@ -33,6 +33,7 @@ export function Sidebar({ subscriptions = [], isAuthenticated = false }: Sidebar
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (pathname.startsWith("/studio")) return null;
+  if (!isAuthenticated) return null;
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -62,7 +63,7 @@ export function Sidebar({ subscriptions = [], isAuthenticated = false }: Sidebar
       >
         {/* Header / Toggle */}
         <div className={`p-4 flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}>
-          {!isCollapsed && <div className="text-[10px] font-bold text-muted-text uppercase tracking-[0.3em] pl-2">Navigation</div>}
+          {!isCollapsed && <div className="text-[10px] font-bold text-muted-text tracking-[0.3em] pl-2">Navigation</div>}
           <div className="flex items-center gap-1">
             {isOpen && (
               <Button variant="ghost" size="icon" className="md:hidden text-muted-text hover:text-white" onClick={close}>
@@ -104,7 +105,7 @@ export function Sidebar({ subscriptions = [], isAuthenticated = false }: Sidebar
 
           {isAuthenticated && subscriptions.length > 0 && <div className="h-[1px] bg-noir-border my-5 mx-4" />}
 
-          {isAuthenticated && subscriptions.length > 0 && <div className="px-4 mb-3 text-xs font-bold text-muted-text uppercase tracking-widest opacity-60">Subscriptions</div>}
+          {isAuthenticated && subscriptions.length > 0 && <div className="px-4 mb-3 text-xs font-bold text-muted-text tracking-widest opacity-60">Subscriptions</div>}
 
           {/* Subscriptions */}
           {isAuthenticated &&
@@ -128,7 +129,7 @@ export function Sidebar({ subscriptions = [], isAuthenticated = false }: Sidebar
                 <div className="flex-1 min-w-0 flex flex-col">
                   <span className={`text-base font-semibold truncate ${sub.isLive ? "text-white" : "text-muted-text group-hover:text-white"}`}>{sub.channelName}</span>
                   {sub.isLive && (
-                    <span className="text-[10px] text-signal-red font-bold uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="text-[10px] text-signal-red font-bold tracking-widest flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 bg-signal-red rounded-full animate-pulse" />
                       Live
                     </span>

@@ -21,6 +21,7 @@ export function StudioStreamMode({ isLive, settings, isValid, onSettingsChange }
   const [isLoading, setIsLoading] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isEndingStream, setIsEndingStream] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   // Stats for graphs
   const [stats, setStats] = useState({
@@ -155,6 +156,36 @@ export function StudioStreamMode({ isLive, settings, isValid, onSettingsChange }
 
   return (
     <div className="h-full flex flex-col gap-6 relative">
+      {/* End Stream Confirmation Modal */}
+      {showEndConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-noir-terminal border border-noir-border rounded-2xl p-8 shadow-2xl w-full max-w-sm mx-4 flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="w-14 h-14 rounded-full bg-signal-red/10 border border-signal-red/30 flex items-center justify-center">
+                <svg className="w-7 h-7 text-signal-red" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-bold text-foreground">End your stream?</h2>
+              <p className="text-sm text-muted-text">Your stream will stop immediately and viewers will be disconnected.</p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1 h-11" onClick={() => setShowEndConfirm(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 h-11 bg-signal-red hover:bg-signal-red/90 text-white font-bold"
+                onClick={() => {
+                  setShowEndConfirm(false);
+                  handleEndStream();
+                }}
+              >
+                End Stream
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Scrollable Content */}
       <div className="flex-1 space-y-6 pb-24">
         {/* Connection Status & Graphs */}
@@ -284,12 +315,12 @@ export function StudioStreamMode({ isLive, settings, isValid, onSettingsChange }
 
               {isLive ? (
                 <Button
-                  onClick={handleEndStream}
+                  onClick={() => setShowEndConfirm(true)}
                   disabled={isEndingStream}
                   className="bg-noir-bg border-2 border-signal-red text-signal-red hover:bg-signal-red hover:text-white font-bold h-12 px-8 rounded-xl transition-all shadow-lg shadow-signal-red/10"
                 >
                   {isEndingStream ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Square className="w-4 h-4 mr-2 fill-current" />}
-                  {isEndingStream ? "Ending Session..." : "End Session"}
+                  {isEndingStream ? "Ending..." : "End Stream"}
                 </Button>
               ) : null}
             </div>

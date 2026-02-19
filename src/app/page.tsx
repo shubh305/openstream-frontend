@@ -9,7 +9,7 @@ import type { Video } from "@/types/api";
 
 export default async function Home() {
   const activeStreamsData = await getLiveStreams({ limit: 4 });
-  const streamVodsResponse = await getVideos({ isLive: true, limit: 4 });
+  const streamVodsResponse = await getVideos({ isLive: true, limit: 4, sort: "latest" });
   const latestVideosResponse = await getVideos({ limit: 8, sort: "latest", isLive: false });
 
   const liveStreams = activeStreamsData;
@@ -24,7 +24,7 @@ export default async function Home() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center border-b border-noir-border pb-12">
         {/* Tagline */}
         <div className="space-y-6">
-          <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black uppercase leading-[0.95] tracking-tight text-foreground">
+          <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black uppercase leading-[0.95] tracking-normal text-foreground">
             Watch,
             <br />
             <span className="text-electric-lime">Stream,</span>
@@ -35,12 +35,9 @@ export default async function Home() {
           </h1>
           <p className="text-muted-text text-sm max-w-md leading-relaxed">Stream live, watch on demand, and connect with creators.</p>
           <div className="flex gap-4">
-            <Link
-              href="/studio/stream"
-              className="inline-flex items-center gap-2 bg-electric-lime text-black px-6 py-3 font-bold text-sm uppercase tracking-widest hover:bg-electric-lime/90 transition-colors"
-            >
+            <Link href="/studio/stream" className="inline-flex items-center gap-2 bg-electric-lime text-black px-6 py-3 font-bold text-sm tracking-widest hover:bg-electric-lime/90 transition-colors">
               <Play className="w-4 h-4" />
-              Start Streaming
+              Start streaming
             </Link>
           </div>
         </div>
@@ -54,7 +51,7 @@ export default async function Home() {
               <div className="w-16 h-16 rounded-full bg-noir-terminal flex items-center justify-center mb-4">
                 <Play className="w-8 h-8 text-muted-text opacity-20" />
               </div>
-              <p className="text-muted-text text-sm uppercase tracking-widest font-bold">No featured content</p>
+              <p className="text-muted-text text-sm tracking-widest font-bold">No featured content</p>
             </div>
           )}
         </div>
@@ -64,8 +61,8 @@ export default async function Home() {
       {liveStreams.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white uppercase tracking-tighter italic">Live Now</h2>
-            <Link href="/live" className="text-xs text-muted-text hover:text-white px-4 py-2 border border-noir-border rounded-full transition-colors uppercase tracking-widest font-bold">
+            <h2 className="text-xl font-bold text-white normal-case not-italic">Live now</h2>
+            <Link href="/live" className="text-xs text-muted-text hover:text-white px-5 py-2.5 border border-noir-border rounded-full transition-colors tracking-widest font-bold">
               View all
             </Link>
           </div>
@@ -96,15 +93,14 @@ function VideoRow({ title, videos, emptyMessage = "No videos found" }: VideoRowP
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white uppercase tracking-tighter italic">{title}</h2>
-        <Link href="/videos" className="text-xs text-muted-text hover:text-white px-4 py-2 border border-noir-border rounded-full transition-colors uppercase tracking-widest font-bold">
+        <h2 className="text-xl font-bold text-white normal-case not-italic">{title}</h2>
+        <Link href="/videos" className="text-xs text-muted-text hover:text-white px-5 py-2.5 border border-noir-border rounded-full transition-colors tracking-widest font-bold">
           View all
         </Link>
       </div>
-
       {videos.length === 0 ? (
         <div className="py-12 flex flex-col items-center justify-center border border-noir-border rounded-xl bg-noir-terminal/50 text-center">
-          <p className="text-sm font-medium text-foreground uppercase tracking-widest">{emptyMessage}</p>
+          <p className="text-sm font-medium text-foreground tracking-widest">{emptyMessage}</p>
           <p className="text-xs text-muted-text mt-1">Check back later for new content!</p>
         </div>
       ) : (

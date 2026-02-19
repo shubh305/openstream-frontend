@@ -47,7 +47,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {/* Channels Section */}
           {results.channels.length > 0 && (
             <section>
-              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-text mb-4">
+              <h2 className="flex items-center gap-2 text-sm font-bold tracking-widest text-muted-text mb-4">
                 <Users className="w-4 h-4" />
                 Channels ({results.channels.length})
               </h2>
@@ -75,7 +75,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {/* Videos Section */}
           {results.videos.length > 0 && (
             <section>
-              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-text mb-4">
+              <h2 className="flex items-center gap-2 text-sm font-bold tracking-widest text-muted-text mb-4">
                 <VideoIcon className="w-4 h-4" />
                 Videos ({results.videos.length})
               </h2>

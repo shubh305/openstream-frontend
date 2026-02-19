@@ -310,7 +310,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
             <Loader2 className="h-16 w-16 text-electric-lime animate-spin stroke-[1.5]" />
             <div className="absolute inset-0 h-16 w-16 text-electric-lime animate-pulse blur-xl opacity-20" />
           </div>
-          <span className="mt-4 text-xs font-black uppercase tracking-[0.2em] text-electric-lime">Buffering</span>
+          <span className="mt-4 text-xs font-bold tracking-[0.1em] text-electric-lime">Buffering</span>
         </div>
       )}
 
@@ -413,7 +413,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 h-10 gap-2 px-3 relative cursor-pointer group">
                     <Settings className="h-5 w-5" />
-                    <span className="text-xs font-bold hidden sm:inline uppercase">
+                    <span className="text-xs font-bold hidden sm:inline">
                       {currentQuality === "auto" ? (isSettingsOpen ? "Auto" : `Auto${resolvedQuality ? ` (${resolvedQuality})` : ""}`) : currentQuality}
                     </span>
                     {((currentQuality === "auto" ? resolvedQuality : currentQuality).includes("720") || (currentQuality === "auto" ? resolvedQuality : currentQuality).includes("1080")) && (
@@ -424,7 +424,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-noir-terminal border-white/10 text-white min-w-[160px]">
-                  <DropdownMenuLabel className="text-[10px] uppercase text-muted-text">Quality</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-[10px] text-muted-text">Quality</DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/5" />
 
                   {/* Resolution Options */}
@@ -439,7 +439,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
                           onClick={() => handleQualityChange(q)}
                         >
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold uppercase">{q}</span>
+                            <span className="text-xs font-bold">{q}</span>
                             {(q.includes("720") || q.includes("1080")) && <span className="text-[8px] opacity-70 font-black leading-none">HD</span>}
                           </div>
                           {isActive && <Check className="h-3 w-3" />}
@@ -453,7 +453,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
                     className={cn("flex items-center justify-between gap-4 focus:bg-white/10 focus:text-white cursor-pointer", currentQuality === "auto" && "text-electric-lime")}
                     onClick={() => handleQualityChange("auto")}
                   >
-                    <span className="text-xs font-bold uppercase">Auto</span>
+                    <span className="text-xs font-bold">Auto</span>
                     {currentQuality === "auto" && <Check className="h-3 w-3" />}
                   </DropdownMenuItem>
                 </DropdownMenuContent>

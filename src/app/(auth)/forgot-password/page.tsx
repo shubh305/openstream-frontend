@@ -32,8 +32,9 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md border border-noir-border bg-noir-terminal/90 backdrop-blur-xl rounded-2xl p-8 shadow-2xl relative overflow-hidden">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-full border-2 border-electric-lime/50 flex items-center justify-center mb-6 bg-noir-terminal">
-            <div className="w-8 h-8 rounded-full border-2 border-electric-lime animate-pulse" />
+          <div className="w-16 h-16 rounded-xl border border-noir-border flex items-center justify-center mb-6 bg-noir-terminal overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="OpenStream" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Reset Password</h1>
           <p className="text-sm text-muted-text mt-2 text-center">Enter your email and we&apos;ll send you a reset link</p>
@@ -48,8 +49,8 @@ export default function ForgotPasswordPage() {
               <p className="text-sm font-medium text-electric-lime">Email Sent!</p>
               <p className="text-xs text-muted-text">If an account exists, a recovery link has been sent to your email.</p>
             </div>
-            <Button asChild className="w-full h-12 bg-electric-lime text-black hover:bg-electric-lime/90 transition-all duration-300 font-semibold text-sm rounded-lg">
-              <Link href="/login" className="flex items-center justify-center gap-2">
+            <Button asChild className="w-full h-12 bg-electric-lime text-black hover:bg-electric-lime/90 transition-all duration-300 font-semibold text-sm rounded-lg cursor-pointer">
+              <Link href="/login" className="flex items-center justify-center gap-2 cursor-pointer">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Login
               </Link>
@@ -71,7 +72,10 @@ export default function ForgotPasswordPage() {
             </div>
 
             {/* Submit Button */}
-            <Button className="w-full h-12 bg-electric-lime text-black hover:bg-electric-lime/90 transition-all duration-300 font-semibold text-sm rounded-lg" disabled={isLoading}>
+            <Button
+              className="w-full h-12 bg-electric-lime text-black hover:bg-electric-lime/90 transition-all duration-300 font-semibold text-sm rounded-lg cursor-pointer disabled:cursor-not-allowed"
+              disabled={isLoading}
+            >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send Reset Link"}
             </Button>
 

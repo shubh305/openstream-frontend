@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -121,8 +123,15 @@ function SearchForm() {
   );
 }
 
+
+
 export function Navbar({ user }: NavbarProps) {
   const { toggle } = useSidebar();
+  const pathname = usePathname();
+
+  const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/signup") || pathname?.startsWith("/forgot-password");
+
+  if (isAuthPage) return null;
 
   return (
     <header className="sticky top-0 z-[60] flex h-16 items-center justify-between border-b border-noir-border bg-noir-terminal/80 backdrop-blur-md px-4 md:px-8">
@@ -131,10 +140,11 @@ export function Navbar({ user }: NavbarProps) {
           <Menu className="h-5 w-5" />
         </Button>
         <Link href="/" className="flex items-center gap-3 group shrink-0">
-          <div className="flex h-10 w-10 items-center justify-center bg-noir-border border border-noir-border group-hover:border-electric-lime transition-all duration-300 rounded-lg">
-            <span className="text-electric-lime font-bold tracking-tighter text-xl italic cursor-default">OS</span>
+          <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-noir-border group-hover:border-electric-lime transition-all duration-300">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="OpenStream" className="w-full h-full object-contain" />
           </div>
-          <span className="hidden text-base font-bold uppercase tracking-[0.2em] text-white md:block group-hover:text-electric-lime transition-colors">OpenStream</span>
+          <span className="hidden text-base font-bold tracking-[0.05em] text-white md:block group-hover:text-electric-lime transition-colors">OpenStream</span>
         </Link>
       </div>
 
@@ -185,24 +195,24 @@ export function Navbar({ user }: NavbarProps) {
               <DropdownMenuContent className="w-64 bg-noir-terminal border border-noir-border rounded-none" align="end" forceMount>
                 <DropdownMenuLabel className="font-mono p-4">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-xs font-bold leading-none uppercase tracking-widest text-electric-lime">{user.username}</p>
-                    <p className="text-[10px] leading-none text-muted-text uppercase tracking-widest">{user.email}</p>
+                    <p className="text-sm font-bold leading-none text-electric-lime">{user.username}</p>
+                    <p className="text-xs leading-none text-muted-text mt-1">{user.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-noir-border" />
                 <DropdownMenuItem asChild className="hover:bg-noir-border focus:bg-noir-border cursor-pointer">
-                  <Link href={`/@${user.username}`} className="w-full text-xs font-mono uppercase tracking-widest py-2">
+                  <Link href={`/@${user.username}`} className="w-full text-sm font-medium py-2">
                     Your Channel
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="hover:bg-noir-border focus:bg-noir-border cursor-pointer">
-                  <Link href="/studio/customization" className="w-full text-xs font-mono uppercase tracking-widest py-2">
+                  <Link href="/studio/customization" className="w-full text-sm font-medium py-2">
                     Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-noir-border" />
                 <DropdownMenuItem
-                  className="text-signal-red hover:bg-noir-border focus:bg-noir-border cursor-pointer text-xs font-mono uppercase tracking-widest py-2"
+                  className="text-signal-red hover:bg-noir-border focus:bg-noir-border cursor-pointer text-sm font-medium py-2"
                   onClick={() => {
                     import("react").then(({ startTransition }) => {
                       startTransition(() => logout());
@@ -217,10 +227,10 @@ export function Navbar({ user }: NavbarProps) {
           </>
         ) : (
           <div className="flex items-center gap-3 relative z-50 pointer-events-auto">
-            <Button variant="ghost" size="sm" asChild className="text-xs font-mono uppercase tracking-widest hover:text-electric-lime text-white cursor-pointer">
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button size="sm" asChild className="bg-white text-black hover:bg-electric-lime transition-colors text-xs font-mono uppercase tracking-widest px-4 cursor-pointer">
+            <Link href="/login" className="text-sm font-bold hover:text-electric-lime text-white transition-colors cursor-pointer px-3">
+              Login
+            </Link>
+            <Button size="sm" asChild className="bg-white text-black hover:bg-white/90 transition-colors text-sm font-bold px-5 rounded-full cursor-pointer h-9">
               <Link href="/signup">Sign up</Link>
             </Button>
           </div>

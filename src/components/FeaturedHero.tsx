@@ -58,13 +58,13 @@ export function FeaturedHero({ content }: FeaturedHeroProps) {
 
           {/* Live Badge */}
           {isCurrentlyLive ? (
-            <div className="absolute top-4 right-4 flex items-center gap-2 bg-signal-red px-3 py-1.5 rounded-full animate-pulse z-30">
-              <span className="w-2 h-2 rounded-full bg-white" />
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Live Now</span>
+            <div className="absolute top-4 right-4 flex items-center gap-2 bg-signal-red px-3 py-1.5 rounded-full z-30">
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span className="text-xs font-bold text-white tracking-wider">Live now</span>
             </div>
           ) : isStreamVod ? (
             <div className="absolute top-4 right-4 flex items-center gap-2 bg-noir-terminal/80 border border-white/20 backdrop-blur-md px-3 py-1.5 rounded-full z-30">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Stream</span>
+              <span className="text-xs font-bold text-white tracking-wider">Stream</span>
             </div>
           ) : null}
 
