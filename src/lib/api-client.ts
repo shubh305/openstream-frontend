@@ -8,9 +8,12 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}, t
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
     ...options.headers,
   };
+
+  if (!(options.body instanceof FormData)) {
+    (headers as Record<string, string>)["Content-Type"] = "application/json";
+  }
 
   if (token) {
     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
