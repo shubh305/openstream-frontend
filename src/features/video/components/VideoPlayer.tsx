@@ -9,18 +9,28 @@ import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings, RotateCcw,
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { incrementView } from "@/actions/video";
+import { incrementClipView } from "@/actions/clips";
 
 import { useVideoStatus } from "@/hooks/useVideoStatus";
+import { useHighlights } from "@/hooks/useHighlights";
+import { useSubtitles } from "@/hooks/useSubtitles";
+import { useSpritePreview } from "@/hooks/useSpritePreview";
+import { HighlightStrip } from "./HighlightStrip";
+import { SubtitleSelector } from "./SubtitleSelector";
+import { SeekbarThumbnail } from "./SeekbarThumbnail";
 
-interface VideoPlayerProps {
+export interface VideoPlayerProps {
   videoId: string;
   posterUrl?: string;
   videoUrl?: string;
   resolutions?: string[];
+  status?: string;
+  type?: "video" | "clip";
 }
 
-export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: initialVideoUrl, resolutions: initialResolutions = [] }: VideoPlayerProps) {
+export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: initialVideoUrl, resolutions: initialResolutions = [], status: initialStatus, type = "video" }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isScrubbing, setIsScrubbing] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
@@ -36,6 +46,11 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
   const [buffered, setBuffered] = useState<{ start: number; end: number }[]>([]);
   const [resolvedQuality, setResolvedQuality] = useState<string>("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeSubtitleTrack, setActiveSubtitleTrack] = useState<string | null>(null);
+  const [seekHoverTime, setSeekHoverTime] = useState<number | null>(null);
+  const [seekHoverX, setSeekHoverX] = useState(0);
+  const [seekbarWidth, setSeekbarWidth] = useState(0);
+  const [isOverHighlight, setIsOverHighlight] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,8 +58,24 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasViewedRef = useRef(false);
 
-  // Real-time status updates
+  // Real-time pipeline status
   const { update } = useVideoStatus(videoId);
+
+  const isReady = !!videoUrl || availableQualities.length > 1 || update?.hlsManifest || initialStatus === "READY" || initialStatus === "PUBLISHED" || type === "clip";
+
+  // Sprite thumbnail preview
+  const { vttUrl, setVttUrl } = useSpritePreview(type === "video" ? videoId : null);
+
+  // Content Intelligence Layer data
+  const { highlights } = useHighlights(type === "video" ? videoId : null);
+  const { subtitles } = useSubtitles(type === "video" ? videoId : null);
+
+  // Activate sprite preview live on sprite:ready WebSocket event
+  useEffect(() => {
+    if (update?.status === "sprite:ready" && update.vttUrl && !vttUrl) {
+      setVttUrl(update.vttUrl);
+    }
+  }, [update, vttUrl, setVttUrl]);
 
   // Consolidate quality options and status updates from all sources
   useEffect(() => {
@@ -68,8 +99,6 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
       requestAnimationFrame(() => setAvailableQualities(newQualities));
     }
   }, [initialResolutions, update, videoUrl, posterUrl, availableQualities.length]);
-
-
 
   useEffect(() => {
     if (initialResolutions.length > 0 && availableQualities.length <= 1) {
@@ -103,15 +132,20 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-          const levels = data.levels.map(level => `${level.height}p`);
-          const uniqueLevels = Array.from(new Set(levels));
+          const levels = data.levels.filter(l => l.height > 0).map(level => `${level.height}p`);
+
+          let uniqueLevels = Array.from(new Set(levels));
+          if (uniqueLevels.length === 0 && initialResolutions.length > 0) {
+            uniqueLevels = [...initialResolutions];
+          }
+
           setAvailableQualities(["auto", ...uniqueLevels]);
 
           if (currentQuality === "auto") {
             hls.startLevel = -1;
           } else {
             const height = parseInt(currentQuality);
-            const levelIndex = data.levels.findIndex(l => l.height === height);
+            const levelIndex = data.levels.findIndex(l => l.height === height || uniqueLevels.includes(currentQuality));
             if (levelIndex !== -1) {
               hls.startLevel = levelIndex;
             }
@@ -120,19 +154,34 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
 
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
           if (data.level !== -1 && hls.levels[data.level]) {
-            setResolvedQuality(`${hls.levels[data.level].height}p`);
+            const height = hls.levels[data.level].height;
+            if (height > 0) {
+              setResolvedQuality(`${height}p`);
+            } else if (initialResolutions.length > 0) {
+              setResolvedQuality(initialResolutions[0]);
+            }
           }
         });
 
         hls.on(Hls.Events.LEVEL_LOADED, (_, data) => {
-          if (hls.levels[data.level]) {
-            setResolvedQuality(`${hls.levels[data.level].height}p`);
+          if (data.level !== undefined && hls.levels[data.level]) {
+            const height = hls.levels[data.level].height;
+            if (height > 0) {
+              setResolvedQuality(`${height}p`);
+            } else if (initialResolutions.length > 0) {
+              setResolvedQuality(initialResolutions[0]);
+            }
           }
         });
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           if (hls.loadLevel !== -1 && hls.levels[hls.loadLevel]) {
-            setResolvedQuality(`${hls.levels[hls.loadLevel].height}p`);
+            const height = hls.levels[hls.loadLevel].height;
+            if (height > 0) {
+              setResolvedQuality(`${height}p`);
+            } else if (initialResolutions.length > 0) {
+              setResolvedQuality(initialResolutions[0]);
+            }
           }
         });
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -147,18 +196,22 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
         hlsRef.current.destroy();
       }
     };
-  }, [videoUrl, currentQuality]);
+  }, [videoUrl, currentQuality, initialResolutions]);
 
   useEffect(() => {
     if (isPlaying && !hasViewedRef.current && videoId) {
-      incrementView(videoId);
+      if (type === "video") {
+        incrementView(videoId);
+      } else if (type === "clip") {
+        incrementClipView(videoId);
+      }
       hasViewedRef.current = true;
     }
-  }, [isPlaying, videoId]);
+  }, [isPlaying, videoId, type]);
 
   const handlePlayPause = useCallback(() => {
     if (!videoRef.current) return;
- 
+
     if (hasEnded) {
       videoRef.current.currentTime = 0;
       setCurrentTime(0);
@@ -167,7 +220,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
       setHasEnded(false);
       return;
     }
- 
+
     if (isPlaying) {
       videoRef.current.pause();
     } else {
@@ -176,7 +229,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
     setIsPlaying(!isPlaying);
     setHasEnded(false);
   }, [hasEnded, isPlaying]);
- 
+
   const handleQualityChange = useCallback(
     (quality: string) => {
       if (quality === currentQuality) {
@@ -210,13 +263,13 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
     },
     [currentQuality, videoUrl, setVideoUrl],
   );
- 
+
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
- 
+
   const handleVolumeChange = useCallback((value: number[]) => {
     if (!videoRef.current) return;
     const newVolume = value[0];
@@ -224,7 +277,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
   }, []);
- 
+
   const toggleMute = useCallback(() => {
     if (!videoRef.current) return;
     if (isMuted) {
@@ -235,7 +288,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
       setIsMuted(true);
     }
   }, [isMuted, volume]);
- 
+
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
@@ -246,7 +299,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
       setIsFullscreen(false);
     }
   }, []);
- 
+
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
@@ -269,7 +322,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
         className="h-full w-full max-h-full object-contain cursor-pointer"
         onClick={handlePlayPause}
         onTimeUpdate={() => {
-          if (videoRef.current && !isBuffering) {
+          if (videoRef.current && !isBuffering && !isScrubbing) {
             setCurrentTime(videoRef.current.currentTime);
           }
         }}
@@ -301,21 +354,41 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
           }
         }}
         playsInline
-      />
+        crossOrigin="anonymous"
+      >
+        {/* Subtitle tracks */}
+        {subtitles?.tracks?.map(track => (
+          <track key={track.lang} kind="subtitles" src={track.url} srcLang={track.lang} label={track.label} default={false} />
+        ))}
+      </video>
+
+      {/* Processing State Overlay */}
+      {!isReady && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-noir-terminal z-40 p-6 text-center">
+          <div className="relative mb-6">
+            <div className="h-16 w-16 rounded-full border-t-2 border-electric-lime animate-spin" />
+            <div className="absolute inset-0 h-16 w-16 rounded-full bg-electric-lime animate-pulse blur-2xl opacity-20" />
+          </div>
+          <h2 className="text-lg font-bold text-white mb-2 tracking-tight">Video is being processed</h2>
+          <p className="text-muted-text max-w-sm text-[10px] leading-relaxed uppercase tracking-widest font-mono">Preparing for playback. Please wait...</p>
+        </div>
+      )}
+
+      {/* Scrubbing Overlay */}
+      <div className={cn("absolute inset-0 bg-black/40 transition-opacity duration-300 pointer-events-none z-10", isScrubbing ? "opacity-100" : "opacity-0")} />
 
       {/* Loading Spinner */}
       {isBuffering && !hasEnded && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md z-30 transition-all duration-300">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 z-5 transition-all duration-300">
           <div className="relative">
             <Loader2 className="h-16 w-16 text-electric-lime animate-spin stroke-[1.5]" />
             <div className="absolute inset-0 h-16 w-16 text-electric-lime animate-pulse blur-xl opacity-20" />
           </div>
-          <span className="mt-4 text-xs font-bold tracking-[0.1em] text-electric-lime">Buffering</span>
         </div>
       )}
 
       {/* Overlays (Poster/Play/Replay) */}
-      {(!isPlaying && currentTime === 0) || hasEnded ? (
+      {isReady && ((!isPlaying && currentTime === 0) || hasEnded) ? (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] z-10">
           {currentTime === 0 && posterUrl && <Image src={posterUrl} alt="Poster" fill className="object-cover -z-10 opacity-70" priority />}
           <Button
@@ -331,27 +404,70 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
       {/* Bottom Controls */}
       <div
         className={cn(
-          "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent px-4 pb-4 pt-10 transition-all duration-300 z-20",
-          showControls || !isPlaying ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0 pointer-events-none",
+          "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent px-4 pb-4 pt-10 transition-all duration-300 z-50",
+          (showControls || !isPlaying) && isReady ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0 pointer-events-none",
         )}
       >
         {/* Progress Bar */}
-        <div className="group/progress-container mb-4 px-2">
+        <div className="relative group/progress-container mb-4 px-2">
           <div
             className="relative h-1 group-hover/progress-container:h-2 transition-all duration-150 cursor-pointer flex items-center"
+            onMouseMove={e => {
+              if (!duration) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const percent = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+              setSeekHoverTime(percent * duration);
+              setSeekHoverX(e.clientX - rect.left);
+              setSeekbarWidth(rect.width);
+            }}
+            onMouseLeave={() => setSeekHoverTime(null)}
             onMouseDown={e => {
-              const handleScrub = (moveEvent: MouseEvent) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const percent = Math.min(Math.max((moveEvent.clientX - rect.left) / rect.width, 0), 1);
+              if (duration === 0) return;
+              setIsScrubbing(true);
+              const wasPlayingWhenStarted = isPlaying;
+              if (wasPlayingWhenStarted && videoRef.current) {
+                videoRef.current.pause();
+                setIsPlaying(false);
+              }
+
+              const seekbar = e.currentTarget;
+              const lastHardwareSeekRef = { current: 0 };
+
+              const handleScrub = (clientX: number, isFinal = false) => {
+                const rect = seekbar.getBoundingClientRect();
+                const percent = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
                 const newTime = percent * duration;
-                if (videoRef.current) videoRef.current.currentTime = newTime;
+
                 setCurrentTime(newTime);
+
+                setSeekHoverTime(newTime);
+                setSeekHoverX(clientX - rect.left);
+                setSeekbarWidth(rect.width);
+                const now = Date.now();
+                if (isFinal || now - lastHardwareSeekRef.current > 150) {
+                  if (videoRef.current) {
+                    videoRef.current.currentTime = newTime;
+                  }
+                  lastHardwareSeekRef.current = now;
+                }
               };
 
-              handleScrub(e.nativeEvent);
+              handleScrub(e.clientX);
 
-              const onMouseMove = (moveEvent: MouseEvent) => handleScrub(moveEvent);
-              const onMouseUp = () => {
+              const onMouseMove = (moveEvent: MouseEvent) => {
+                handleScrub(moveEvent.clientX);
+              };
+
+              const onMouseUp = (upEvent: MouseEvent) => {
+                setIsScrubbing(false);
+                handleScrub(upEvent.clientX, true);
+                setSeekHoverTime(null);
+
+                if (wasPlayingWhenStarted && videoRef.current) {
+                  videoRef.current.play();
+                  setIsPlaying(true);
+                }
+
                 window.removeEventListener("mousemove", onMouseMove);
                 window.removeEventListener("mouseup", onMouseUp);
               };
@@ -359,9 +475,66 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
               window.addEventListener("mousemove", onMouseMove);
               window.addEventListener("mouseup", onMouseUp);
             }}
+            onTouchStart={e => {
+              if (duration === 0) return;
+              setIsScrubbing(true);
+              const wasPlayingWhenStarted = isPlaying;
+              if (wasPlayingWhenStarted && videoRef.current) {
+                videoRef.current.pause();
+                setIsPlaying(false);
+              }
+
+              const seekbar = e.currentTarget;
+              const lastHardwareSeekRef = { current: 0 };
+
+              const handleTouchScrub = (clientX: number, isFinal = false) => {
+                const rect = seekbar.getBoundingClientRect();
+                const percent = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+                const newTime = percent * duration;
+
+                setCurrentTime(newTime);
+
+                setSeekHoverTime(newTime);
+                setSeekHoverX(clientX - rect.left);
+                setSeekbarWidth(rect.width);
+
+                const now = Date.now();
+                if (isFinal || now - lastHardwareSeekRef.current > 150) {
+                  if (videoRef.current) {
+                    videoRef.current.currentTime = newTime;
+                  }
+                  lastHardwareSeekRef.current = now;
+                }
+              };
+
+              handleTouchScrub(e.touches[0].clientX);
+
+              const onTouchMove = (moveEvent: TouchEvent) => {
+                handleTouchScrub(moveEvent.touches[0].clientX);
+              };
+
+              const onTouchEnd = (endEvent: TouchEvent) => {
+                setIsScrubbing(false);
+                if (endEvent.changedTouches && endEvent.changedTouches.length > 0) {
+                  handleTouchScrub(endEvent.changedTouches[0].clientX, true);
+                }
+                setSeekHoverTime(null);
+
+                if (wasPlayingWhenStarted && videoRef.current) {
+                  videoRef.current.play();
+                  setIsPlaying(true);
+                }
+
+                window.removeEventListener("touchmove", onTouchMove);
+                window.removeEventListener("touchend", onTouchEnd);
+              };
+
+              window.addEventListener("touchmove", onTouchMove, { passive: false });
+              window.addEventListener("touchend", onTouchEnd);
+            }}
           >
             {/* Background */}
-            <div className="absolute inset-0 bg-white/20 rounded-full" />
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-white/20 rounded-full" />
 
             {/* Buffered Ranges */}
             {buffered.map((range, i) => (
@@ -376,24 +549,55 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
             ))}
 
             {/* Progress */}
-            <div className="absolute inset-y-0 bg-electric-lime rounded-full" style={{ width: `${(currentTime / duration) * 100}%` }} />
+            <div className="absolute inset-y-0 bg-[#fafafa] rounded-full" style={{ width: `${(currentTime / duration) * 100}%` }} />
 
             {/* Scrubber Thumb */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-electric-lime rounded-full shadow-lg scale-0 group-hover/progress-container:scale-100 transition-transform duration-150"
-              style={{ left: `calc(${(currentTime / duration) * 100}% - 6px)` }}
+              className="absolute top-1/2 -translate-y-1/2 h-4 w-4 bg-[#fafafa] rounded-full shadow-lg scale-0 group-hover/progress-container:scale-100 transition-transform duration-150 z-20"
+              style={{ left: `calc(${(currentTime / duration) * 100}% - 8px)` }}
             />
+
+            {/* Highlight Timeline Markers */}
+            {highlights?.clips && highlights.clips.length > 0 && (
+              <HighlightStrip
+                clips={highlights.clips}
+                duration={duration}
+                currentTime={currentTime}
+                onSeek={time => {
+                  if (videoRef.current) {
+                    videoRef.current.currentTime = time;
+                    setCurrentTime(time);
+                    if (!isPlaying) {
+                      videoRef.current.play();
+                      setIsPlaying(true);
+                    }
+                  }
+                }}
+                onHover={(time, x) => {
+                  setSeekHoverTime(time);
+                  setSeekHoverX(x);
+                  setIsOverHighlight(true);
+                }}
+                onLeave={() => {
+                  setIsOverHighlight(false);
+                }}
+                className="absolute inset-x-0 -top-1 -bottom-1 pointer-events-none"
+              />
+            )}
           </div>
+
+          {/* Sprite Thumbnail Preview */}
+          {vttUrl && seekHoverTime !== null && seekbarWidth > 0 && !isOverHighlight && <SeekbarThumbnail vttUrl={vttUrl} hoverTime={seekHoverTime} hoverX={seekHoverX} seekbarWidth={seekbarWidth} />}
         </div>
 
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 sm:gap-4 font-mono">
-            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10 h-10 w-10" onClick={handlePlayPause}>
+            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10 h-10 w-10 cursor-pointer" onClick={handlePlayPause}>
               {isPlaying ? <Pause className="h-6 w-6 fill-white" /> : <Play className="h-6 w-6 fill-white" />}
             </Button>
 
             <div className="flex items-center gap-2 group/volume">
-              <Button size="icon" variant="ghost" className="text-white hover:bg-white/10 h-10 w-10 shrink-0" onClick={toggleMute}>
+              <Button size="icon" variant="ghost" className="text-white hover:bg-white/10 h-10 w-10 shrink-0 cursor-pointer" onClick={toggleMute}>
                 {isMuted || volume === 0 ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
               </Button>
               <div className="w-0 overflow-hidden transition-all duration-300 group-hover/volume:w-24">
@@ -460,7 +664,26 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
               </DropdownMenu>
             )}
 
-            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10 h-10 w-10" onClick={toggleFullscreen}>
+            {/* Subtitle Selector */}
+            {subtitles && (subtitles.tracks?.length > 0 || ["processing", "transcribed", "translating"].includes(subtitles.status)) && (
+              <SubtitleSelector
+                tracks={subtitles.tracks || []}
+                status={subtitles.status}
+                activeTrack={activeSubtitleTrack}
+                onTrackSelect={lang => {
+                  setActiveSubtitleTrack(lang);
+
+                  if (videoRef.current) {
+                    const tracks = videoRef.current.textTracks;
+                    for (let i = 0; i < tracks.length; i++) {
+                      tracks[i].mode = tracks[i].language === lang ? "showing" : "hidden";
+                    }
+                  }
+                }}
+              />
+            )}
+
+            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10 h-10 w-10 cursor-pointer" onClick={toggleFullscreen}>
               {isFullscreen ? <Minimize className="h-6 w-6" /> : <Maximize className="h-6 w-6" />}
             </Button>
           </div>

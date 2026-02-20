@@ -8,6 +8,7 @@ export interface VideoStatusUpdate {
   thumbnailUrl?: string;
   duration?: number;
   resolutions?: string[];
+  vttUrl?: string;
   error?: string;
 }
 
@@ -56,6 +57,7 @@ export function useVideoStatus(videoId: string | null) {
               thumbnailUrl: msg.thumbnailUrl,
               duration: msg.duration,
               resolutions: msg.resolutions,
+              vttUrl: msg.vttUrl,
               error: msg.error,
             });
           }
