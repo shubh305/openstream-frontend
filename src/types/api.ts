@@ -47,6 +47,7 @@ export interface Video {
   uploadedAt: string;
   publishedAt?: string;
   visibility?: "public" | "private" | "unlisted";
+  status?: string;
   category?: string;
   isLive?: boolean;
   creator: {
@@ -61,6 +62,17 @@ export interface Video {
     subscribed: boolean;
   };
   resolutions?: string[];
+  isSemantic?: boolean;
+  matchedExcerpt?: string;
+  keyMoments?: { time: number | string; description: string }[];
+  entities?: string[];
+  topic?: string | null;
+  aiMetadata?: {
+    summary: string | null;
+    entities: string[];
+    keyMoments: { time: number; description: string }[];
+    topic: string | null;
+  } | null;
 }
 
 export interface Stream {

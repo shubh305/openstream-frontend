@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, PlusSquare, Library, Tv, Clock, Settings, LayoutDashboard, PenTool, Menu, X } from "lucide-react";
+import { Home, PlusSquare, Library, Tv, Clock, Settings, LayoutDashboard, PenTool, Menu, X, Sparkles } from "lucide-react";
 import { Subscription } from "@/actions/subscription";
 import { useSidebar } from "@/lib/sidebar-context";
 import { Button } from "./ui/button";
@@ -13,6 +13,7 @@ import { useState } from "react";
 
 const NAV_ITEMS = [
   { icon: Home, href: "/", label: "Home" },
+  { icon: Sparkles, href: "/clips", label: "Clips" },
   { icon: LayoutDashboard, href: "/studio/dashboard", label: "Studio", authRequired: true, wipKey: "showStudioDashboard" as const },
   { icon: PlusSquare, href: "/upload", label: "Upload", authRequired: true },
   { icon: Library, href: "/library", label: "Library", authRequired: true, wipKey: "showLibrary" as const },

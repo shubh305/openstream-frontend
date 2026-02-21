@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -49,13 +49,35 @@ function SearchForm() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("openstream_recent_searches");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setTimeout(() => setRecentSearches(parsed), 0);
+      } catch (e) {
+        console.error("Failed to parse recent searches", e);
+      }
+    }
+  }, []);
+
+  const saveRecentSearch = (term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    const updated = [trimmed, ...recentSearches.filter(s => s !== trimmed)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem("openstream_recent_searches", JSON.stringify(updated));
+  };
 
   const handleSearch = (term: string) => {
     if (term.trim()) {
       setShowSuggestions(false);
       setQuery(term);
+      saveRecentSearch(term);
       router.push(`/search?q=${encodeURIComponent(term.trim())}`);
     }
   };
@@ -80,7 +102,11 @@ function SearchForm() {
       setTimeoutId(id);
     } else {
       setSuggestions([]);
-      setShowSuggestions(false);
+      if (val.trim() === "") {
+        setShowSuggestions(true);
+      } else {
+        setShowSuggestions(false);
+      }
     }
   };
 
@@ -94,7 +120,7 @@ function SearchForm() {
           value={query}
           onChange={handleChange}
           onFocus={() => {
-            if (suggestions.length > 0) setShowSuggestions(true);
+            setShowSuggestions(true);
           }}
           onBlur={() => {
             setTimeout(() => setShowSuggestions(false), 200);
@@ -104,17 +130,20 @@ function SearchForm() {
       </div>
 
       {/* Suggestions Dropdown */}
-      {showSuggestions && suggestions.length > 0 && (
+      {showSuggestions && (suggestions.length > 0 || (query.trim() === "" && recentSearches.length > 0)) && (
         <div className="absolute top-12 left-0 right-0 bg-noir-terminal border border-noir-border rounded-lg shadow-xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
-          {suggestions.map((suggestion, idx) => (
+          {query.trim() === "" && recentSearches.length > 0 && (
+            <div className="px-4 py-2 text-[10px] font-bold text-muted-text uppercase tracking-wider border-b border-noir-border/50">Recent Searches</div>
+          )}
+          {(query.trim() === "" ? recentSearches : suggestions).map((item, idx) => (
             <button
               key={idx}
               type="button"
-              className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
-              onClick={() => handleSearch(suggestion)}
+              className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2 cursor-pointer"
+              onClick={() => handleSearch(item)}
             >
               <Search className="w-3 h-3 text-muted-text" />
-              <span>{suggestion}</span>
+              <span>{item}</span>
             </button>
           ))}
         </div>
@@ -126,8 +155,13 @@ function SearchForm() {
 
 
 export function Navbar({ user }: NavbarProps) {
+  const [mounted, setMounted] = useState(false);
   const { toggle } = useSidebar();
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/signup") || pathname?.startsWith("/forgot-password");
 
@@ -153,16 +187,16 @@ export function Navbar({ user }: NavbarProps) {
       </div>
 
       <div className="flex items-center gap-4 shrink-0 relative z-[70]">
-        {user ? (
+        {mounted && user ? (
           <>
-            <Button variant="ghost" size="icon" asChild className="hidden sm:inline-flex text-muted-text hover:text-white hover:bg-noir-border rounded-lg">
+            <Button variant="ghost" size="icon" asChild className="hidden sm:inline-flex text-muted-text hover:text-white hover:bg-noir-border rounded-lg cursor-pointer">
               <Link href="/upload">
                 <Upload className="h-5 w-5" />
               </Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-text hover:text-white hover:bg-noir-border relative group rounded-lg">
+                <Button variant="ghost" size="icon" className="text-muted-text hover:text-white hover:bg-noir-border relative group rounded-lg cursor-pointer">
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-signal-red rounded-full group-hover:animate-pulse" />
                 </Button>
@@ -185,7 +219,7 @@ export function Navbar({ user }: NavbarProps) {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 p-0 border border-noir-border hover:border-electric-lime transition-all overflow-hidden rounded-none">
+                <Button variant="ghost" className="relative h-10 w-10 p-0 border border-noir-border hover:border-electric-lime transition-all overflow-hidden rounded-none cursor-pointer">
                   <Avatar className="h-10 w-10 rounded-none border-none grayscale">
                     <AvatarImage src={user.avatarUrl} alt={user.username} className="object-cover" />
                     <AvatarFallback className="bg-noir-terminal text-electric-lime rounded-none">{user.username[0]}</AvatarFallback>
@@ -225,7 +259,7 @@ export function Navbar({ user }: NavbarProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           </>
-        ) : (
+        ) : mounted ? (
           <div className="flex items-center gap-3 relative z-50 pointer-events-auto">
             <Link href="/login" className="text-sm font-bold hover:text-electric-lime text-white transition-colors cursor-pointer px-3">
               Login
@@ -234,6 +268,8 @@ export function Navbar({ user }: NavbarProps) {
               <Link href="/signup">Sign up</Link>
             </Button>
           </div>
+        ) : (
+          <div className="flex items-center gap-3 h-10 w-24" />
         )}
       </div>
     </header>

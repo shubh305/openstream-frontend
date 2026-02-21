@@ -13,6 +13,8 @@ interface Video {
     avatarUrl?: string;
   };
   isLive?: boolean;
+  status?: string;
+  resolutions?: string[];
 }
 
 interface VideoGridProps {

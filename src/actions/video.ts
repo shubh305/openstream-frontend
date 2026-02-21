@@ -127,3 +127,52 @@ export async function dislikeVideo(id: string) {
     return false;
   }
 }
+
+export interface HighlightClip {
+  index: number;
+  start: number;
+  end: number;
+  score: number;
+  title: string;
+  clipUrl: string;
+  thumbnailUrl: string;
+}
+
+export interface HighlightsResponse {
+  videoId: string;
+  status: string;
+  clips: HighlightClip[];
+  generatedAt?: string;
+}
+
+export interface SubtitleTrack {
+  lang: string;
+  label: string;
+  url: string;
+  isDefault: boolean;
+}
+
+export interface SubtitlesResponse {
+  videoId: string;
+  status: string;
+  tracks: SubtitleTrack[];
+  accessibilityCompliant: boolean;
+}
+
+export async function getHighlights(id: string): Promise<HighlightsResponse | null> {
+  try {
+    return await api.get<HighlightsResponse>(`/videos/${id}/highlights`, { cache: "no-store" });
+  } catch (error) {
+    console.error(`getHighlights(${id}) error:`, error);
+    return null;
+  }
+}
+
+export async function getSubtitles(id: string): Promise<SubtitlesResponse | null> {
+  try {
+    return await api.get<SubtitlesResponse>(`/videos/${id}/subtitles`, { cache: "no-store" });
+  } catch (error) {
+    console.error(`getSubtitles(${id}) error:`, error);
+    return null;
+  }
+}

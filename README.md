@@ -43,6 +43,10 @@ The authoritative documentation for the frontend platform is available in the `d
 ## Primary Capabilities
 - **Smart Upload Wizard**: Client-side validation, TUS integration, and real-time processing feedback.
 - **Instant Playback**: Auto-switching HLS player that adapts to "Fast Lane" availability.
+- **Seekbar Smart Thumbnails**: Hover-activated interactive sprite preview powered by VTT mapping.
+- **AI Semantic Search**: Integrated natural language search toggle with persistent recent searches.
+- **Highlight Strip**: Seamless timeline integration illustrating AI-generated video highlights.
+- **Transcriptions**: Integrated subtitle selector exposing automated WebVTT transcripts.
 - **Real-Time Chat**: Persistent WebSocket connection for high-frequency engagement.
 - **Dashboard**: Command center for managing VOD assets and stream keys.
 

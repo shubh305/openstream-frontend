@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { StreamThumbnail } from "@/components/StreamThumbnail";
 import { Input } from "@/components/ui/input";
 import { Search, Globe, Lock, EyeOff, ListVideo, Pencil, Trash2 } from "lucide-react";
@@ -98,15 +99,13 @@ export default function ContentPage() {
             ) : (
               playlists.map(playlist => (
                 <div key={playlist.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors group">
-                  <div className="col-span-12 md:col-span-5 flex items-start gap-4">
-                    <input type="checkbox" className="mt-4 rounded border-noir-border bg-noir-bg text-electric-lime focus:ring-electric-lime" />
+                  <div className="col-span-12 md:col-span-5 flex items-start gap-4 px-9">
                     <Link
                       href={`/playlist?list=${playlist.id}`}
                       className="w-32 aspect-video bg-noir-bg border border-noir-border rounded overflow-hidden shrink-0 relative group-hover:border-electric-lime transition-colors block"
                     >
                       {playlist.thumbnailUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={playlist.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                        <Image src={playlist.thumbnailUrl} alt="" fill sizes="128px" className="object-cover" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-noir-bg">
                           <ListVideo className="w-8 h-8 text-muted-text" />
@@ -153,8 +152,7 @@ export default function ContentPage() {
           ) : (
             videos.map(video => (
               <div key={video.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors group">
-                <div className="col-span-12 md:col-span-5 flex items-start gap-4">
-                  <input type="checkbox" className="mt-4 rounded border-noir-border bg-noir-bg text-electric-lime focus:ring-electric-lime" />
+                <div className="col-span-12 md:col-span-5 flex items-start gap-4 px-9">
                   <Link href={`/watch/${video.id}`} className="w-32 aspect-video bg-noir-bg border border-noir-border rounded overflow-hidden shrink-0 relative block">
                     <StreamThumbnail
                       url={video.thumbnailUrl}

@@ -427,7 +427,7 @@ export function UploadForm() {
                 }
                 handlePublish();
               }}
-              className="bg-foreground text-background hover:bg-electric-lime h-10 px-6"
+              className="bg-foreground text-background hover:bg-electric-lime h-10 px-6 cursor-pointer"
             >
               {isPublishing ? (
                 <>

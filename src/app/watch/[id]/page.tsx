@@ -11,15 +11,18 @@ import { notFound } from "next/navigation";
 import { SubscribeButton } from "@/features/video/components/SubscribeButton";
 import { getChannelByHandle } from "@/actions/channel";
 import { getSubscriptions } from "@/actions/subscription";
+import { ClipsRail } from "@/features/video/components/ClipsRail";
+import { getVideoClips } from "@/actions/clips";
 
 export default async function WatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [video, recommendations, comments, session] = await Promise.all([getVideo(id), getRelatedVideos(id), getComments(id), getSession()]);
+  const [video, recommendations, comments, session, clips] = await Promise.all([getVideo(id), getRelatedVideos(id), getComments(id), getSession(), getVideoClips(id)]);
 
   if (!video) {
     notFound();
   }
+
 
   let channelId = "";
   let isOwner = false;
@@ -48,10 +51,10 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
       <div className="mx-auto max-w-[1600px] p-0 sm:p-4 lg:p-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px] lg:gap-8">
           {/* Main Content */}
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             {/* Video Player */}
-            <div className="relative sm:rounded-2xl overflow-hidden bg-noir-terminal aspect-video">
-              <VideoPlayer videoId={video.id} posterUrl={video.posterUrl} videoUrl={video.videoUrl} resolutions={video.resolutions} />
+            <div className="relative sm:rounded-2xl overflow-hidden bg-noir-terminal aspect-video max-h-[75vh]">
+              <VideoPlayer videoId={video.id} posterUrl={video.posterUrl} videoUrl={video.videoUrl} resolutions={video.resolutions} status={video.status} />
             </div>
 
             {/* Title Row */}
@@ -82,13 +85,73 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            {/* Description */}
-            <div className="mx-4 sm:mx-0 bg-noir-terminal/50 rounded-xl p-4">
-              <div className="text-xs md:text-sm text-muted-text mb-2">
-                {Intl.NumberFormat("en-US", { notation: "compact" }).format(video.views)} views • {video.uploadedAt}
+            {/* Description & AI Insights */}
+            <div className="mx-4 sm:mx-0 bg-noir-terminal/50 rounded-xl overflow-hidden">
+              <div className="p-4">
+                <div className="text-xs md:text-sm text-muted-text mb-2">
+                  {Intl.NumberFormat("en-US", { notation: "compact" }).format(video.views)} views • {video.uploadedAt}
+                </div>
+                <p className="text-xs md:text-sm text-white/80 whitespace-pre-wrap line-clamp-3">{video.description}</p>
               </div>
-              <p className="text-xs md:text-sm text-white/80 whitespace-pre-wrap line-clamp-3">{video.description}</p>
+
+              {video.aiMetadata && (
+                <div className="border-t border-noir-border/30 bg-electric-lime/5 p-4 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-electric-lime animate-pulse" />
+                    <h3 className="text-[10px] uppercase tracking-wider font-mono text-electric-lime font-bold">AI Insight</h3>
+                  </div>
+
+                  {video.aiMetadata.summary && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-white/90 leading-relaxed italic">&ldquo;{video.aiMetadata.summary}&rdquo;</p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-4">
+                    {video.aiMetadata.entities && video.aiMetadata.entities.length > 0 && (
+                      <div className="space-y-1">
+                        <span className="text-[9px] uppercase text-muted-text font-mono">Mentions</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {video.aiMetadata.entities.map((en, i) => (
+                            <span key={i} className="text-[10px] text-white/70 bg-noir-bg px-2 py-0.5 rounded border border-noir-border/50">
+                              {en}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {video.aiMetadata.topic && (
+                      <div className="space-y-1">
+                        <span className="text-[9px] uppercase text-muted-text font-mono">Topic</span>
+                        <div>
+                          <span className="text-[10px] text-electric-lime bg-electric-lime/10 px-2 py-0.5 rounded border border-electric-lime/30">{video.aiMetadata.topic}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {video.aiMetadata.keyMoments && video.aiMetadata.keyMoments.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-[9px] uppercase text-muted-text font-mono">Key Moments</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {video.aiMetadata.keyMoments.map((km, idx) => (
+                          <div key={idx} className="flex items-start gap-2 p-2 rounded bg-black/40 border border-noir-border/20 hover:border-electric-lime/30 transition-colors group cursor-pointer">
+                            <span className="text-[10px] font-mono text-electric-lime shrink-0 bg-electric-lime/10 px-1.5 py-0.5 rounded">
+                              {Math.floor(km.time / 60)}:{(km.time % 60).toString().padStart(2, "0")}
+                            </span>
+                            <span className="text-[11px] text-white/80 group-hover:text-white transition-colors line-clamp-1">{km.description}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Clips Rail */}
+            <ClipsRail videoId={video.id} clips={clips} />
 
             {/* Comments */}
             {video.visibility !== "private" && (
@@ -99,7 +162,7 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {/* Sidebar */}
-          <aside className="px-4 sm:px-0 space-y-4">
+          <aside className="px-4 sm:px-0 space-y-4 min-w-0">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">You may like</h3>
               <Link href="/videos" className="text-xs text-electric-lime hover:underline">
