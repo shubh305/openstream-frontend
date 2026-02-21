@@ -5,19 +5,21 @@ import { Video, Channel, Stream } from "@/types/api";
 
 interface SearchResponse {
   results: {
-    videos: Video[];
+    videos: (Video & { isSemantic?: boolean; matchedExcerpt?: string; score?: number })[];
     channels: Channel[];
     streams: Stream[];
   };
   query: string;
   totalResults: number;
+  isAI?: boolean;
 }
 
-export async function search(query: string, type: "video" | "channel" | "stream" | "all" = "all") {
+export async function search(query: string, type: "video" | "channel" | "stream" | "all" = "all", isAI: boolean = false) {
   const queryString = new URLSearchParams({ q: query, limit: "50" });
+  const endpoint = isAI ? "/search/ai" : "/search";
 
   try {
-    const response = await api.get<SearchResponse>(`/search?${queryString.toString()}`, {
+    const response = await api.get<SearchResponse>(`${endpoint}?${queryString.toString()}`, {
       next: { revalidate: 0 },
     });
 

@@ -3,14 +3,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { SearchIcon, Users, Video as VideoIcon, Radio } from "lucide-react";
 import { StreamCard } from "@/components/StreamCard";
+import { SearchToggle } from "./_components/SearchToggle";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles } from "lucide-react";
 
 interface SearchPageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; ai?: string }>;
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const query = params.q || "";
+  const isAI = params.ai === "true";
 
   if (!query) {
     return (
@@ -24,17 +28,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     );
   }
 
-  const results = await search(query);
+  const results = await search(query, "all", isAI);
   const totalResults = results.videos.length + results.channels.length + results.streams.length;
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground mb-2">Search results for &ldquo;{query}&rdquo;</h1>
-        <p className="text-muted-text">
-          {totalResults} {totalResults === 1 ? "result" : "results"} found
-        </p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Search results for &ldquo;{query}&rdquo;</h1>
+          <p className="text-muted-text">
+            {totalResults} {totalResults === 1 ? "result" : "results"} found
+          </p>
+        </div>
+        <SearchToggle />
       </div>
 
       {totalResults === 0 ? (
@@ -106,7 +113,46 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
                     {/* Metadata */}
                     <div className="flex flex-col gap-2 py-1">
-                      <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-electric-lime transition-colors">{video.title}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-electric-lime transition-colors">{video.title}</h3>
+                        {video.isSemantic && (
+                          <Badge variant="outline" className="text-[10px] h-4 border-electric-lime/30 text-electric-lime bg-electric-lime/5 gap-1 shrink-0">
+                            <Sparkles className="w-2.5 h-2.5" />
+                            AI MATCH
+                          </Badge>
+                        )}
+                      </div>
+
+                      {video.isSemantic && video.matchedExcerpt && (
+                        <div className="space-y-2">
+                          <div className="relative overflow-hidden rounded border border-noir-border/30 bg-noir-bg/50 p-3">
+                            <div className="text-[11px] leading-5 text-muted-text italic line-clamp-4">&ldquo;...{video.matchedExcerpt.replace(/<[^>]*>/g, "")}...&rdquo;</div>
+                          </div>
+
+                          {video.keyMoments && video.keyMoments.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {video.keyMoments.slice(0, 3).map((moment, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-electric-lime/10 border border-electric-lime/20 text-[10px] text-electric-lime font-medium whitespace-nowrap"
+                                >
+                                  <span className="opacity-70">
+                                    {typeof moment.time === "number" ? Math.floor(moment.time / 60) + ":" + (moment.time % 60).toString().padStart(2, "0") : moment.time}
+                                  </span>
+                                  <span className="truncate max-w-[120px]">{moment.description}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {video.topic && (
+                            <div className="text-[10px] uppercase tracking-wider text-muted-text/60 font-mono">
+                              Detected Topic: <span className="text-muted-text">{video.topic}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-2 text-sm text-muted-text">
                         <span>{video.creator.username}</span>
                         <span>•</span>
