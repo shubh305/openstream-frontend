@@ -8,6 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { SessionGuard } from "@/components/SessionGuard";
 import { Toaster } from "@/components/ui/sonner";
+import { BottomNavbar } from "@/components/BottomNavbar";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -57,16 +58,17 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${interTight.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground font-mono min-h-screen relative overflow-x-hidden`}>
+      <body className={`${interTight.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground font-mono min-h-screen relative overflow-x-hidden no-scrollbar`}>
         <SidebarProvider>
           <SessionGuard isAuthenticated={!!session} />
-          <div className="flex h-screen overflow-hidden">
+          <div className="flex min-h-screen w-full relative">
             <Sidebar subscriptions={subscriptions} isAuthenticated={!!session} />
-            <div className="flex-1 flex flex-col relative z-0 overflow-y-auto h-full w-full">
+            <div className="flex-1 flex flex-col relative z-0 w-full min-w-0">
               <Navbar user={session} />
-              <div className="flex-1 flex flex-col min-h-0">{children}</div>
+              <main className="flex-1 flex flex-col relative pb-20 md:pb-0">{children}</main>
             </div>
           </div>
+          <BottomNavbar user={session} />
         </SidebarProvider>
         <Toaster />
       </body>

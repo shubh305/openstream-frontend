@@ -1,9 +1,10 @@
 import { search } from "@/actions/search";
 import Image from "next/image";
 import Link from "next/link";
-import { SearchIcon, Users, Video as VideoIcon, Radio } from "lucide-react";
+import { SearchIcon, Users, Video as VideoIcon } from "lucide-react";
 import { StreamCard } from "@/components/StreamCard";
 import { SearchToggle } from "./_components/SearchToggle";
+import { PlaylistAction } from "@/components/PlaylistAction";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
 
@@ -32,34 +33,40 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const totalResults = results.videos.length + results.channels.length + results.streams.length;
 
   return (
-    <div className="container max-w-6xl mx-auto px-4 py-8">
+    <div className="container max-w-6xl mx-auto px-4 py-8 md:py-12 mb-20 md:mb-0">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Search results for &ldquo;{query}&rdquo;</h1>
-          <p className="text-muted-text">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 md:mb-12 noir-reveal">
+        <div className="space-y-2">
+          <h1 className="text-2xl md:text-4xl font-black text-white leading-tight tracking-tight">
+            Search results for <span className="text-white/40 italic">&ldquo;{query}&rdquo;</span>
+          </h1>
+          <p className="text-sm md:text-base text-muted-text font-medium">
             {totalResults} {totalResults === 1 ? "result" : "results"} found
           </p>
         </div>
-        <SearchToggle />
+        <div className="flex items-center">
+          <SearchToggle />
+        </div>
       </div>
 
       {totalResults === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <SearchIcon className="w-12 h-12 text-muted-text mb-4" />
-          <h2 className="text-lg font-semibold text-foreground mb-2">No results found</h2>
-          <p className="text-muted-text">Try different keywords or check your spelling.</p>
+        <div className="flex flex-col items-center justify-center py-24 text-center glasswork glass-border rounded-3xl mx-auto max-w-2xl">
+          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
+            <SearchIcon className="w-8 h-8 text-muted-text" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-3">No results found</h2>
+          <p className="text-muted-text px-8">Try different keywords or check your spelling. We couldn&apos;t find a match for &ldquo;{query}&rdquo;.</p>
         </div>
       ) : (
-        <div className="space-y-12">
+        <div className="space-y-16 md:space-y-24">
           {/* Live Streams Section */}
           {results.streams.length > 0 && (
-            <section>
-              <h2 className="flex items-center gap-2 text-sm font-bold tracking-widest text-signal-red mb-4 uppercase">
-                <Radio className="w-4 h-4 animate-pulse" />
+            <section className="noir-reveal">
+              <h2 className="flex items-center gap-3 text-[10px] md:text-xs font-black tracking-[0.2em] text-signal-red mb-6 uppercase">
+                <div className="w-2 h-2 rounded-full bg-signal-red animate-pulse shadow-[0_0_8px_rgba(255,51,51,0.6)]" />
                 Live Streams ({results.streams.length})
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {results.streams.map(stream => (
                   <StreamCard key={stream.id} stream={stream} />
                 ))}
@@ -69,25 +76,32 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
           {/* Channels Section */}
           {results.channels.length > 0 && (
-            <section>
-              <h2 className="flex items-center gap-2 text-sm font-bold tracking-widest text-muted-text mb-4">
+            <section className="noir-reveal" style={{ animationDelay: "0.1s" }}>
+              <h2 className="flex items-center gap-3 text-[10px] md:text-xs font-black tracking-[0.2em] text-white/40 mb-6 uppercase">
                 <Users className="w-4 h-4" />
                 Channels ({results.channels.length})
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {results.channels.map(channel => (
                   <Link
                     key={channel.id}
                     href={`/@${channel.handle}`}
-                    className="flex items-center gap-4 p-4 rounded-lg border border-noir-border bg-noir-terminal hover:border-electric-lime transition-colors group"
+                    className="flex items-center gap-5 p-5 md:p-4 rounded-2xl border border-white/5 glasswork hover:border-white/20 transition-all duration-300 group active:scale-95 touch-none"
                   >
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden bg-noir-bg border border-noir-border">
-                      <Image src={channel.avatarUrl || `https://api.dicebear.com/9.x/bottts/svg?seed=${channel.handle}`} alt={channel.name} fill className="object-cover" />
+                    <div className="relative w-16 h-16 md:w-14 md:h-14 rounded-full overflow-hidden bg-noir-deep border border-white/10 glass-border shrink-0">
+                      <Image
+                        src={channel.avatarUrl || `https://api.dicebear.com/9.x/bottts/svg?seed=${channel.handle}`}
+                        alt={channel.name}
+                        fill
+                        className="object-cover transition-transform group-hover:scale-110 duration-500"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate group-hover:text-electric-lime transition-colors">{channel.name}</h3>
-                      <p className="text-sm text-muted-text">@{channel.handle}</p>
-                      <p className="text-xs text-muted-text">{Intl.NumberFormat("en-US", { notation: "compact" }).format(channel.subscriberCount)} subscribers</p>
+                      <h3 className="font-bold text-base md:text-sm text-white truncate group-hover:text-white/80 transition-colors uppercase tracking-tight">{channel.name}</h3>
+                      <p className="text-xs md:text-[11px] text-muted-text mt-0.5 font-medium">@{channel.handle}</p>
+                      <p className="text-[10px] text-muted-text/50 font-black tracking-widest uppercase mt-2">
+                        {Intl.NumberFormat("en-US", { notation: "compact" }).format(channel.subscriberCount)} Fans
+                      </p>
                     </div>
                   </Link>
                 ))}
@@ -97,69 +111,87 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
           {/* Videos Section */}
           {results.videos.length > 0 && (
-            <section>
-              <h2 className="flex items-center gap-2 text-sm font-bold tracking-widest text-muted-text mb-4">
+            <section className="noir-reveal" style={{ animationDelay: "0.2s" }}>
+              <h2 className="flex items-center gap-3 text-[10px] md:text-xs font-black tracking-[0.2em] text-white/40 mb-6 uppercase">
                 <VideoIcon className="w-4 h-4" />
                 Videos ({results.videos.length})
               </h2>
-              <div className="space-y-4">
+              <div className="flex flex-col gap-8 md:gap-6">
                 {results.videos.map(video => (
-                  <Link key={video.id} href={`/watch/${video.id}`} className="flex flex-col sm:flex-row gap-4 p-2 -m-2 rounded-lg hover:bg-noir-terminal/50 transition-colors group">
+                  <Link
+                    key={video.id}
+                    href={`/watch/${video.id}`}
+                    className="flex flex-col sm:flex-row gap-6 md:gap-8 p-4 md:p-2 -m-4 md:-m-2 rounded-2xl hover:bg-white/5 transition-all duration-500 group active:scale-[0.98] sm:active:scale-100"
+                  >
                     {/* Thumbnail */}
-                    <div className="relative w-full sm:w-64 sm:min-w-[16rem] aspect-video rounded-lg overflow-hidden bg-noir-terminal">
-                      <Image src={video.thumbnailUrl} alt={video.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                      {video.duration && <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-xs font-medium text-white">{video.duration}</div>}
+                    <div className="relative w-full sm:w-80 sm:min-w-[20rem] aspect-video rounded-2xl overflow-hidden bg-noir-deep border border-white/5 glass-border shadow-lg shadow-black/20">
+                      <Image
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700 brightness-90 group-hover:brightness-100"
+                      />
+                      {video.duration && (
+                        <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md z-20 glass-border font-bold text-[10px] text-white tracking-widest uppercase">
+                          {video.duration}
+                        </div>
+                      )}
+
+                      {/* Playlist Action */}
+                      <div className="absolute top-3 right-3 z-40 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <PlaylistAction videoId={video.id} />
+                      </div>
                     </div>
 
                     {/* Metadata */}
-                    <div className="flex flex-col gap-2 py-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-electric-lime transition-colors">{video.title}</h3>
-                        {video.isSemantic && (
-                          <Badge variant="outline" className="text-[10px] h-4 border-electric-lime/30 text-electric-lime bg-electric-lime/5 gap-1 shrink-0">
-                            <Sparkles className="w-2.5 h-2.5" />
-                            AI MATCH
-                          </Badge>
-                        )}
+                    <div className="flex flex-col gap-3 md:gap-2 py-1 flex-1">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <h3 className="font-bold text-lg md:text-base text-white line-clamp-2 md:line-clamp-1 group-hover:text-white/90 transition-colors leading-snug md:leading-tight">
+                            {video.title}
+                          </h3>
+                          {video.isSemantic && (
+                            <Badge variant="outline" className="text-[10px] font-black h-5 border-white/10 text-white bg-white/5 gap-1.5 shrink-0 px-2 tracking-widest rounded-full">
+                              <Sparkles className="w-3 h-3 text-electric-lime" />
+                              MATCH
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3 text-sm md:text-xs text-muted-text font-bold">
+                          <span className="hover:text-white transition-colors">{video.creator.username}</span>
+                          <span className="w-1 h-1 rounded-full bg-white/10" />
+                          <span>{Intl.NumberFormat("en-US", { notation: "compact" }).format(video.views)} views</span>
+                          <span className="w-1 h-1 rounded-full bg-white/10 hidden sm:block" />
+                          <span className="hidden sm:block">{video.uploadedAt}</span>
+                        </div>
                       </div>
 
                       {video.isSemantic && video.matchedExcerpt && (
-                        <div className="space-y-2">
-                          <div className="relative overflow-hidden rounded border border-noir-border/30 bg-noir-bg/50 p-3">
-                            <div className="text-[11px] leading-5 text-muted-text italic line-clamp-4">&ldquo;...{video.matchedExcerpt.replace(/<[^>]*>/g, "")}...&rdquo;</div>
+                        <div className="space-y-4 mt-2">
+                          <div className="relative overflow-hidden rounded-xl border border-white/5 bg-white/5 p-4 md:p-3">
+                            <div className="text-[12px] md:text-[11px] leading-relaxed text-white/60 font-medium italic line-clamp-3 md:line-clamp-2">
+                              &ldquo;...{video.matchedExcerpt.replace(/<[^>]*>/g, "")}...&rdquo;
+                            </div>
                           </div>
 
                           {video.keyMoments && video.keyMoments.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2 md:gap-1.5">
                               {video.keyMoments.slice(0, 3).map((moment, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-electric-lime/10 border border-electric-lime/20 text-[10px] text-electric-lime font-medium whitespace-nowrap"
+                                  className="flex items-center gap-2 px-3 py-1.5 md:px-2 md:py-1 rounded-lg bg-electric-lime/10 border border-electric-lime/20 text-[11px] md:text-[10px] text-electric-lime font-bold tracking-tight active:scale-95 transition-transform"
                                 >
-                                  <span className="opacity-70">
+                                  <span className="opacity-80">
                                     {typeof moment.time === "number" ? Math.floor(moment.time / 60) + ":" + (moment.time % 60).toString().padStart(2, "0") : moment.time}
                                   </span>
-                                  <span className="truncate max-w-[120px]">{moment.description}</span>
+                                  <span className="truncate max-w-[150px] md:max-w-[120px]">{moment.description}</span>
                                 </div>
                               ))}
                             </div>
                           )}
-
-                          {video.topic && (
-                            <div className="text-[10px] uppercase tracking-wider text-muted-text/60 font-mono">
-                              Detected Topic: <span className="text-muted-text">{video.topic}</span>
-                            </div>
-                          )}
                         </div>
                       )}
-
-                      <div className="flex items-center gap-2 text-sm text-muted-text">
-                        <span>{video.creator.username}</span>
-                        <span>•</span>
-                        <span>{Intl.NumberFormat("en-US", { notation: "compact" }).format(video.views)} views</span>
-                        <span>•</span>
-                        <span>{video.uploadedAt}</span>
-                      </div>
                     </div>
                   </Link>
                 ))}
