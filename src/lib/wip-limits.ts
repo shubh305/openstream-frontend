@@ -6,7 +6,7 @@ export const WIP_LIMITS = {
   // Navigation
   showStudioDashboard: false,
   showStudioAnalytics: false,
-  showLibrary: false,
+  showLibrary: true,
 
   // Features
   showPublishFeature: true,

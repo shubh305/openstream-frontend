@@ -156,5 +156,31 @@ export interface PlaylistListResponse {
 export interface LoginResponse {
   access_token: string;
   user: User;
-  streamKey?: string; // Sometimes returned
+  streamKey?: string;
+}
+export interface Session {
+  user: User;
+  accessToken: string;
+}
+
+export interface Clip {
+  _id: string;
+  clipId: string;
+  parentVideoId: string | { _id: string; title: string };
+  status: "PENDING" | "READY" | "FAILED";
+  duration: number;
+  signals: {
+    audio: boolean;
+    scene: boolean;
+    chat: boolean;
+    ocr: boolean;
+  };
+  title?: string;
+  score: number;
+  start: number;
+  end: number;
+  viewCount: number;
+  createdAt: string;
+  playableUrl: string;
+  thumbnailUrl?: string | null;
 }

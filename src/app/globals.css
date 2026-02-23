@@ -32,36 +32,94 @@
 :root {
   --background: #000000;
   --foreground: #E8E8E8;
+  
+  --noir-deep: #050505;
+  --noir-surface: rgba(18, 18, 18, 0.7);
+  --noir-glass: rgba(10, 10, 10, 0.4);
+  --noir-border-glass: rgba(255, 255, 255, 0.08);
+
+  /* Fluid Typography Tokens */
+  --font-size-xs: clamp(0.64rem, 0.05vw + 0.63rem, 0.67rem);
+  --font-size-sm: clamp(0.8rem, 0.17vw + 0.76rem, 0.89rem);
+  --font-size-base: clamp(1rem, 0.34vw + 0.91rem, 1.19rem);
+  --font-size-lg: clamp(1.25rem, 0.61vw + 1.1rem, 1.58rem);
+  --font-size-xl: clamp(1.56rem, 1.01vw + 1.31rem, 2.11rem);
+  --font-size-2xl: clamp(1.95rem, 1.6vw + 1.55rem, 2.81rem);
+  --font-size-3xl: clamp(2.44rem, 2.45vw + 1.83rem, 3.75rem);
+
+  /* Touch Targets & Spacing */
+  --touch-target: 44px;
 }
 
 @layer base {
+  html {
+    @apply scroll-smooth;
+    -webkit-text-size-adjust: 100%;
+    background-color: var(--background);
+  }
+
   body {
-    @apply bg-background text-foreground font-mono antialiased;
+    @apply text-foreground font-mono antialiased;
+    background-color: var(--background);
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
     overflow-x: hidden;
+    font-size: var(--font-size-base);
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-sans font-bold tracking-normal;
-    word-spacing: 0.1em;
+    @apply font-sans font-bold tracking-tight;
+    letter-spacing: -0.02em;
+  }
+
+  button, a {
+    cursor: pointer;
   }
 }
 
 @layer components {
+  .glasswork {
+    @apply border border-white/5;
+    background: #111111;
+  }
+
+  .glass-border {
+    @apply border border-white/10;
+  }
+
+  .noir-reveal {
+    opacity: 1;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+  .hover-glow:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
   .glitch {
     @apply relative text-white font-bold tracking-[0.5rem];
-    text-shadow: 2px 2px 0px red, -2px -2px 0px blue;
-    animation: simple-glitch 2s infinite;
+    text-shadow: 2px 2px 0px rgba(255, 0, 0, 0.5), -2px -2px 0px rgba(0, 0, 255, 0.5);
+    animation: simple-glitch 4s infinite;
   }
 }
 
 /* Animations */
+@keyframes noir-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes simple-glitch {
-  0% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
-  100% { transform: translate(0); }
+  0%, 100% { transform: translate(0); }
+  1% { transform: translate(-1px, 1px); }
+  2% { transform: translate(-1px, -1px); }
+  3% { transform: translate(1px, 1px); }
+  4% { transform: translate(1px, -1px); }
+  5% { transform: translate(0); }
 }
 
 @keyframes blink { 
@@ -71,4 +129,42 @@
 
 .animate-blink {
   animation: blink 2s infinite;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #444;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
 }
