@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, PlusSquare, Library, Tv, Clock, Settings, LayoutDashboard, PenTool, Menu, X, Sparkles } from "lucide-react";
+import { Home, PlusSquare, Library, Tv, Clock, Settings, LayoutDashboard, Menu, X, Sparkles } from "lucide-react";
 import { Subscription } from "@/actions/subscription";
 import { useSidebar } from "@/lib/sidebar-context";
 import { Button } from "./ui/button";
@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   { icon: Sparkles, href: "/clips", label: "Clips" },
   {
     icon: LayoutDashboard,
-    href: "/studio/dashboard",
+    href: "/studio",
     label: "Studio",
     authRequired: true,
     wipKey: "showStudioDashboard" as const,
@@ -40,12 +40,6 @@ const NAV_ITEMS = [
     icon: Clock,
     href: "/playlist?list=WL",
     label: "Watch Later",
-    authRequired: true,
-  },
-  {
-    icon: PenTool,
-    href: "/studio/content",
-    label: "Studio",
     authRequired: true,
   },
 ];

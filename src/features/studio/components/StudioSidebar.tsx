@@ -7,14 +7,15 @@ import { useState, useEffect } from "react";
 import { getMyChannel } from "@/actions/channel";
 import { cn } from "@/lib/utils";
 import { WIP_LIMITS } from "@/lib/wip-limits";
-import { LayoutDashboard, Video, BarChart2, Settings, Radio, PenTool, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Video, BarChart2, Settings, Radio, PenTool, ArrowLeft, Upload } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/studio/dashboard", icon: LayoutDashboard, wipKey: "showStudioDashboard" as const },
+  { label: "Dashboard", href: "/studio", icon: LayoutDashboard, wipKey: "showStudioDashboard" as const },
   { label: "Content", href: "/studio/content", icon: Video },
   { label: "Analytics", href: "/studio/analytics", icon: BarChart2, wipKey: "showStudioAnalytics" as const },
   { label: "Customize", href: "/studio/customization", icon: PenTool },
   { label: "Go Live", href: "/studio/stream", icon: Radio, highlight: true },
+  { label: "Upload", href: "/upload", icon: Upload },
 ];
 
 const BOTTOM_ITEMS = [{ label: "Settings", href: "/studio/customization", icon: Settings }];

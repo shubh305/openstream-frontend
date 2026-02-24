@@ -21,6 +21,7 @@ import {
 import { logout } from "@/actions/auth";
 import { useSidebar } from "@/lib/sidebar-context";
 import { cn } from "@/lib/utils";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 interface User {
     username: string;
@@ -80,6 +81,7 @@ function SearchForm({ isMobile, onClose }: { isMobile?: boolean; onClose?: () =>
       setShowSuggestions(false);
       setQuery(term);
       saveRecentSearch(term);
+      trackEvent(AnalyticsEvent.SEARCH_QUERY, { query: term.trim() });
       router.push(`/search?q=${encodeURIComponent(term.trim())}`);
       if (onClose) onClose();
     }

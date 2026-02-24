@@ -4,8 +4,8 @@
  */
 export const WIP_LIMITS = {
   // Navigation
-  showStudioDashboard: false,
-  showStudioAnalytics: false,
+  showStudioDashboard: true,
+  showStudioAnalytics: true,
   showLibrary: true,
 
   // Features
