@@ -143,6 +143,9 @@ export function BottomNavbar({ user }: BottomNavbarProps) {
     },
   ];
 
+  const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/signup") || pathname?.startsWith("/forgot-password");
+  if (isAuthPage) return null;
+
   return (
     <>
       {/* Search Overlay - Full Screen "Native" Experience */}

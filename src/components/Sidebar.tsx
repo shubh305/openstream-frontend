@@ -67,6 +67,8 @@ export function Sidebar({ subscriptions = [], isAuthenticated = false }: Sidebar
   }, [isOpen]);
 
   if (pathname.startsWith("/studio")) return null;
+  const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/signup") || pathname?.startsWith("/forgot-password");
+  if (isAuthPage) return null;
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -209,10 +211,10 @@ export function Sidebar({ subscriptions = [], isAuthenticated = false }: Sidebar
         {/* Mobile Footer / Settings */}
         <div className={cn("p-8 md:p-4 border-t border-white/5 mt-auto", isCollapsed ? "flex justify-center" : "px-6 md:px-4")}>
           <Link
-            href={isAuthenticated ? "/settings" : "/login"}
+            href={isAuthenticated ? "/studio/customization" : "/login"}
             className={cn(
               "flex items-center rounded-2xl md:rounded-lg transition-all duration-300 w-full cursor-pointer active:scale-95 px-6 md:px-4 py-5 md:py-3",
-              pathname === "/settings" ? "bg-white/10 text-white" : "text-muted-text hover:text-white hover:bg-white/5",
+              pathname === "/studio/customization" ? "bg-white/10 text-white" : "text-muted-text hover:text-white hover:bg-white/5",
             )}
             onClick={() => isOpen && close()}
           >

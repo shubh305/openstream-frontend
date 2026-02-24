@@ -17,7 +17,7 @@ export function SessionGuard({ isAuthenticated = false }: SessionGuardProps) {
   const pathname = usePathname();
 
   const checkSession = useCallback(async () => {
-    const protectedRoutes = ["/studio", "/upload", "/subscriptions", "/library", "/settings", "/playlist"];
+    const protectedRoutes = ["/studio", "/upload", "/subscriptions", "/library", "/playlist"];
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
     if (!isProtectedRoute && !isAuthenticated) return;
