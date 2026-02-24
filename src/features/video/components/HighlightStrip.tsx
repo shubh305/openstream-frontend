@@ -74,7 +74,7 @@ export function HighlightStrip({ clips, duration, currentTime, onSeek, onHover, 
     <div className={cn("relative", className)}>
       {/* Timeline Markers */}
       <div className="absolute inset-x-0 top-0 h-full pointer-events-none z-10">
-        {clips.map((clip) => {
+        {clips.map(clip => {
           const left = (clip.start / duration) * 100;
           const width = ((clip.end - clip.start) / duration) * 100;
           const isActive = activeClip?.index === clip.index;
@@ -84,81 +84,87 @@ export function HighlightStrip({ clips, duration, currentTime, onSeek, onHover, 
               key={clip.index}
               className={cn(
                 "absolute top-0 h-full rounded-sm transition-all duration-300 pointer-events-auto cursor-pointer",
-                isActive
-                  ? "bg-violet-500/50 border-t-2 border-violet-400 shadow-[0_0_12px_rgba(139,92,246,0.6)]"
-                  : "bg-violet-500/20 hover:bg-violet-500/40 border-t border-violet-500/40",
+                isActive ? "bg-white/40 border-t-2 border-white shadow-[0_0_12px_rgba(255,255,255,0.4)]" : "bg-white/20 hover:bg-white/40 border-t border-white/30",
               )}
               style={{ left: `${left}%`, width: `${Math.max(width, 0.3)}%` }}
-              onMouseMove={(e) => {
+              onMouseDown={e => e.stopPropagation()}
+              onTouchStart={e => e.stopPropagation()}
+              onMouseMove={e => {
                 const rect = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const hoverTime = (x / rect.width) * duration;
                 onHover?.(hoverTime, x);
               }}
               onMouseLeave={() => onLeave?.()}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 const rect = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const seekTime = (x / rect.width) * duration;
-                
+
                 onSeek(seekTime);
                 setSelectedClip(clip.index);
                 setIsExpanded(true);
               }}
               title={clip.title}
-            />
+            >
+              <div className="absolute inset-x-0 -top-4 -bottom-4 md:hidden" />
+            </div>
           );
         })}
       </div>
 
       {/* Toggle Button */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={e => {
+          e.stopPropagation();
+          setIsExpanded(!isExpanded);
+        }}
+        onMouseDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
         onMouseEnter={() => onHover?.(currentTime, 0)}
         onMouseLeave={() => onLeave?.()}
         className={cn(
-          "absolute -top-8 right-0 flex items-center gap-1.5 px-2.5 py-1 rounded-t-md text-[10px] font-bold tracking-wide transition-all duration-300 z-20 pointer-events-auto cursor-pointer",
+          "absolute -top-10 right-0 flex items-center gap-1.5 px-3 py-1.5 rounded-t-lg transition-all duration-300 z-50 pointer-events-auto cursor-pointer border-x border-t",
           isExpanded
-            ? "bg-violet-500 text-white"
-            : "bg-white/10 text-violet-400 hover:bg-white/15",
+            ? "bg-white text-black border-white shadow-[0_-4px_16px_rgba(255,255,255,0.2)]"
+            : "bg-black/80 text-white border-white/10 hover:bg-white hover:text-black hover:border-white shadow-xl",
         )}
       >
-        <Sparkles className="h-3 w-3" />
-        <span>{clips.length} HIGHLIGHTS</span>
+        <Sparkles className={cn("h-3.5 w-3.5", isExpanded ? "text-black" : "text-white")} />
+        <span className="text-[10px] font-black tracking-[0.2em]">{clips.length} HIGHLIGHTS</span>
       </button>
 
       {/* Expanded Clip Carousel */}
       {isExpanded && (
-        <div 
+        <div
           onMouseEnter={() => onHover?.(currentTime, 0)}
           onMouseLeave={() => onLeave?.()}
-          className="absolute bottom-full mb-1 left-0 right-0 bg-gradient-to-t from-black/95 to-black/80 backdrop-blur-md rounded-t-lg border-t border-violet-500/30 px-2 py-3 z-30 animate-in slide-in-from-bottom-2 fade-in duration-300 pointer-events-auto"
+          onMouseDown={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
+          className="absolute bottom-full mb-2 left-0 right-0 bg-gradient-to-t from-black/98 via-black/95 to-black/90 backdrop-blur-3xl rounded-t-2xl border-t border-white/10 px-3 py-4 z-30 animate-in slide-in-from-bottom-4 fade-in duration-500 pointer-events-auto shadow-2xl max-h-[180px] md:max-h-none overflow-hidden"
         >
           {/* Scroll Arrows */}
           {showArrows && (
             <>
               <button
                 onClick={() => scroll("left")}
-                className="absolute left-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center rounded-full bg-black/60 text-white/70 hover:text-white hover:bg-black/80 transition-colors cursor-pointer"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center rounded-full bg-black/80 text-white/70 hover:text-white hover:bg-black transition-all cursor-pointer border border-white/5 active:scale-95"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
               </button>
               <button
                 onClick={() => scroll("right")}
-                className="absolute right-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center rounded-full bg-black/60 text-white/70 hover:text-white hover:bg-black/80 transition-colors cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center rounded-full bg-black/80 text-white/70 hover:text-white hover:bg-black transition-all cursor-pointer border border-white/5 active:scale-95"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
               </button>
             </>
           )}
 
           {/* Scrollable Clip Cards */}
-          <div
-            ref={scrollRef}
-            className="flex gap-2.5 overflow-x-auto scrollbar-hide px-1 snap-x snap-mandatory"
-          >
-            {clips.map((clip) => {
+          <div ref={scrollRef} className="flex gap-3 md:gap-4 overflow-x-auto overflow-y-hidden no-scrollbar px-1 snap-x snap-mandatory">
+            {clips.map(clip => {
               const isActive = activeClip?.index === clip.index;
               const isSelected = selectedClip === clip.index;
               const clipDuration = clip.end - clip.start;
@@ -168,24 +174,17 @@ export function HighlightStrip({ clips, duration, currentTime, onSeek, onHover, 
                   key={clip.index}
                   onClick={() => handleClipClick(clip)}
                   className={cn(
-                    "flex-none w-[150px] snap-start group rounded-lg overflow-hidden transition-all duration-200 text-left cursor-pointer",
-                    isSelected || isActive
-                      ? "ring-2 ring-violet-500 shadow-lg shadow-violet-500/20"
-                      : "ring-1 ring-white/10 hover:ring-white/25",
+                    "flex-none w-[140px] md:w-[200px] snap-start group rounded-xl overflow-hidden transition-all duration-300 text-left cursor-pointer",
+                    isSelected || isActive ? "ring-2 ring-electric-lime shadow-xl shadow-electric-lime/30 scale-[1.02]" : "ring-1 ring-white/10 hover:ring-white/25 active:scale-95",
                   )}
                 >
                   {/* Thumbnail */}
                   <div className="relative aspect-video bg-noir-terminal overflow-hidden">
                     {clip.thumbnailUrl ? (
-                      <Image
-                        src={clip.thumbnailUrl}
-                        alt={clip.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      <Image src={clip.thumbnailUrl} alt={clip.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-violet-900/30 to-black">
-                        <Sparkles className="h-5 w-5 text-violet-400/50" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-white/10 to-black">
+                        <Sparkles className="h-5 w-5 text-white/50" />
                       </div>
                     )}
                     {/* Play overlay */}
@@ -198,8 +197,8 @@ export function HighlightStrip({ clips, duration, currentTime, onSeek, onHover, 
                     </span>
                     {/* Playing indicator */}
                     {isActive && (
-                      <div className="absolute top-1 left-1 flex items-center gap-1 px-1.5 py-0.5 bg-violet-500 rounded text-[8px] font-black text-white">
-                        <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                      <div className="absolute top-1 left-1 flex items-center gap-1 px-1.5 py-0.5 bg-electric-lime rounded text-[8px] font-black text-black">
+                        <div className="h-1.5 w-1.5 rounded-full bg-black animate-pulse" />
                         PLAYING
                       </div>
                     )}

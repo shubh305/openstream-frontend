@@ -36,12 +36,16 @@ export async function getClips(
     page?: number;
     limit?: number;
     signal?: string;
+    sortBy?: "score" | "createdAt";
+    sortOrder?: "asc" | "desc";
   } = {},
 ) {
   const queryString = new URLSearchParams();
   if (params.page) queryString.append("page", params.page.toString());
   if (params.limit) queryString.append("limit", params.limit.toString());
   if (params.signal) queryString.append("signal", params.signal);
+  if (params.sortBy) queryString.append("sortBy", params.sortBy);
+  if (params.sortOrder) queryString.append("sortOrder", params.sortOrder);
 
   try {
     return await api.get<ClipsResponse>(`/clips?${queryString.toString()}`, {

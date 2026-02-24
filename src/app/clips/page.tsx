@@ -11,18 +11,41 @@ export default async function ClipsFeedPage({
   const resolvedParams = await searchParams;
   const page = resolvedParams.page ? parseInt(resolvedParams.page as string, 10) : 1;
   const signal = (resolvedParams.signal as string) || "";
+  const sortBy = (resolvedParams.sortBy as "createdAt" | "score") || "createdAt";
 
-  const { data: clips, lastPage } = await getClips({ page, limit: 20, signal });
+  const { data: clips, lastPage } = await getClips({
+    page,
+    limit: 24,
+    signal,
+    sortBy,
+  });
 
   return (
     <div className="min-h-screen bg-black px-4 py-8 lg:px-8">
       <div className="mx-auto max-w-[1600px]">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Discovery Highlights</h1>
-            <p className="text-muted-text max-w-2xl">
-              Watch automatic, bite-sized highlight clips captured straight from OpenStream VODs.
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-white mb-2 underline decoration-electric-lime/30 underline-offset-8">Discovery Highlights</h1>
+            <p className="text-muted-text max-w-2xl">Watch automatic, bite-sized highlight clips captured straight from OpenStream VODs.</p>
+          </div>
+
+          <div className="flex items-center p-1 bg-noir-terminal/40 rounded-xl border border-white/5 w-fit">
+            <Link
+              href={`/clips?sortBy=createdAt${signal ? `&signal=${signal}` : ""}`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                sortBy === "createdAt" ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.1)]" : "text-muted-text hover:text-white"
+              }`}
+            >
+              Latest
+            </Link>
+            <Link
+              href={`/clips?sortBy=score${signal ? `&signal=${signal}` : ""}`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                sortBy === "score" ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.1)]" : "text-muted-text hover:text-white"
+              }`}
+            >
+              Top Rated
+            </Link>
           </div>
         </div>
 
@@ -35,7 +58,7 @@ export default async function ClipsFeedPage({
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {clips.map((clip) => (
+              {clips.map(clip => (
                 <Link
                   key={clip.clipId}
                   href={`/clips/${clip.clipId}`}
@@ -62,7 +85,7 @@ export default async function ClipsFeedPage({
                       <Clock className="w-3 h-3" />
                       00:{Math.floor(clip.duration).toString().padStart(2, "0")}
                     </div>
-                    
+
                     {/* Signals overlay */}
                     <div className="absolute top-2 left-2 flex gap-1.5">
                       {clip.signals?.chat && <div className="w-2.5 h-2.5 rounded-full bg-electric-lime shadow-[0_0_8px_rgba(204,255,0,0.8)]" title="High Chat Activity" />}
@@ -71,16 +94,12 @@ export default async function ClipsFeedPage({
                     </div>
                   </div>
                   <div className="px-1">
-                    <h3 className="font-bold text-white group-hover:text-electric-lime transition-colors">
-                      {clip.title || `Highlight #${clip.clipId.slice(-4).toUpperCase()}`}
-                    </h3>
+                    <h3 className="font-bold text-white group-hover:text-electric-lime transition-colors">{clip.title || `Highlight #${clip.clipId.slice(-4).toUpperCase()}`}</h3>
                     <div className="text-sm text-muted-text mt-1 flex items-center justify-between">
                       {typeof clip.parentVideoId === "object" && clip.parentVideoId !== null && "title" in clip.parentVideoId ? (
-                         <span className="truncate pr-4 border-l-2 border-electric-lime/40 pl-2 text-xs italic">
-                           From: {(clip.parentVideoId as { title: string }).title}
-                         </span>
+                        <span className="truncate pr-4 border-l-2 border-electric-lime/40 pl-2 text-xs italic">From: {(clip.parentVideoId as { title: string }).title}</span>
                       ) : (
-                         <span>OpenStream VOD</span>
+                        <span>OpenStream VOD</span>
                       )}
                       <span className="shrink-0">{Intl.NumberFormat("en-US", { notation: "compact" }).format(clip.viewCount)} views</span>
                     </div>
@@ -94,7 +113,7 @@ export default async function ClipsFeedPage({
               <div className="mt-12 flex justify-center gap-2">
                 {page > 1 && (
                   <Link
-                    href={`/clips?page=${page - 1}${signal ? `&signal=${signal}` : ""}`}
+                    href={`/clips?page=${page - 1}${signal ? `&signal=${signal}` : ""}${sortBy ? `&sortBy=${sortBy}` : ""}`}
                     className="px-4 py-2 rounded-lg bg-noir-terminal text-white hover:bg-white/10 transition-colors"
                   >
                     Previous
@@ -105,7 +124,7 @@ export default async function ClipsFeedPage({
                 </span>
                 {page < lastPage && (
                   <Link
-                    href={`/clips?page=${page + 1}${signal ? `&signal=${signal}` : ""}`}
+                    href={`/clips?page=${page + 1}${signal ? `&signal=${signal}` : ""}${sortBy ? `&sortBy=${sortBy}` : ""}`}
                     className="px-4 py-2 rounded-lg bg-noir-terminal text-white hover:bg-white/10 transition-colors"
                   >
                     Next
