@@ -26,9 +26,18 @@ export interface VideoPlayerProps {
   resolutions?: string[];
   status?: string;
   type?: "video" | "clip";
+  onEnded?: () => void;
 }
 
-export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: initialVideoUrl, resolutions: initialResolutions = [], status: initialStatus, type = "video" }: VideoPlayerProps) {
+export function VideoPlayer({
+  videoId,
+  posterUrl: initialPosterUrl,
+  videoUrl: initialVideoUrl,
+  resolutions: initialResolutions = [],
+  status: initialStatus,
+  type = "video",
+  onEnded,
+}: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -47,13 +56,20 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
   const [resolvedQuality, setResolvedQuality] = useState<string>("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeSubtitleTrack, setActiveSubtitleTrack] = useState<string | null>(null);
+  const [isOverHighlight, setIsOverHighlight] = useState(false);
   const [seekHoverTime, setSeekHoverTime] = useState<number | null>(null);
   const [seekHoverX, setSeekHoverX] = useState(0);
   const [seekbarWidth, setSeekbarWidth] = useState(0);
-  const [isOverHighlight, setIsOverHighlight] = useState(false);
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainer(containerRef.current);
+    }
+  }, []);
   const hlsRef = useRef<Hls | null>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasViewedRef = useRef(false);
@@ -183,12 +199,20 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
               setResolvedQuality(initialResolutions[0]);
             }
           }
+
+          if (videoRef.current) {
+            videoRef.current.play().catch(() => {});
+          }
         });
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = videoUrl;
       }
     } else {
       video.src = videoUrl;
+    }
+
+    if (videoUrl && !videoUrl.endsWith(".m3u8") && video) {
+      video.play().catch(() => {});
     }
 
     return () => {
@@ -313,6 +337,13 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
       ref={containerRef}
       className="group relative h-full w-full overflow-hidden bg-black flex items-center justify-center cursor-default"
       onMouseMove={handleMouseMove}
+      onClick={() => {
+        if (showControls) {
+          setShowControls(false);
+        } else {
+          handleMouseMove();
+        }
+      }}
       onMouseLeave={() => {
         if (isPlaying) setShowControls(false);
       }}
@@ -335,11 +366,14 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
           setIsBuffering(false);
           if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
         }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onEnded={() => {
           setIsPlaying(false);
           setHasEnded(true);
           setShowControls(true);
           setIsBuffering(false);
+          if (onEnded) onEnded();
         }}
         onProgress={() => {
           if (videoRef.current) {
@@ -393,10 +427,10 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
           {currentTime === 0 && posterUrl && <Image src={posterUrl} alt="Poster" fill className="object-cover -z-10 opacity-70" priority />}
           <Button
             size="icon"
-            className="h-20 w-20 rounded-full bg-electric-lime text-black hover:bg-electric-lime/90 hover:scale-110 transition-all shadow-2xl shadow-electric-lime/20 cursor-pointer"
+            className="h-14 w-14 md:h-20 md:w-20 rounded-full bg-electric-lime text-black hover:bg-electric-lime/90 md:hover:scale-110 transition-all shadow-2xl shadow-electric-lime/20 cursor-pointer"
             onClick={handlePlayPause}
           >
-            {hasEnded ? <RotateCcw className="h-10 w-10" /> : <Play className="h-10 w-10 ml-1.5" />}
+            {hasEnded ? <RotateCcw className="h-7 w-7 md:h-10 md:w-10" /> : <Play className="h-7 w-7 md:h-10 md:w-10 ml-0.5 md:ml-1.5" />}
           </Button>
         </div>
       ) : null}
@@ -567,10 +601,6 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
                   if (videoRef.current) {
                     videoRef.current.currentTime = time;
                     setCurrentTime(time);
-                    if (!isPlaying) {
-                      videoRef.current.play();
-                      setIsPlaying(true);
-                    }
                   }
                 }}
                 onHover={(time, x) => {
@@ -601,7 +631,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
                 {isMuted || volume === 0 ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
               </Button>
               <div className="w-0 overflow-hidden transition-all duration-300 group-hover/volume:w-24">
-                <Slider value={[isMuted ? 0 : volume]} min={0} max={1} step={0.01} onValueChange={handleVolumeChange} className="w-20" />
+                <Slider value={[isMuted ? 0 : volume]} min={0} max={1} step={0.01} onValueChange={handleVolumeChange} className="w-20 cursor-pointer" />
               </div>
             </div>
 
@@ -627,7 +657,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-noir-terminal border-white/10 text-white min-w-[160px]">
+                <DropdownMenuContent align="end" className="bg-noir-terminal border-white/10 text-white min-w-[160px]" container={container}>
                   <DropdownMenuLabel className="text-[10px] text-muted-text">Quality</DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/5" />
 
@@ -670,6 +700,7 @@ export function VideoPlayer({ videoId, posterUrl: initialPosterUrl, videoUrl: in
                 tracks={subtitles.tracks || []}
                 status={subtitles.status}
                 activeTrack={activeSubtitleTrack}
+                container={container}
                 onTrackSelect={lang => {
                   setActiveSubtitleTrack(lang);
 
