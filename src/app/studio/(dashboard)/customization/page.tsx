@@ -135,120 +135,149 @@ export default function CustomizationPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column */}
-        <div className="lg:col-span-12 xl:col-span-7 space-y-10">
-          {/* Visual Identity Section */}
-          <StudioCard title="Visual Assets" padding="none" rounded="large">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Branding Assets & Identity */}
+        <div className="xl:col-span-8 space-y-8">
+          {/* Visual Branding Card */}
+          <StudioCard title="Visual Branding" padding="none" rounded="large" className="overflow-hidden">
             <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={handleFileChange("banner")} />
-            <div onClick={handleBannerClick} className="h-32 md:h-48 bg-noir-terminal relative cursor-pointer group/banner transition-all overflow-hidden">
+            <div onClick={handleBannerClick} className="h-40 md:h-56 bg-noir-terminal relative cursor-pointer group/banner transition-all overflow-hidden">
               {channel?.bannerUrl ? (
                 <Image src={channel.bannerUrl} alt="Channel Banner" fill className="object-cover transition-transform duration-1000 group-hover/banner:scale-105" />
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-noir-terminal to-noir-bg flex items-center justify-center">
-                  <LayoutTemplate className="w-8 h-8 text-white/5" />
+                  <LayoutTemplate className="w-10 h-10 text-white/5" />
+                  <span className="absolute bottom-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Click to upload banner</span>
                 </div>
               )}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-all bg-black/40 backdrop-blur-md">
-                <div className="bg-white text-black p-3 rounded-full shadow-2xl transform scale-90 group-hover/banner:scale-100 transition-transform">
-                  <Upload className="w-5 h-5" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-all bg-black/40 backdrop-blur-sm">
+                <div className="bg-white text-black px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transform translate-y-2 group-hover/banner:translate-y-0 transition-all flex items-center gap-2">
+                  <Upload className="w-3 h-3" />
+                  Update Banner
                 </div>
               </div>
             </div>
 
-            <div className="px-6 md:px-10 pb-10 relative">
+            <div className="px-6 md:px-10 pb-8 flex flex-col md:flex-row items-center md:items-end gap-6">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleFileChange("avatar")} />
-              <div className="relative -mt-12 md:-mt-16 mb-6 inline-block">
+              <div className="relative -mt-16 md:-mt-20">
                 <div
                   onClick={handleAvatarClick}
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-[24px] md:rounded-[32px] bg-noir-terminal border-4 md:border-8 border-noir-deep overflow-hidden shadow-2xl relative group/avatar cursor-pointer transition-all hover:scale-105"
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-[40px] bg-noir-terminal border-[8px] border-noir-bg overflow-hidden shadow-2xl relative group/avatar cursor-pointer transition-all hover:scale-105"
                 >
                   {channel?.avatarUrl ? (
-                    <Image src={channel.avatarUrl} alt={name} width={128} height={128} className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" />
+                    <Image src={channel.avatarUrl} alt={name} width={160} height={160} className="object-cover w-full h-full grayscale group-hover/avatar:grayscale-0 transition-all duration-700" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-electric-lime font-black text-2xl md:text-5xl">{(name[0] || "U").toUpperCase()}</div>
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-electric-lime font-black text-4xl md:text-6xl">{(name[0] || "U").toUpperCase()}</div>
                   )}
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all">
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all backdrop-blur-sm">
                     <Upload className="w-6 h-6 text-white" />
                   </div>
                 </div>
               </div>
+              <div className="pb-4 space-y-1 text-center md:text-left">
+                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter">{name || "Channel Name"}</h2>
+                <p className="text-muted-text font-mono text-[10px] uppercase tracking-widest">@{handle || "handle"}</p>
+              </div>
+            </div>
+          </StudioCard>
 
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Screen Name</label>
-                    <Input
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      placeholder="Creative Name"
-                      className="bg-white/5 border-white/5 focus:border-white/20 h-16 text-xl font-black uppercase tracking-tight px-6 rounded-2xl transition-all"
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Digital Handle</label>
-                    <div className="relative">
-                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-black select-none">@</span>
-                      <Input
-                        value={handle}
-                        onChange={e => setHandle(e.target.value.replace("@", ""))}
-                        placeholder="handle"
-                        className="bg-white/5 border-white/5 focus:border-white/20 h-16 text-xl font-black tracking-tight pl-12 pr-6 rounded-2xl transition-all"
-                      />
-                    </div>
-                  </div>
+          {/* Basic Identity Card */}
+          <StudioCard title="Channel Details" padding="xl" rounded="large">
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Screen Name</label>
+                  <Input
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Transmission Identity"
+                    className="bg-white/5 border-white/5 focus:border-white/20 h-14 text-lg font-black uppercase tracking-tight px-6 rounded-2xl transition-all"
+                  />
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Mission / About</label>
-                  <Textarea
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    placeholder="Transmission details..."
-                    className="bg-white/5 border-white/5 focus:border-white/20 min-h-[160px] text-base p-6 rounded-3xl resize-none leading-relaxed transition-all font-medium"
-                  />
-                  <div className="text-[9px] font-mono text-muted-text uppercase tracking-widest text-right px-2">{description.length} / 1000 SYMBOLS</div>
+                  <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Digital Handle</label>
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-black select-none">@</span>
+                    <Input
+                      value={handle}
+                      onChange={e => setHandle(e.target.value.replace("@", ""))}
+                      placeholder="handle"
+                      className="bg-white/5 border-white/5 focus:border-white/20 h-14 text-lg font-black tracking-tight pl-12 pr-6 rounded-2xl transition-all"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between ml-1">
+                  <label className="text-[10px] font-black text-muted-text uppercase tracking-widest">Mission / Bio</label>
+                  <div className="text-[9px] font-mono text-muted-text uppercase tracking-widest">{description.length} / 1000</div>
+                </div>
+                <Textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Describe your frequency..."
+                  className="bg-white/5 border-white/5 focus:border-white/20 min-h-[160px] text-base p-6 rounded-3xl resize-none leading-relaxed transition-all font-medium"
+                />
               </div>
             </div>
           </StudioCard>
         </div>
 
-        {/* Right Column */}
-        <div className="lg:col-span-12 xl:col-span-5 space-y-10">
-          <StudioCard title="Broadcast URL" padding="lg" rounded="large" className="shadow-2xl">
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-electric-lime/10 flex items-center justify-center">
-                <LayoutTemplate className="w-5 h-5 text-electric-lime" />
+        {/* Right Column: Preview & Utils */}
+        <div className="xl:col-span-4 space-y-8 sticky top-[120px]">
+          <StudioCard title="Public Broadcast" padding="lg" rounded="large" className="shadow-2xl border-white/5 bg-gradient-to-br from-noir-terminal/50 to-transparent">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-white/10 group cursor-pointer hover:border-electric-lime/30 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-electric-lime/10 flex items-center justify-center group-hover:bg-electric-lime/20 transition-all">
+                  <LayoutTemplate className="w-5 h-5 text-electric-lime" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-black text-muted-text uppercase tracking-widest mb-1">Access URL</div>
+                  <div className="text-sm font-bold text-white truncate font-mono tracking-tight">
+                    {origin ? `${origin.replace(/^https?:\/\//, "")}/@${handle || "..."}` : `openstream.dev/@${handle || "..."}`}
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-black text-muted-text uppercase tracking-widest mb-1">Public Access Link</div>
-                <div className="text-sm font-bold text-white truncate font-mono">{origin ? `${origin.replace(/^https?:\/\//, "")}/@${handle || "..."}` : `openstream.dev/@${handle || "..."}`}</div>
-              </div>
+              <p className="text-[11px] text-muted-text leading-relaxed font-semibold italic opacity-60">
+                This is your primary entry point for viewers. High-fidelity streams and telemetry will originate from this node.
+              </p>
             </div>
-            <p className="text-xs text-muted-text leading-relaxed font-medium">
-              {" "}
-              This is your unique broadcast identifier. High-fidelity streams and community interactions will originate from this terminal point.{" "}
-            </p>
           </StudioCard>
 
-          <StudioCard title="Live Preview Stat" padding="xl" rounded="large" className="relative overflow-hidden">
-            <div className="flex flex-col items-center text-center space-y-6">
+          <StudioCard title="Live Preview" padding="xl" rounded="large" className="relative overflow-hidden border-white/5">
+            <div className="flex flex-col items-center text-center space-y-8 py-4">
               <div className="absolute top-0 right-0 w-32 h-32 bg-electric-lime/5 blur-3xl -mr-16 -mt-16" />
-              <div className="w-24 h-24 rounded-[32px] bg-noir-terminal border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
-                {channel?.avatarUrl ? (
-                  <Image src={channel.avatarUrl} alt="" width={96} height={96} className="object-cover" />
-                ) : (
-                  <span className="text-electric-lime font-black text-3xl">{name[0]?.toUpperCase()}</span>
-                )}
+
+              <div className="relative">
+                <div className="w-28 h-28 rounded-[36px] bg-noir-terminal border-2 border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
+                  {channel?.avatarUrl ? (
+                    <Image src={channel.avatarUrl} alt="" width={112} height={112} className="object-cover" />
+                  ) : (
+                    <span className="text-electric-lime font-black text-4xl">{name[0]?.toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-noir-bg border-4 border-noir-bg shadow-xl flex items-center justify-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-electric-lime animate-pulse" />
+                </div>
               </div>
-              <div className="space-y-1">
-                <h3 className="text-xl font-black text-white uppercase tracking-tight">{name || "Unnamed"}</h3>
-                <p className="text-[10px] font-black text-muted-text uppercase tracking-[0.3em] flex items-center justify-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-electric-lime animate-pulse" />
-                  Established
-                </p>
+
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">{name || "Unnamed"}</h3>
+                <p className="text-[10px] font-black text-electric-lime uppercase tracking-[0.4em] flex items-center justify-center gap-2">Established</p>
+              </div>
+
+              <div className="w-full pt-4 border-t border-white/5 grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-[10px] font-black text-muted-text uppercase tracking-widest mb-0.5">Frequency</div>
+                  <div className="text-sm font-bold text-white">480p+</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] font-black text-muted-text uppercase tracking-widest mb-0.5">Status</div>
+                  <div className="text-sm font-bold text-white uppercase tracking-tight">Active</div>
+                </div>
               </div>
             </div>
           </StudioCard>
