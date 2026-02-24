@@ -10,6 +10,7 @@ import { getMyChannel, updateChannel } from "@/actions/channel";
 import { uploadChannelImage } from "@/actions/user";
 import { toast } from "sonner";
 import { Channel } from "@/types/api";
+import { StudioCard } from "@/features/studio/components/StudioCard";
 
 export default function CustomizationPage() {
   const [channel, setChannel] = useState<Channel | null>(null);
@@ -138,109 +139,102 @@ export default function CustomizationPage() {
         {/* Left Column */}
         <div className="lg:col-span-12 xl:col-span-7 space-y-10">
           {/* Visual Identity Section */}
-          <section className="space-y-6">
-            <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.4em] px-2">Visual Assets</h2>
-            <div className="glasswork border border-white/5 rounded-[32px] overflow-hidden shadow-2xl">
-              <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={handleFileChange("banner")} />
-              <div onClick={handleBannerClick} className="h-32 md:h-48 bg-noir-terminal relative cursor-pointer group/banner transition-all overflow-hidden">
-                {channel?.bannerUrl ? (
-                  <Image src={channel.bannerUrl} alt="Channel Banner" fill className="object-cover transition-transform duration-1000 group-hover/banner:scale-105" />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-noir-terminal to-noir-bg flex items-center justify-center">
-                    <LayoutTemplate className="w-8 h-8 text-white/5" />
-                  </div>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-all bg-black/40 backdrop-blur-md">
-                  <div className="bg-white text-black p-3 rounded-full shadow-2xl transform scale-90 group-hover/banner:scale-100 transition-transform">
-                    <Upload className="w-5 h-5" />
-                  </div>
+          <StudioCard title="Visual Assets" padding="none" rounded="large">
+            <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={handleFileChange("banner")} />
+            <div onClick={handleBannerClick} className="h-32 md:h-48 bg-noir-terminal relative cursor-pointer group/banner transition-all overflow-hidden">
+              {channel?.bannerUrl ? (
+                <Image src={channel.bannerUrl} alt="Channel Banner" fill className="object-cover transition-transform duration-1000 group-hover/banner:scale-105" />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-noir-terminal to-noir-bg flex items-center justify-center">
+                  <LayoutTemplate className="w-8 h-8 text-white/5" />
                 </div>
-              </div>
-
-              <div className="px-6 md:px-10 pb-10 relative">
-                <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleFileChange("avatar")} />
-                <div className="relative -mt-12 md:-mt-16 mb-6 inline-block">
-                  <div
-                    onClick={handleAvatarClick}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-[24px] md:rounded-[32px] bg-noir-terminal border-4 md:border-8 border-noir-deep overflow-hidden shadow-2xl relative group/avatar cursor-pointer transition-all hover:scale-105"
-                  >
-                    {channel?.avatarUrl ? (
-                      <Image src={channel.avatarUrl} alt={name} width={128} height={128} className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-electric-lime font-black text-2xl md:text-5xl">{(name[0] || "U").toUpperCase()}</div>
-                    )}
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all">
-                      <Upload className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Screen Name</label>
-                      <Input
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        placeholder="Creative Name"
-                        className="bg-white/5 border-white/5 focus:border-white/20 h-16 text-xl font-black uppercase tracking-tight px-6 rounded-2xl transition-all"
-                      />
-                    </div>
-
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Digital Handle</label>
-                      <div className="relative">
-                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-black select-none">@</span>
-                        <Input
-                          value={handle}
-                          onChange={e => setHandle(e.target.value.replace("@", ""))}
-                          placeholder="handle"
-                          className="bg-white/5 border-white/5 focus:border-white/20 h-16 text-xl font-black tracking-tight pl-12 pr-6 rounded-2xl transition-all"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Mission / About</label>
-                    <Textarea
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      placeholder="Transmission details..."
-                      className="bg-white/5 border-white/5 focus:border-white/20 min-h-[160px] text-base p-6 rounded-3xl resize-none leading-relaxed transition-all font-medium"
-                    />
-                    <div className="text-[9px] font-mono text-muted-text uppercase tracking-widest text-right px-2">{description.length} / 1000 SYMBOLS</div>
-                  </div>
+              )}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-all bg-black/40 backdrop-blur-md">
+                <div className="bg-white text-black p-3 rounded-full shadow-2xl transform scale-90 group-hover/banner:scale-100 transition-transform">
+                  <Upload className="w-5 h-5" />
                 </div>
               </div>
             </div>
-          </section>
+
+            <div className="px-6 md:px-10 pb-10 relative">
+              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleFileChange("avatar")} />
+              <div className="relative -mt-12 md:-mt-16 mb-6 inline-block">
+                <div
+                  onClick={handleAvatarClick}
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-[24px] md:rounded-[32px] bg-noir-terminal border-4 md:border-8 border-noir-deep overflow-hidden shadow-2xl relative group/avatar cursor-pointer transition-all hover:scale-105"
+                >
+                  {channel?.avatarUrl ? (
+                    <Image src={channel.avatarUrl} alt={name} width={128} height={128} className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-electric-lime font-black text-2xl md:text-5xl">{(name[0] || "U").toUpperCase()}</div>
+                  )}
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all">
+                    <Upload className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Screen Name</label>
+                    <Input
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="Creative Name"
+                      className="bg-white/5 border-white/5 focus:border-white/20 h-16 text-xl font-black uppercase tracking-tight px-6 rounded-2xl transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Digital Handle</label>
+                    <div className="relative">
+                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-black select-none">@</span>
+                      <Input
+                        value={handle}
+                        onChange={e => setHandle(e.target.value.replace("@", ""))}
+                        placeholder="handle"
+                        className="bg-white/5 border-white/5 focus:border-white/20 h-16 text-xl font-black tracking-tight pl-12 pr-6 rounded-2xl transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Mission / About</label>
+                  <Textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="Transmission details..."
+                    className="bg-white/5 border-white/5 focus:border-white/20 min-h-[160px] text-base p-6 rounded-3xl resize-none leading-relaxed transition-all font-medium"
+                  />
+                  <div className="text-[9px] font-mono text-muted-text uppercase tracking-widest text-right px-2">{description.length} / 1000 SYMBOLS</div>
+                </div>
+              </div>
+            </div>
+          </StudioCard>
         </div>
 
         {/* Right Column */}
         <div className="lg:col-span-12 xl:col-span-5 space-y-10">
-          <section className="space-y-6">
-            <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.4em] px-2">Broadcast URL</h2>
-            <div className="glasswork border border-white/5 p-8 rounded-[32px] space-y-6 shadow-2xl">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-white/5">
-                <div className="w-10 h-10 rounded-xl bg-electric-lime/10 flex items-center justify-center">
-                  <LayoutTemplate className="w-5 h-5 text-electric-lime" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-black text-muted-text uppercase tracking-widest mb-1">Public Access Link</div>
-                  <div className="text-sm font-bold text-white truncate font-mono">{origin ? `${origin.replace(/^https?:\/\//, "")}/@${handle || "..."}` : `openstream.dev/@${handle || "..."}`}</div>
-                </div>
+          <StudioCard title="Broadcast URL" padding="lg" rounded="large" className="shadow-2xl">
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-white/5">
+              <div className="w-10 h-10 rounded-xl bg-electric-lime/10 flex items-center justify-center">
+                <LayoutTemplate className="w-5 h-5 text-electric-lime" />
               </div>
-              <p className="text-xs text-muted-text leading-relaxed font-medium">
-                {" "}
-                This is your unique broadcast identifier. High-fidelity streams and community interactions will originate from this terminal point.{" "}
-              </p>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] font-black text-muted-text uppercase tracking-widest mb-1">Public Access Link</div>
+                <div className="text-sm font-bold text-white truncate font-mono">{origin ? `${origin.replace(/^https?:\/\//, "")}/@${handle || "..."}` : `openstream.dev/@${handle || "..."}`}</div>
+              </div>
             </div>
-          </section>
+            <p className="text-xs text-muted-text leading-relaxed font-medium">
+              {" "}
+              This is your unique broadcast identifier. High-fidelity streams and community interactions will originate from this terminal point.{" "}
+            </p>
+          </StudioCard>
 
-          <section className="space-y-6">
-            <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.4em] px-2">Live Preview Stat</h2>
-            <div className="glasswork border border-white/5 p-10 rounded-[40px] flex flex-col items-center text-center space-y-6 relative overflow-hidden">
+          <StudioCard title="Live Preview Stat" padding="xl" rounded="large" className="relative overflow-hidden">
+            <div className="flex flex-col items-center text-center space-y-6">
               <div className="absolute top-0 right-0 w-32 h-32 bg-electric-lime/5 blur-3xl -mr-16 -mt-16" />
               <div className="w-24 h-24 rounded-[32px] bg-noir-terminal border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
                 {channel?.avatarUrl ? (
@@ -257,7 +251,7 @@ export default function CustomizationPage() {
                 </p>
               </div>
             </div>
-          </section>
+          </StudioCard>
         </div>
       </div>
     </div>
