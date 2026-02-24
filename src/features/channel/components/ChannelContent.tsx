@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Play, Eye } from "lucide-react";
+import { Play, Eye } from "lucide-react";
 import Link from "next/link";
 import { SubscribeButton } from "@/features/video/components/SubscribeButton";
 import { StreamThumbnail } from "@/components/StreamThumbnail";
 import { Channel, Video, Stream, Playlist } from "@/types/api";
+import { PlaylistAction } from "@/components/PlaylistAction";
 
 interface ChannelContentProps {
   channel: Channel;
@@ -52,7 +53,7 @@ export function ChannelContent({ channel, videos, pastStreams = [], liveStreams,
                 <div className="text-[10px] text-white/40 font-medium tracking-wider">Subscribers</div>
               </div>
               <div className="bg-white/5 rounded-2xl p-3">
-                <div className="text-xl font-bold">{videos.length}</div>
+                <div className="text-xl font-bold">{videos.length + pastStreams.length}</div>
                 <div className="text-[10px] text-white/40 font-medium tracking-wider">Videos</div>
               </div>
             </div>
@@ -128,7 +129,7 @@ export function ChannelContent({ channel, videos, pastStreams = [], liveStreams,
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`
-                            px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap
+                            px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap cursor-pointer
                             ${isActive ? "bg-white text-black font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105" : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"}
                         `}
                 >
@@ -250,63 +251,70 @@ export function ChannelContent({ channel, videos, pastStreams = [], liveStreams,
 function HubVideoCard({ video }: { video: Video }) {
     const isReady = video.isLive || (video.resolutions && video.resolutions.length > 0) || video.status === "READY" || video.status === "PUBLISHED";
 
-    const CardContent = (
+    return (
       <div
         className={`group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden transition-all duration-300 ${isReady ? "hover:border-white/20 hover:-translate-y-1 hover:shadow-2xl" : "opacity-60 grayscale-[0.5]"}`}
       >
-        {/* Thumbnail Area */}
-        <div className="aspect-video relative overflow-hidden">
-          <StreamThumbnail
-            url={video.thumbnailUrl}
-            title={video.title}
-            className="w-full h-full"
-            avatarUrl={video.creator?.avatarUrl}
-            avatarFallback={(video.creator?.username || video.title || "V")[0].toUpperCase()}
-          />
+        <Link href={`/watch/${video.id}`} className="block">
+          {/* Thumbnail Area */}
+          <div className="aspect-video relative overflow-hidden">
+            <StreamThumbnail
+              url={video.thumbnailUrl}
+              title={video.title}
+              className="w-full h-full"
+              avatarUrl={video.creator?.avatarUrl}
+              avatarFallback={(video.creator?.username || video.title || "V")[0].toUpperCase()}
+            />
 
-          {!isReady && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-30 pointer-events-none">
-              <div className="flex flex-col items-center gap-2">
-                <div className="h-1.5 w-24 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-electric-lime w-1/3 animate-[shimmer_2s_infinite]" />
+            {!isReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-30 pointer-events-none">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="h-1.5 w-24 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-electric-lime w-1/3 animate-[shimmer_2s_infinite]" />
+                  </div>
+                  <span className="text-[10px] font-bold text-electric-lime tracking-[0.2em] uppercase">Processing</span>
                 </div>
-                <span className="text-[10px] font-bold text-electric-lime tracking-[0.2em] uppercase">Processing</span>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Duration Badge */}
-          {isReady && <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-[10px] font-bold font-mono border border-white/10">{video.duration}</div>}
+            {/* Duration Badge */}
+            {isReady && <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-[10px] font-bold font-mono border border-white/10">{video.duration}</div>}
 
-          {/* Play Overlay */}
-          {isReady && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                <Play className="w-5 h-5 text-white fill-white" />
+            {/* Play Overlay */}
+            {isReady && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                  <Play className="w-5 h-5 text-white fill-white" />
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </Link>
 
         {/* Content Area */}
         <div className="p-5 relative">
-          <h3 className={`text-base font-bold text-white leading-snug line-clamp-2 mb-2 transition-colors ${isReady ? "group-hover:text-electric-lime" : ""}`}>{video.title}</h3>
+          <Link href={`/watch/${video.id}`} className="block mb-2">
+            <h3 className={`text-base font-bold text-white leading-snug line-clamp-2 transition-colors ${isReady ? "group-hover:text-electric-lime" : ""}`}>{video.title}</h3>
+          </Link>
           <div className="flex items-center justify-between text-xs text-white/40">
             <div className="flex items-center gap-2">
               <span>{video.views ? video.views.toLocaleString() : 0} views</span>
               <span className="w-0.5 h-0.5 rounded-full bg-white/40" />
               <span>{video.uploadedAt}</span>
             </div>
-            <MoreVertical className="w-4 h-4 hover:text-white cursor-pointer" />
+
+            <div
+              className="shrink-0"
+              onClick={e => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <PlaylistAction videoId={video.id} className="relative z-30" />
+            </div>
           </div>
         </div>
       </div>
-    );
-
-    return (
-      <Link href={`/watch/${video.id}`} className="block">
-        {CardContent}
-      </Link>
     );
 }
 

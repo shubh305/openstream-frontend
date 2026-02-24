@@ -16,7 +16,13 @@ export function StreamThumbnail({ url, title, className = "", avatarUrl, avatarF
   if (isValidUrl) {
     return (
       <div className={`relative w-full h-full bg-noir-terminal ${className}`}>
-        <Image src={url!} alt={title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+        <Image
+          src={url!}
+          alt={title}
+          fill
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1536px) 25vw, 20vw"
+        />
       </div>
     );
   }
@@ -41,7 +47,7 @@ export function StreamThumbnail({ url, title, className = "", avatarUrl, avatarF
         )}
       </div>
       {/* Title */}
-      <p className="text-white/70 text-xs font-medium text-center line-clamp-1 px-4 max-w-[80%]">{title || "Untitled"}</p>
+      <p className="text-white/70 text-[10px] md:text-xs font-medium text-center line-clamp-1 px-4 max-w-[80%]">{title || "Untitled"}</p>
     </div>
   );
 }

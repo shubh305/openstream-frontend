@@ -222,11 +222,12 @@ export function LiveVideoPlayer({
           left: 0;
           right: 0;
           width: 100%;
-          height: 0.3em;
+          height: 0.8em;
           transition: height 0.1s ease-in-out;
+          z-index: 10;
         }
         .vjs-theme-noir .vjs-progress-control:hover {
-          height: 0.5em;
+          height: 1em;
         }
         .vjs-theme-noir .vjs-progress-holder {
           margin: 0;

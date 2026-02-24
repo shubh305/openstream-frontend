@@ -48,32 +48,62 @@ export function FeaturedHero({ content }: FeaturedHeroProps) {
     );
   }
 
+  const views = isStream ? (content as Stream).viewerCount : (content as Video).views;
+
+  const viewsLabel =
+    views !== undefined ? (
+      <div className="flex items-center gap-3">
+        <p className="text-white/70 text-sm md:text-base font-medium">{creatorName}</p>
+        <span className="w-1 h-1 rounded-full bg-white/20" />
+        <p className="text-white/50 text-xs md:text-sm font-medium">
+          {Intl.NumberFormat("en-US", { notation: "compact" }).format(views)}
+          {isStream ? " viewers" : " views"}
+        </p>
+      </div>
+    ) : (
+      <p className="text-white/70 text-sm md:text-base font-medium">{creatorName}</p>
+    );
+
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-noir-border bg-noir-terminal group h-full w-full">
-      <Link href={href} className="block h-full w-full">
-        <div className="h-full w-full relative">
-          <StreamThumbnail url={content.thumbnailUrl} title={content.title} className="w-full h-full" />
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-noir-deep group h-full w-full">
+      <Link href={href} className="block h-full w-full relative overflow-hidden">
+        <StreamThumbnail url={content.thumbnailUrl} title={content.title} className="w-full h-full scale-100 brightness-75 transition-all duration-300" />
 
-          {/* Live Badge */}
-          {isCurrentlyLive ? (
-            <div className="absolute top-4 right-4 flex items-center gap-2 bg-signal-red px-3 py-1.5 rounded-full z-30">
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              <span className="text-xs font-bold text-white tracking-wider">Live now</span>
-            </div>
-          ) : isStreamVod ? (
-            <div className="absolute top-4 right-4 flex items-center gap-2 bg-noir-terminal/80 border border-white/20 backdrop-blur-md px-3 py-1.5 rounded-full z-30">
-              <span className="text-xs font-bold text-white tracking-wider">Stream</span>
-            </div>
-          ) : null}
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
-          {/* Video Info */}
-          <div className="absolute bottom-4 left-4 right-4">
-            <h3 className="text-white font-bold text-lg line-clamp-2">{content.title}</h3>
-            <p className="text-muted-text text-sm mt-1">{creatorName}</p>
+        <div className="absolute inset-0 p-4 sm:p-6 md:p-10 flex flex-col justify-end">
+          <div className="space-y-3 md:space-y-6 max-w-3xl">
+            {/* Status Badges */}
+            <div className="flex flex-wrap gap-2">
+              {isCurrentlyLive && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-signal-red border border-white/10 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Live Now</span>
+                </div>
+              )}
+              {content.category && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+                  <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">{content.category}</span>
+                </div>
+              )}
+              {isStreamVod && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+                  <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Stream Recording</span>
+                </div>
+              )}
+            </div>
+
+            {/* Content Title & Meta */}
+            <div className="space-y-2">
+              <h3 className="text-white font-bold text-2xl md:text-3xl lg:text-5xl leading-[1.05] tracking-tight line-clamp-2 drop-shadow-2xl">{content.title}</h3>
+              {viewsLabel}
+            </div>
           </div>
         </div>
+
+        {/* Interaction Glow */}
+        <div className="absolute inset-0 ring-1 ring-inset ring-white/10 group-hover:ring-white/20 transition-all duration-500 pointer-events-none" />
       </Link>
     </div>
   );

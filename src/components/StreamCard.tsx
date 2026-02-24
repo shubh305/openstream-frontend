@@ -2,9 +2,11 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { StreamThumbnail } from "./StreamThumbnail";
 import type { Stream } from "@/types/api";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { PlaylistAction } from "./PlaylistAction";
 
 interface StreamCardProps {
   stream: Stream;
@@ -13,7 +15,6 @@ interface StreamCardProps {
 export function StreamCard({ stream }: StreamCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<ReturnType<typeof import("video.js").default> | null>(null);
-  const [isHovering, setIsHovering] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
   // Only show video if it's a real HLS stream and status is live
@@ -121,12 +122,10 @@ export function StreamCard({ stream }: StreamCardProps) {
   }, [stream.hlsPlaybackUrl]);
 
   const handleMouseEnter = useCallback(() => {
-    setIsHovering(true);
     playerRef.current?.play()?.catch(() => {});
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    setIsHovering(false);
     playerRef.current?.pause();
   }, []);
 
@@ -134,62 +133,65 @@ export function StreamCard({ stream }: StreamCardProps) {
   const streamerInfo = stream.streamer || stream.creator;
 
   return (
-    <Link href={`/live/${streamerInfo?.username || stream.id}`} className="block group" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <div ref={containerRef} className="relative aspect-video w-full rounded-lg overflow-hidden bg-noir-terminal">
-        <StreamThumbnail url={stream.thumbnailUrl} title={stream.title} className={`transition-opacity duration-300 ${isVideoReady ? "opacity-0" : "opacity-100"}`} />
+    <div className="relative group">
+      <Link href={`/live/${streamerInfo?.username || stream.id}`} className="block" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+        <div ref={containerRef} className="relative aspect-video w-full rounded-xl overflow-hidden bg-noir-deep border border-white/10">
+          <StreamThumbnail url={stream.thumbnailUrl} title={stream.title} className={cn("transition-all duration-300", isVideoReady ? "opacity-0" : "opacity-100")} />
 
-        {canLivePreview && (
-          <div className={`stream-card-player absolute inset-0 transition-opacity duration-500 ${isVideoReady ? "opacity-100" : "opacity-0"}`}>
-            <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-            <video ref={videoRef} className="video-js vjs-fluid" playsInline muted />
-          </div>
-        )}
-
-        <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-signal-red px-2 py-0.5 rounded z-20">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-          <span className="text-[10px] font-bold text-white tracking-wide">Live</span>
-        </div>
-
-        <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/70 px-2 py-0.5 rounded text-xs text-white z-20">
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-          </svg>
-          <span>{viewerCount} viewers</span>
-        </div>
-
-        <div className={`absolute inset-0 ring-2 ring-electric-lime rounded-lg transition-opacity duration-200 z-30 ${isHovering ? "opacity-100" : "opacity-0"}`} />
-      </div>
-
-      <div className="flex gap-4 mt-3">
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-noir-border shrink-0">
-          {streamerInfo?.avatarUrl ? (
-            <Image src={streamerInfo.avatarUrl} alt={streamerInfo.username || "Streamer"} width={40} height={40} className="object-cover w-full h-full" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold">{(streamerInfo?.username || "U")[0].toUpperCase()}</div>
+          {canLivePreview && (
+            <div className={`stream-card-player absolute inset-0 transition-opacity duration-500 ${isVideoReady ? "opacity-100" : "opacity-0"}`}>
+              <video ref={videoRef} className="video-js vjs-fluid" playsInline muted />
+            </div>
           )}
-        </div>
-        <div className="flex flex-col min-w-0">
-          <h3 className="text-base font-semibold text-white leading-tight line-clamp-1 group-hover:text-electric-lime transition-colors">{stream.title}</h3>
-          <p className="text-sm text-muted-text mt-1 line-clamp-1">{streamerInfo?.username || "Unknown"}</p>
-          <p className="text-xs text-muted-text mt-0.5 line-clamp-1">{stream.category || "Just Chatting"}</p>
-        </div>
-      </div>
 
-      <style jsx global>{`
-        .stream-card-player .vjs-fluid {
-          padding-top: 0 !important;
-          height: 100% !important;
-        }
-        .stream-card-player .vjs-fluid video {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      `}</style>
-    </Link>
+          {/* Status Overlay */}
+          <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/80 px-2.5 py-1 rounded-md z-20">
+            <div className="w-1.5 h-1.5 rounded-full bg-signal-red" />
+            <span className="text-[9px] font-black text-white uppercase tracking-[0.15em]">Live</span>
+          </div>
+
+          {/* View Count Overlay */}
+          <div className="absolute bottom-3 right-3 bg-black/80 px-2 py-1 rounded-md z-20">
+            <span className="text-[9px] font-bold text-white tracking-widest uppercase">{viewerCount} VIEWERS</span>
+          </div>
+        </div>
+
+        <div className="flex gap-4 mt-4 px-2 md:px-1">
+          <Avatar className="h-10 w-10 shrink-0 border border-white/10">
+            <AvatarImage src={streamerInfo?.avatarUrl} alt={streamerInfo?.username} />
+            <AvatarFallback className="bg-noir-deep text-white text-xs font-bold uppercase">{streamerInfo?.username?.[0] || "?"}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col min-w-0">
+            <h3 className="text-base md:text-sm font-bold text-white leading-snug md:leading-tight line-clamp-2 transition-colors group-hover:text-white/90">{stream.title}</h3>
+            <div className="flex flex-col mt-2 md:mt-1 space-y-0.5">
+              <p className="text-sm md:text-[11px] text-muted-text font-bold md:font-medium group-hover:text-white/70 transition-colors truncate">{streamerInfo?.username || "Unknown Creator"}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] md:text-[10px] text-muted-text/40 uppercase tracking-wider font-black">{stream.category || "General"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <style jsx global>{`
+          .stream-card-player .vjs-fluid {
+            padding-top: 0 !important;
+            height: 100% !important;
+          }
+          .stream-card-player .vjs-fluid video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        `}</style>
+      </Link>
+
+      {/* Playlist Action */}
+      <div className="absolute top-2 right-2 z-40 opacity-0 group-hover:opacity-100 transition-opacity">
+        <PlaylistAction videoId={stream.id} />
+      </div>
+    </div>
   );
 }
