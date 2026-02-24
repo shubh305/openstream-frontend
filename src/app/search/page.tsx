@@ -7,6 +7,7 @@ import { SearchToggle } from "./_components/SearchToggle";
 import { PlaylistAction } from "@/components/PlaylistAction";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
+import { StudioCard } from "@/features/studio/components/StudioCard";
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string; ai?: string }>;
@@ -50,12 +51,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </div>
 
       {totalResults === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center glasswork glass-border rounded-3xl mx-auto max-w-2xl">
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
-            <SearchIcon className="w-8 h-8 text-muted-text" />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-3">No results found</h2>
-          <p className="text-muted-text px-8">Try different keywords or check your spelling. We couldn&apos;t find a match for &ldquo;{query}&rdquo;.</p>
+        <div className="noir-reveal max-w-2xl mx-auto py-12">
+          <StudioCard variant="glass" padding="xl" rounded="large" className="text-center">
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                <SearchIcon className="w-8 h-8 text-muted-text" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-3">No results found</h2>
+              <p className="text-muted-text px-8">Try different keywords or check your spelling. We couldn&apos;t find a match for &ldquo;{query}&rdquo;.</p>
+            </div>
+          </StudioCard>
         </div>
       ) : (
         <div className="space-y-16 md:space-y-24">
@@ -81,28 +86,28 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <Users className="w-4 h-4" />
                 Channels ({results.channels.length})
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {results.channels.map(channel => (
-                  <Link
-                    key={channel.id}
-                    href={`/@${channel.handle}`}
-                    className="flex items-center gap-5 p-5 md:p-4 rounded-2xl border border-white/5 glasswork hover:border-white/20 transition-all duration-300 group active:scale-95 touch-none"
-                  >
-                    <div className="relative w-16 h-16 md:w-14 md:h-14 rounded-full overflow-hidden bg-noir-deep border border-white/10 glass-border shrink-0">
-                      <Image
-                        src={channel.avatarUrl || `https://api.dicebear.com/9.x/bottts/svg?seed=${channel.handle}`}
-                        alt={channel.name}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-110 duration-500"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-base md:text-sm text-white truncate group-hover:text-white/80 transition-colors uppercase tracking-tight">{channel.name}</h3>
-                      <p className="text-xs md:text-[11px] text-muted-text mt-0.5 font-medium">@{channel.handle}</p>
-                      <p className="text-[10px] text-muted-text/50 font-black tracking-widest uppercase mt-2">
-                        {Intl.NumberFormat("en-US", { notation: "compact" }).format(channel.subscriberCount)} Fans
-                      </p>
-                    </div>
+                  <Link key={channel.id} href={`/@${channel.handle}`} className="block active:scale-95 transition-transform touch-none">
+                    <StudioCard variant="glass" padding="sm" rounded="default" className="hover:border-white/20">
+                      <div className="flex items-center gap-5">
+                        <div className="relative w-16 h-16 md:w-14 md:h-14 rounded-full overflow-hidden bg-noir-deep border border-white/10 shrink-0">
+                          <Image
+                            src={channel.avatarUrl || `https://api.dicebear.com/9.x/bottts/svg?seed=${channel.handle}`}
+                            alt={channel.name}
+                            fill
+                            className="object-cover transition-transform group-hover:scale-110 duration-500"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-base md:text-sm text-white truncate group-hover:text-white/80 transition-colors uppercase tracking-tight">{channel.name}</h3>
+                          <p className="text-xs md:text-[11px] text-muted-text mt-0.5 font-medium">@{channel.handle}</p>
+                          <p className="text-[10px] text-muted-text/50 font-black tracking-widest uppercase mt-2">
+                            {Intl.NumberFormat("en-US", { notation: "compact" }).format(channel.subscriberCount)} Fans
+                          </p>
+                        </div>
+                      </div>
+                    </StudioCard>
                   </Link>
                 ))}
               </div>

@@ -6,6 +6,7 @@ import { Send, Loader2 } from "lucide-react";
 import { Comment } from "@/types/api"; // Ensure using API type
 import { postComment } from "@/actions/comment";
 import { User } from "@/types/api";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 interface CommentSectionProps {
   videoId: string;
@@ -28,6 +29,7 @@ export function CommentSection({ videoId, initialComments, currentUser }: Commen
 
     if (result.success) {
       setNewComment("");
+      trackEvent(AnalyticsEvent.COMMENT_ADD, { video_id: videoId });
       const optimisticComment: Comment = {
         id: `temp-${Date.now()}`,
         text: newComment,

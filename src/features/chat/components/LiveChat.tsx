@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Loader2, WifiOff } from "lucide-react";
 import { chatSocket, ChatEvent, ChatMessageEvent } from "@/lib/socket";
 import { API_BASE_URL } from "@/lib/constants";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 interface ChatMessage {
   id: string;
@@ -107,6 +108,7 @@ export function LiveChat({ streamId, token }: LiveChatProps) {
     setIsSending(false);
 
     if (sent) {
+      trackEvent(AnalyticsEvent.CHAT_MESSAGE, { stream_id: streamId });
       setNewMessage("");
     }
   };

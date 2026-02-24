@@ -22,6 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 import { SidebarProvider } from "@/lib/sidebar-context";
 import { User } from "@/types/api";
+import { AnalyticsProvider } from "@/providers/AnalyticsProvider";
 
 export const metadata: Metadata = {
   title: "OpenStream",
@@ -59,20 +60,21 @@ export default async function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${interTight.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground font-mono min-h-screen relative overflow-x-hidden no-scrollbar`}>
-        <SidebarProvider>
-          <SessionGuard isAuthenticated={!!session} />
-          <div className="flex min-h-screen w-full relative">
-            <Sidebar subscriptions={subscriptions} isAuthenticated={!!session} />
-            <div className="flex-1 flex flex-col relative z-0 w-full min-w-0">
-              <Navbar user={session} />
-              <main className="flex-1 flex flex-col relative pb-20 md:pb-0">{children}</main>
+        <AnalyticsProvider>
+          <SidebarProvider>
+            <SessionGuard isAuthenticated={!!session} />
+            <div className="flex min-h-screen w-full relative">
+              <Sidebar subscriptions={subscriptions} isAuthenticated={!!session} />
+              <div className="flex-1 flex flex-col relative z-0 w-full min-w-0">
+                <Navbar user={session} />
+                <main className="flex-1 flex flex-col relative pb-20 md:pb-0">{children}</main>
+              </div>
             </div>
-          </div>
-          <BottomNavbar user={session} />
-        </SidebarProvider>
+            <BottomNavbar user={session} />
+          </SidebarProvider>
+        </AnalyticsProvider>
         <Toaster />
       </body>
     </html>
   );
 }
-

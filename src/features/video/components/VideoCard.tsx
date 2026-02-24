@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StreamThumbnail } from "@/components/StreamThumbnail";
 import { cn } from "@/lib/utils";
 import { PlaylistAction } from "@/components/PlaylistAction";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 interface VideoCardProps {
   id: string;
@@ -29,7 +30,11 @@ export function VideoCard({ id, title, thumbnailUrl, duration, views, uploadedAt
     <div className={cn("group relative flex flex-col gap-4 pointer-events-auto shrink-0 transition-opacity", !isReady && "opacity-70")}>
       <div className="flex flex-col gap-4 flex-1 min-w-0">
         {/* Thumbnail Section */}
-        <Link href={`/watch/${id}`} className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-noir-terminal cursor-pointer">
+        <Link
+          href={`/watch/${id}`}
+          className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-noir-terminal cursor-pointer"
+          onClick={() => trackEvent(AnalyticsEvent.VIDEO_CLICK, { video_id: id, source: "home" })}
+        >
           <StreamThumbnail url={thumbnailUrl} title={title} className="w-full h-full scale-100" avatarUrl={creator?.avatarUrl} avatarFallback={(creator?.username || title || "V")[0].toUpperCase()} />
 
           {!isReady && (

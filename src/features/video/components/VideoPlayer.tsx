@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { cn } from "@/lib/utils";
 import { incrementView } from "@/actions/video";
 import { incrementClipView } from "@/actions/clips";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 import { useVideoStatus } from "@/hooks/useVideoStatus";
 import { useHighlights } from "@/hooks/useHighlights";
@@ -26,6 +27,7 @@ export interface VideoPlayerProps {
   resolutions?: string[];
   status?: string;
   type?: "video" | "clip";
+  channelId?: string;
   onEnded?: () => void;
 }
 
@@ -36,6 +38,7 @@ export function VideoPlayer({
   resolutions: initialResolutions = [],
   status: initialStatus,
   type = "video",
+  channelId,
   onEnded,
 }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -242,17 +245,37 @@ export function VideoPlayer({
       videoRef.current.play();
       setIsPlaying(true);
       setHasEnded(false);
+      trackEvent(AnalyticsEvent.VIDEO_PLAY, { video_id: videoId });
       return;
     }
 
     if (isPlaying) {
       videoRef.current.pause();
+      trackEvent(AnalyticsEvent.VIDEO_PAUSE, { video_id: videoId, position_sec: videoRef.current.currentTime });
     } else {
       videoRef.current.play();
+      trackEvent(AnalyticsEvent.VIDEO_PLAY, { video_id: videoId });
     }
     setIsPlaying(!isPlaying);
     setHasEnded(false);
-  }, [hasEnded, isPlaying]);
+  }, [hasEnded, isPlaying, videoId]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPlaying && !hasEnded) {
+      interval = setInterval(() => {
+        if (videoRef.current) {
+          trackEvent(AnalyticsEvent.VIDEO_HEARTBEAT, {
+            video_id: videoId,
+            ...(channelId && { channel_id: channelId }),
+            watch_time: 10,
+            position_sec: videoRef.current.currentTime,
+          });
+        }
+      }, 10000);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, hasEnded, videoId, channelId]);
 
   const handleQualityChange = useCallback(
     (quality: string) => {
@@ -276,6 +299,7 @@ export function VideoPlayer({
         if (levelIndex !== -1) {
           hlsRef.current.currentLevel = levelIndex;
           hlsRef.current.loadLevel = levelIndex;
+          trackEvent(AnalyticsEvent.VIDEO_QUALITY_CHANGE, { video_id: videoId, quality });
         } else {
           if (videoUrl && !videoUrl.includes("?t=")) {
             const separator = videoUrl.includes("?") ? "&" : "?";
@@ -285,7 +309,7 @@ export function VideoPlayer({
         }
       }
     },
-    [currentQuality, videoUrl, setVideoUrl],
+    [currentQuality, videoUrl, setVideoUrl, videoId],
   );
 
   const formatTime = (time: number) => {
@@ -358,13 +382,20 @@ export function VideoPlayer({
           }
         }}
         onLoadedMetadata={() => setDuration(videoRef.current?.duration || 0)}
-        onWaiting={() => setIsBuffering(true)}
+        onWaiting={() => {
+          setIsBuffering(true);
+          trackEvent(AnalyticsEvent.VIDEO_BUFFERING, { video_id: videoId, position_sec: videoRef.current?.currentTime });
+        }}
         onPlaying={() => setIsBuffering(false)}
         onCanPlay={() => setIsBuffering(false)}
         onSeeking={() => setIsBuffering(true)}
         onSeeked={() => {
           setIsBuffering(false);
           if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
+        }}
+        onError={e => {
+          console.error("Video Error:", e);
+          trackEvent(AnalyticsEvent.VIDEO_ERROR, { video_id: videoId, error: "playback_error" });
         }}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
@@ -373,6 +404,7 @@ export function VideoPlayer({
           setHasEnded(true);
           setShowControls(true);
           setIsBuffering(false);
+          trackEvent(AnalyticsEvent.VIDEO_COMPLETE, { video_id: videoId });
           if (onEnded) onEnded();
         }}
         onProgress={() => {

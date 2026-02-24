@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Share2, MoreHorizontal } from "lucide-react";
 import { LikeButton } from "./LikeButton";
 import { SubscribeButton } from "./SubscribeButton";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 interface VideoMetadataProps {
   videoId: string;
@@ -47,7 +48,7 @@ export function VideoMetadata({ videoId, title, description, views, uploadedAt, 
             <div className="h-6 w-px bg-neutral-300 dark:bg-neutral-600" />
             {/* Dislike button placeholder */}
           </div>
-          <Button variant="secondary" className="rounded-full">
+          <Button variant="secondary" className="rounded-full" onClick={() => trackEvent(AnalyticsEvent.VIDEO_SHARE, { video_id: videoId })}>
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>

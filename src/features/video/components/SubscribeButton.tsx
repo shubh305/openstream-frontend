@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { Loader2 } from "lucide-react";
 import { toggleSubscription } from "@/actions/subscription";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 interface SubscribeButtonProps {
   channelId: string;
@@ -42,10 +43,12 @@ export function SubscribeButton({
       setIsSubscribed(newIsSubscribed);
 
       if (newIsSubscribed) {
+        trackEvent(AnalyticsEvent.SUBSCRIBE, { channel_id: channelId });
         toast.success(`Subscribed to ${channelName}`, {
           description: "You'll be notified when they go live",
         });
       } else {
+        trackEvent(AnalyticsEvent.UNSUBSCRIBE, { channel_id: channelId });
         toast.success(`Unsubscribed from ${channelName}`);
       }
     } catch (error) {

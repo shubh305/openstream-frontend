@@ -73,12 +73,13 @@ export function WatchClient({
           <div className="space-y-4 min-w-0">
             {/* Video Player */}
             <div className="relative sm:rounded-2xl overflow-hidden bg-noir-terminal aspect-video max-h-[75vh]">
-              <VideoPlayer 
-                videoId={video.id} 
-                posterUrl={video.posterUrl} 
-                videoUrl={video.videoUrl} 
-                resolutions={video.resolutions} 
-                status={video.status} 
+              <VideoPlayer
+                videoId={video.id}
+                posterUrl={video.posterUrl}
+                videoUrl={video.videoUrl}
+                resolutions={video.resolutions}
+                status={video.status}
+                channelId={channelId}
                 onEnded={handleVideoEnded}
               />
             </div>
@@ -191,15 +192,7 @@ export function WatchClient({
           {/* Sidebar */}
           <aside className="px-4 sm:px-0 space-y-6 min-w-0">
             {/* Playlist Queue */}
-            {playlist && (
-              <PlaylistQueue 
-                playlist={playlist} 
-                currentVideoId={video.id} 
-                isShuffle={isShuffle}
-                onShuffleToggle={() => setIsShuffle(!isShuffle)}
-                displayVideos={displayVideos}
-              />
-            )}
+            {playlist && <PlaylistQueue playlist={playlist} currentVideoId={video.id} isShuffle={isShuffle} onShuffleToggle={() => setIsShuffle(!isShuffle)} displayVideos={displayVideos} />}
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { incrementView, likeVideo, unlikeVideo, dislikeVideo } from "@/actions/video";
+import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 
 type VideoInteractionsProps = {
   videoId: string;
@@ -50,6 +51,7 @@ export function VideoInteractions({ videoId, initialLikes = 0, initialUserIntera
       if (previousInteraction.disliked) {
       }
       setLikes(l => l + 1);
+      trackEvent(AnalyticsEvent.VIDEO_LIKE, { video_id: videoId });
       
       const success = await likeVideo(videoId);
       if (!success) {
@@ -76,6 +78,7 @@ export function VideoInteractions({ videoId, initialLikes = 0, initialUserIntera
       if (previousInteraction.liked) {
         setLikes(l => Math.max(0, l - 1));
       }
+      trackEvent(AnalyticsEvent.VIDEO_DISLIKE, { video_id: videoId });
       
       const success = await dislikeVideo(videoId);
       if (!success) {

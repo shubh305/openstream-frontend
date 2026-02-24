@@ -4,6 +4,7 @@ import { VideoPlayer } from "@/features/video/components/VideoPlayer";
 import { getClipById, getVideoClips } from "@/actions/clips";
 import { Clock, PlayCircle, Sparkles } from "lucide-react";
 import Image from "next/image";
+import { StudioCard } from "@/features/studio/components/StudioCard";
 
 export default async function ClipPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -100,27 +101,35 @@ export default async function ClipPage({ params }: { params: Promise<{ id: strin
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                   {moreClips.map(c => (
-                    <Link key={c.clipId} href={`/clips/${c.clipId}`} className="group relative glasswork p-2 rounded-3xl hover:border-white/20 transition-all">
-                      <div className="flex gap-4">
-                        <div className="w-32 aspect-video bg-noir-terminal rounded-2xl overflow-hidden relative shrink-0 border border-white/5">
-                          {c.thumbnailResolvedUrl && (
-                            <Image src={c.thumbnailResolvedUrl} fill sizes="150px" className="object-cover opacity-60 group-hover:opacity-100 transition-all scale-100 group-hover:scale-110" alt="" />
-                          )}
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <PlayCircle className="w-8 h-8 text-electric-lime" />
+                    <Link key={c.clipId} href={`/clips/${c.clipId}`} className="block transition-transform active:scale-[0.98]">
+                      <StudioCard variant="glass" padding="none" rounded="large" className="hover:border-white/20">
+                        <div className="flex gap-4 p-2">
+                          <div className="w-32 aspect-video bg-noir-terminal rounded-2xl overflow-hidden relative shrink-0 border border-white/5">
+                            {c.thumbnailResolvedUrl && (
+                              <Image
+                                src={c.thumbnailResolvedUrl}
+                                fill
+                                sizes="150px"
+                                className="object-cover opacity-60 group-hover:opacity-100 transition-all scale-100 group-hover:scale-110"
+                                alt=""
+                              />
+                            )}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <PlayCircle className="w-8 h-8 text-electric-lime" />
+                            </div>
+                          </div>
+                          <div className="min-w-0 pr-2 py-1 flex flex-col justify-center">
+                            <h4 className="font-black text-xs text-white uppercase tracking-tight line-clamp-1 group-hover:text-electric-lime transition-colors leading-tight">
+                              {c.title || `Highlight #${c.clipId.slice(-4)}`}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-2">
+                              <div className="w-1 h-1 rounded-full bg-white/20" />
+                              <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">00:{Math.floor(c.duration)}S</span>
+                              <span className="text-[8px] font-black text-electric-lime uppercase tracking-widest">+{c.viewCount}V</span>
+                            </div>
                           </div>
                         </div>
-                        <div className="min-w-0 pr-2 py-1 flex flex-col justify-center">
-                          <h4 className="font-black text-xs text-white uppercase tracking-tight line-clamp-1 group-hover:text-electric-lime transition-colors leading-tight">
-                            {c.title || `Highlight #${c.clipId.slice(-4)}`}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-2">
-                            <div className="w-1 h-1 rounded-full bg-white/20" />
-                            <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">00:{Math.floor(c.duration)}S</span>
-                            <span className="text-[8px] font-black text-electric-lime uppercase tracking-widest">+{c.viewCount}V</span>
-                          </div>
-                        </div>
-                      </div>
+                      </StudioCard>
                     </Link>
                   ))}
                 </div>
@@ -132,15 +141,17 @@ export default async function ClipPage({ params }: { params: Promise<{ id: strin
         {/* Desktop Sidebar */}
         <div className="hidden lg:block w-[360px] shrink-0">
           <div className="sticky top-24 space-y-8">
-            <div className="bg-noir-terminal/40 border border-white/5 p-8 rounded-[40px] shadow-2xl ring-1 ring-white/5 backdrop-blur-3xl overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-electric-lime/5 blur-3xl -mr-16 -mt-16 group-hover:bg-electric-lime/10 transition-colors" />
+            <StudioCard
+              title="Origin Archive"
+              headerAction={<div className="w-1.5 h-4 bg-electric-lime rounded-full" />}
+              variant="glass"
+              padding="xl"
+              rounded="large"
+              className="shadow-2xl ring-1 ring-white/5 backdrop-blur-3xl overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-electric-lime/5 blur-3xl -mr-16 -mt-16 group-hover/card:bg-electric-lime/10 transition-colors" />
 
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-1.5 h-4 bg-electric-lime rounded-full" />
-                <h3 className="text-[11px] font-black tracking-[0.4em] text-white/40 uppercase">Origin Archive</h3>
-              </div>
-
-              <Link href={`/watch/${parentId}`} className="group block">
+              <Link href={`/watch/${parentId}`} className="block">
                 <div className="relative aspect-video bg-black/50 rounded-3xl overflow-hidden mb-6 border border-white/5 ring-1 ring-white/5 shadow-inner">
                   {clip.thumbnailResolvedUrl && (
                     <Image
@@ -167,7 +178,7 @@ export default async function ClipPage({ params }: { params: Promise<{ id: strin
                   </div>
                 </div>
               </Link>
-            </div>
+            </StudioCard>
 
             <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[32px] text-center">
               <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">Broadcast ID: {clip.clipId.slice(-12)}</p>
