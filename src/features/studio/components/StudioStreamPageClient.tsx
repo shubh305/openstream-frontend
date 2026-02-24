@@ -75,9 +75,9 @@ export function StudioStreamPageClient({ token }: StudioStreamPageClientProps) {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden">
+    <div className="h-[calc(100vh)] md:h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden">
       {/* Header */}
-      <header className="flex h-14 items-center justify-between border-b border-noir-border bg-noir-terminal px-4 shrink-0">
+      <header className="flex h-16 md:h-14 items-center justify-between border-b border-noir-border bg-noir-terminal px-4 shrink-0 transition-all">
         <div className="flex items-center gap-4">
           <Link href="/">
             <Button variant="ghost" size="icon" className="text-muted-text hover:text-foreground">
@@ -93,33 +93,34 @@ export function StudioStreamPageClient({ token }: StudioStreamPageClientProps) {
           )}
         </div>
         {/* Mode Tabs */}
-        <div className="flex items-center gap-1 bg-noir-bg p-1 rounded-lg border border-noir-border">
+        <div className="flex items-center gap-1 bg-noir-bg p-1 rounded-xl border border-noir-border">
           <button
             onClick={() => setMode("webcam")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              mode === "webcam" ? "bg-noir-terminal text-foreground border border-noir-border" : "text-muted-text hover:text-foreground"
+            className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
+              mode === "webcam" ? "bg-noir-terminal text-foreground border border-noir-border shadow-sm" : "text-muted-text hover:text-foreground"
             }`}
           >
-            <Video className="w-4 h-4" />
-            Webcam
+            <Video className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Webcam</span>
+            <span className="sm:hidden">Cam</span>
           </button>
           <button
             onClick={() => setMode("stream")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              mode === "stream" ? "bg-noir-terminal text-foreground border border-noir-border" : "text-muted-text hover:text-foreground"
+            className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
+              mode === "stream" ? "bg-noir-terminal text-foreground border border-noir-border shadow-sm" : "text-muted-text hover:text-foreground"
             }`}
           >
-            <Radio className="w-4 h-4" />
-            Stream
+            <Radio className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Stream</span>
+            <span className="sm:hidden">Mode</span>
           </button>
         </div>
-        <div className="w-20" />
+        <div className="w-10 md:w-20" />
       </header>
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden pb-16 md:pb-0">
         {/* Left + Center: Preview + Settings */}
-        <div className="flex-1 flex flex-col p-6 gap-6 overflow-y-auto">
+        <div className="flex-1 flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-y-auto">
           {/* Mode-specific content */}
           {mode === "webcam" ? (
             <StudioWebcamMode isLive={isLive} setIsLive={setIsLive} settings={settings} setSettings={setSettings} isValid={isSettingsValid} />

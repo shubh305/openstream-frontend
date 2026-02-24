@@ -114,123 +114,151 @@ export default function CustomizationPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-24">
-      <div className="flex items-center justify-between mb-12 py-6 sticky top-0 bg-background/80 backdrop-blur-md z-50">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-            <LayoutTemplate className="w-6 h-6 text-electric-lime" />
-            Channel Identity
-          </h1>
-          <p className="text-sm text-muted-text mt-1">Customize how viewers categorize and discover your content.</p>
+    <div className="max-w-[1400px] mx-auto space-y-8 p-4 md:p-6 lg:p-8">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-6 border-b border-white/5 sticky top-0 bg-background/80 backdrop-blur-3xl z-40">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-electric-lime animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-electric-lime">Identity</span>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-white uppercase">Channel Brand</h1>
+          <p className="text-muted-text font-medium text-xs md:text-sm">Manage your digital presence and signature.</p>
         </div>
         <Button
           onClick={handlePublish}
           disabled={isPublishing}
-          className="rounded-full bg-electric-lime text-black hover:bg-electric-lime/90 font-bold px-8 shadow-[0_0_20px_rgba(204,255,0,0.2)] transition-all hover:shadow-[0_0_30px_rgba(204,255,0,0.4)]"
+          className="h-12 px-8 rounded-xl bg-electric-lime text-black font-black text-[10px] uppercase tracking-[0.15em] hover:bg-white transition-all shadow-xl shadow-electric-lime/10 group"
         >
-          {isPublishing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-          {isPublishing ? "Publishing..." : "Publish Changes"}
+          {isPublishing ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Save className="w-3 h-3 mr-2 group-hover:scale-110 transition-transform" />}
+          {isPublishing ? "Syncing..." : "Publish"}
         </Button>
       </div>
 
-      <div className="space-y-6 max-w-5xl mx-auto">
-        {/* ROW 1: Visual Identity */}
-        <section className="space-y-2">
-          <h2 className="text-sm font-bold text-muted-text uppercase tracking-widest flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-electric-lime" />
-            Visual Identity
-          </h2>
-          <div className="bg-noir-terminal rounded-3xl overflow-hidden border border-white/5 shadow-2xl group relative">
-            <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={handleFileChange("banner")} />
-            <div onClick={handleBannerClick} className="h-32 md:h-46 bg-gradient-to-br from-neutral-900 to-black relative cursor-pointer group/banner transition-all hover:opacity-95 overflow-hidden">
-              {channel?.bannerUrl && <Image src={channel.bannerUrl} alt="Channel Banner" fill className="object-cover transition-transform duration-700 group-hover/banner:scale-105" />}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-opacity bg-black/40 backdrop-blur-sm">
-                <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-white border border-white/20 px-6 py-3 rounded-full bg-black/50 hover:bg-white/10 transition-colors">
-                  <Upload className="w-4 h-4" /> Change Banner
-                </span>
-              </div>
-            </div>
-
-            <div className="px-8 pb-8 relative">
-              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleFileChange("avatar")} />
-              <div className="relative -mt-16 mb-6 inline-block">
-                <div
-                  onClick={handleAvatarClick}
-                  className="w-32 h-32 rounded-3xl bg-black border-4 border-noir-terminal overflow-hidden shadow-2xl relative group/avatar cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                >
-                  {channel?.avatarUrl ? (
-                    <Image src={channel.avatarUrl} alt={name} width={128} height={128} className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-electric-lime font-bold text-4xl">{name[0]?.toUpperCase()}</div>
-                  )}
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
-                    <Upload className="w-6 h-6 text-white" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column */}
+        <div className="lg:col-span-12 xl:col-span-7 space-y-10">
+          {/* Visual Identity Section */}
+          <section className="space-y-6">
+            <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.4em] px-2">Visual Assets</h2>
+            <div className="glasswork border border-white/5 rounded-[32px] overflow-hidden shadow-2xl">
+              <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={handleFileChange("banner")} />
+              <div onClick={handleBannerClick} className="h-32 md:h-48 bg-noir-terminal relative cursor-pointer group/banner transition-all overflow-hidden">
+                {channel?.bannerUrl ? (
+                  <Image src={channel.bannerUrl} alt="Channel Banner" fill className="object-cover transition-transform duration-1000 group-hover/banner:scale-105" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-noir-terminal to-noir-bg flex items-center justify-center">
+                    <LayoutTemplate className="w-8 h-8 text-white/5" />
+                  </div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-all bg-black/40 backdrop-blur-md">
+                  <div className="bg-white text-black p-3 rounded-full shadow-2xl transform scale-90 group-hover/banner:scale-100 transition-transform">
+                    <Upload className="w-5 h-5" />
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                  <h2 className="text-3xl font-black text-white leading-tight tracking-tight">{name || "Channel Name"}</h2>
-                  <p className="text-base text-muted-text font-medium mt-1">@{handle || "handle"}</p>
+              <div className="px-6 md:px-10 pb-10 relative">
+                <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleFileChange("avatar")} />
+                <div className="relative -mt-12 md:-mt-16 mb-6 inline-block">
+                  <div
+                    onClick={handleAvatarClick}
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-[24px] md:rounded-[32px] bg-noir-terminal border-4 md:border-8 border-noir-deep overflow-hidden shadow-2xl relative group/avatar cursor-pointer transition-all hover:scale-105"
+                  >
+                    {channel?.avatarUrl ? (
+                      <Image src={channel.avatarUrl} alt={name} width={128} height={128} className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-electric-lime font-black text-2xl md:text-5xl">{(name[0] || "U").toUpperCase()}</div>
+                    )}
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all">
+                      <Upload className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2 text-xs font-mono text-muted-text bg-white/5 py-2 px-4 rounded-lg border border-white/5">
-                  <span className="text-electric-lime">●</span> Live Preview
+
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Screen Name</label>
+                      <Input
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        placeholder="Creative Name"
+                        className="bg-white/5 border-white/5 focus:border-white/20 h-16 text-xl font-black uppercase tracking-tight px-6 rounded-2xl transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Digital Handle</label>
+                      <div className="relative">
+                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-black select-none">@</span>
+                        <Input
+                          value={handle}
+                          onChange={e => setHandle(e.target.value.replace("@", ""))}
+                          placeholder="handle"
+                          className="bg-white/5 border-white/5 focus:border-white/20 h-16 text-xl font-black tracking-tight pl-12 pr-6 rounded-2xl transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-muted-text uppercase tracking-widest ml-1">Mission / About</label>
+                    <Textarea
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      placeholder="Transmission details..."
+                      className="bg-white/5 border-white/5 focus:border-white/20 min-h-[160px] text-base p-6 rounded-3xl resize-none leading-relaxed transition-all font-medium"
+                    />
+                    <div className="text-[9px] font-mono text-muted-text uppercase tracking-widest text-right px-2">{description.length} / 1000 SYMBOLS</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        {/* ROW 2: Basic Info */}
-        <section className="space-y-2">
-          <h2 className="text-sm font-bold text-muted-text uppercase tracking-widest flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-electric-lime" />
-            Basic Info
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-text ml-1">Channel Name</label>
-              <Input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="e.g. The Coding Den"
-                className="bg-noir-terminal border-white/10 focus:border-electric-lime h-14 text-lg font-medium px-4 rounded-xl transition-all"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-text ml-1">Handle</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text font-medium select-none">@</span>
-                <Input
-                  value={handle}
-                  onChange={e => setHandle(e.target.value.replace("@", ""))}
-                  placeholder="coding_den"
-                  className="bg-noir-terminal border-white/10 focus:border-electric-lime h-12 text-lg font-medium pl-9 pr-4 rounded-xl font-mono transition-all"
-                />
+        {/* Right Column */}
+        <div className="lg:col-span-12 xl:col-span-5 space-y-10">
+          <section className="space-y-6">
+            <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.4em] px-2">Broadcast URL</h2>
+            <div className="glasswork border border-white/5 p-8 rounded-[32px] space-y-6 shadow-2xl">
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-white/5">
+                <div className="w-10 h-10 rounded-xl bg-electric-lime/10 flex items-center justify-center">
+                  <LayoutTemplate className="w-5 h-5 text-electric-lime" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-black text-muted-text uppercase tracking-widest mb-1">Public Access Link</div>
+                  <div className="text-sm font-bold text-white truncate font-mono">{origin ? `${origin.replace(/^https?:\/\//, "")}/@${handle || "..."}` : `openstream.dev/@${handle || "..."}`}</div>
+                </div>
               </div>
-              <p className="text-[10px] text-muted-text text-right font-mono mt-1.5">{origin ? `${origin}/@${handle}` : `openstream.dev/@${handle}`}</p>
+              <p className="text-xs text-muted-text leading-relaxed font-medium">
+                {" "}
+                This is your unique broadcast identifier. High-fidelity streams and community interactions will originate from this terminal point.{" "}
+              </p>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ROW 3: About */}
-        <section className="space-y-2">
-          <h2 className="text-sm font-bold text-muted-text uppercase tracking-widest flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-electric-lime" />
-            About
-          </h2>
-          <div className="space-y-2">
-            <Textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Welcome to my channel! Here I stream..."
-              className="bg-noir-terminal border-white/10 focus:border-electric-lime min-h-[200px] text-base p-6 rounded-2xl resize-none leading-relaxed transition-all"
-            />
-            <div className="text-[10px] text-muted-text uppercase tracking-widest text-right px-1">{description.length} / 1000</div>
-          </div>
-        </section>
+          <section className="space-y-6">
+            <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.4em] px-2">Live Preview Stat</h2>
+            <div className="glasswork border border-white/5 p-10 rounded-[40px] flex flex-col items-center text-center space-y-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-electric-lime/5 blur-3xl -mr-16 -mt-16" />
+              <div className="w-24 h-24 rounded-[32px] bg-noir-terminal border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
+                {channel?.avatarUrl ? (
+                  <Image src={channel.avatarUrl} alt="" width={96} height={96} className="object-cover" />
+                ) : (
+                  <span className="text-electric-lime font-black text-3xl">{name[0]?.toUpperCase()}</span>
+                )}
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">{name || "Unnamed"}</h3>
+                <p className="text-[10px] font-black text-muted-text uppercase tracking-[0.3em] flex items-center justify-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-electric-lime animate-pulse" />
+                  Established
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

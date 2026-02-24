@@ -238,27 +238,27 @@ export function StudioStreamMode({ isLive, settings, isValid, onSettingsChange }
         {/* Stream Credentials */}
         <div className="grid gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
           {/* Stream URL */}
-          <div className="bg-noir-terminal border border-noir-border rounded-lg p-4 transition-colors hover:border-muted-text/20">
-            <label className="text-xs text-muted-text uppercase tracking-wide mb-2 block font-bold">Stream URL</label>
+          <div className="bg-noir-terminal border border-noir-border rounded-lg p-3 md:p-4 transition-colors hover:border-muted-text/20">
+            <label className="text-[10px] md:text-xs text-muted-text uppercase tracking-wide mb-2 block font-bold">Stream URL</label>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <code className="flex-1 bg-noir-bg border border-noir-border rounded-lg px-4 py-3 text-sm text-foreground font-mono truncate select-all">{streamUrl}</code>
+              <code className="flex-1 bg-noir-bg border border-noir-border rounded-lg px-4 py-2.5 md:py-3 text-[11px] md:text-sm text-foreground font-mono truncate select-all">{streamUrl}</code>
               <Button
                 variant="outline"
                 onClick={() => copyToClipboard(streamUrl, "url")}
-                className="shrink-0 h-11 px-6 sm:px-0 sm:w-11 rounded-lg flex items-center justify-center gap-2 sm:gap-0 hover:bg-electric-lime/10 hover:text-electric-lime"
+                className="shrink-0 h-10 md:h-11 px-6 sm:px-0 sm:w-11 rounded-lg flex items-center justify-center gap-2 sm:gap-0 hover:bg-electric-lime/10 hover:text-electric-lime"
               >
                 {copiedUrl ? <Check className="w-4 h-4 text-electric-lime" /> : <Copy className="w-4 h-4" />}
-                <span className="sm:hidden text-xs font-bold uppercase transition-all">Copy URL</span>
+                <span className="sm:hidden text-[10px] font-bold uppercase transition-all whitespace-nowrap">Copy URL</span>
               </Button>
             </div>
           </div>
 
           {/* Stream Key */}
-          <div className="bg-noir-terminal border border-noir-border rounded-lg p-4 transition-colors hover:border-muted-text/20">
-            <label className="text-xs text-muted-text uppercase tracking-wide mb-2 block font-bold">Stream Key</label>
+          <div className="bg-noir-terminal border border-noir-border rounded-lg p-3 md:p-4 transition-colors hover:border-muted-text/20">
+            <label className="text-[10px] md:text-xs text-muted-text uppercase tracking-wide mb-2 block font-bold">Stream Key</label>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="flex-1 flex items-center bg-noir-bg border border-noir-border rounded-lg px-4 py-3 h-11 overflow-hidden group focus-within:border-electric-lime">
-                <code className="flex-1 text-sm text-foreground font-mono truncate select-all">{showKey ? streamKey : "••••••••••••••••••••"}</code>
+              <div className="flex-1 flex items-center bg-noir-bg border border-noir-border rounded-lg px-4 py-2.5 md:py-3 h-10 md:h-11 overflow-hidden group focus-within:border-electric-lime">
+                <code className="flex-1 text-[11px] md:text-sm text-foreground font-mono truncate select-all">{showKey ? streamKey : "••••••••••••••••••••"}</code>
                 <button onClick={() => setShowKey(!showKey)} className="ml-2 text-muted-text hover:text-foreground transition-colors shrink-0">
                   {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -267,21 +267,21 @@ export function StudioStreamMode({ isLive, settings, isValid, onSettingsChange }
                 <Button
                   variant="outline"
                   onClick={() => copyToClipboard(streamKey, "key")}
-                  className="flex-1 sm:shrink-0 h-11 sm:w-11 rounded-lg flex items-center justify-center gap-2 sm:gap-0 hover:bg-electric-lime/10 hover:text-electric-lime"
+                  className="flex-1 sm:shrink-0 h-10 md:h-11 sm:w-11 rounded-lg flex items-center justify-center gap-2 sm:gap-0 hover:bg-electric-lime/10 hover:text-electric-lime"
                   title="Copy Key"
                 >
                   {copiedKey ? <Check className="w-4 h-4 text-electric-lime" /> : <Copy className="w-4 h-4" />}
-                  <span className="sm:hidden text-xs font-bold uppercase">Copy</span>
+                  <span className="sm:hidden text-[10px] font-bold uppercase">Copy Key</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleRegenerateKey}
                   disabled={isRegenerating}
-                  className="flex-1 sm:shrink-0 h-11 sm:w-11 rounded-lg border-signal-red/50 text-signal-red hover:bg-signal-red/10 flex items-center justify-center gap-2 sm:gap-0 transition-colors"
+                  className="flex-1 sm:shrink-0 h-10 md:h-11 sm:w-11 rounded-lg border-signal-red/50 text-signal-red hover:bg-signal-red/10 flex items-center justify-center gap-2 sm:gap-0 transition-colors"
                   title="Regenerate Key"
                 >
-                  <RefreshCw className={`w-4 h-4 ${isRegenerating ? "animate-spin" : ""}`} />
-                  <span className="sm:hidden text-xs font-bold uppercase">Reset</span>
+                  <RefreshCw className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isRegenerating ? "animate-spin" : ""}`} />
+                  <span className="sm:hidden text-[10px] font-bold uppercase">Reset</span>
                 </Button>
               </div>
             </div>
@@ -290,8 +290,8 @@ export function StudioStreamMode({ isLive, settings, isValid, onSettingsChange }
       </div>
 
       {/* Control Bar */}
-      <div className="fixed bottom-6 left-0 right-0 px-6 sm:px-10 lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:px-0 z-50">
-        <div className="bg-noir-terminal/90 border border-noir-border backdrop-blur-xl p-4 rounded-2xl shadow-2xl ring-1 ring-white/5 mx-auto max-w-4xl lg:max-w-none">
+      <div className="fixed bottom-20 left-0 right-0 px-4 md:px-10 lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:px-0 z-50">
+        <div className="bg-noir-terminal border border-noir-border backdrop-blur-xl p-3 md:p-4 rounded-2xl shadow-2xl ring-1 ring-white/5 mx-auto max-w-4xl lg:max-w-none">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
               <div className={`p-2 rounded-lg border shrink-0 transition-all duration-500 ${isLive ? "border-signal-red/50 bg-signal-red/10 animate-pulse" : "border-noir-border bg-noir-bg"}`}>

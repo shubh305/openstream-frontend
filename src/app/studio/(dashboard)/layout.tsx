@@ -8,11 +8,9 @@ export default function StudioDashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-background overflow-hidden relative z-0">
+    <div className="flex flex-col md:flex-row min-h-screen md:min-h-[calc(100vh-4rem)] bg-noir-deep relative z-0">
       <StudioSidebar />
-      <main className="flex-1 overflow-y-auto bg-background p-8">
-        {children}
-      </main>
+      <main className="flex-1 bg-noir-deep p-0 md:p-4 lg:p-8 pb-32 md:pb-8">{children}</main>
     </div>
   );
 }

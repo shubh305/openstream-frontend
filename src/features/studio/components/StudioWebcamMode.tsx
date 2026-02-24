@@ -325,7 +325,7 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
       )}
 
       {/* Video Preview Container - Flex Grow to fill space */}
-      <div className="flex-1 relative w-full bg-noir-bg border border-noir-border rounded-xl overflow-hidden group shadow-2xl min-h-0">
+      <div className="flex-1 relative w-full bg-noir-bg border border-noir-border rounded-xl overflow-hidden group shadow-2xl min-h-[300px] md:min-h-0">
         {/* Loading State */}
         {isLoading && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-noir-terminal z-50">
@@ -362,13 +362,15 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
 
         {/* SETUP OVERLAY: Form */}
         {step === "SETUP" && !isLoading && (
-          <div className="absolute inset-0 z-40 flex items-center justify-center p-2 sm:p-8 animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-noir-terminal/95 border border-noir-border shadow-2xl rounded-2xl p-4 sm:p-8 max-w-2xl w-full backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute inset-0 z-40 flex items-center justify-center p-2 md:p-8 animate-in fade-in zoom-in-95 duration-300">
+            <div className="bg-noir-terminal/95 border border-noir-border shadow-2xl rounded-2xl p-3 md:p-8 max-w-4xl w-full backdrop-blur-xl relative overflow-hidden flex flex-col max-h-[95%]">
               {/* Decorative glow */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-electric-lime to-transparent opacity-50" />
-              <h2 className="text-2xl font-bold text-foreground mb-8 text-center tracking-tight">Setup Your Stream</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-6 md:mb-8 text-center tracking-tight shrink-0">Setup Your Stream</h2>
 
-              <StudioSettings settings={settings} onChange={setSettings} className="border-none bg-transparent p-0 shadow-none !space-y-6" />
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                <StudioSettings settings={settings} onChange={setSettings} className="border-none bg-transparent p-0 shadow-none !space-y-6" />
+              </div>
 
               <div className="mt-8 flex justify-end">
                 <Button
@@ -395,36 +397,36 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
         {/* LIVE OVERLAY: Stats */}
         {step === "LIVE" && (
           <div className="absolute top-4 left-4 right-4 z-20 pointer-events-none">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="flex gap-2">
-                <div className="bg-signal-red/90 text-white px-3 py-1.5 rounded-md text-xs font-bold animate-pulse uppercase tracking-wider flex items-center gap-2 shadow-lg ring-1 ring-white/20">
-                  <span className="w-2 h-2 bg-white rounded-full" />
+                <div className="bg-signal-red/90 text-white px-3 py-1.5 rounded-md text-[10px] md:text-xs font-bold animate-pulse uppercase tracking-wider flex items-center gap-2 shadow-lg ring-1 ring-white/20 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full" />
                   LIVE
                 </div>
-                <div className="bg-black/60 backdrop-blur px-3 py-1.5 rounded-md text-xs font-mono text-white border border-white/10 shadow-lg">{formatDuration(duration)}</div>
+                <div className="bg-black/60 backdrop-blur px-3 py-1.5 rounded-md text-[10px] md:text-xs font-mono text-white border border-white/10 shadow-lg">{formatDuration(duration)}</div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 w-64">
-                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
+              <div className="grid grid-cols-3 gap-2 w-full sm:w-64 max-w-[280px]">
+                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg shrink-0">
                   <div>
-                    <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">Bitrate</p>
-                    <p className="text-[10px] font-mono text-green-400">{stats.bitrate} kbps</p>
+                    <p className="text-[7px] text-white/50 uppercase font-bold mb-0.5">Bitrate</p>
+                    <p className="text-[9px] font-mono text-electric-lime italic">{stats.bitrate}</p>
                   </div>
-                  <Sparkline data={history.bitrate} color="#a3e635" height={20} />
+                  <Sparkline data={history.bitrate} color="#a3e635" height={15} />
                 </div>
-                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
+                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg shrink-0">
                   <div>
-                    <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">FPS</p>
-                    <p className="text-[10px] font-mono text-blue-400">{stats.fps}</p>
+                    <p className="text-[7px] text-white/50 uppercase font-bold mb-0.5">FPS</p>
+                    <p className="text-[9px] font-mono text-blue-400 italic">{stats.fps}</p>
                   </div>
-                  <Sparkline data={history.fps} color="#60a5fa" height={20} />
+                  <Sparkline data={history.fps} color="#60a5fa" height={15} />
                 </div>
-                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg">
+                <div className="bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex flex-col justify-between h-14 shadow-lg shrink-0">
                   <div>
-                    <p className="text-[8px] text-white/50 uppercase font-bold mb-0.5">Latency</p>
-                    <p className="text-[10px] font-mono text-purple-400">{stats.latency} ms</p>
+                    <p className="text-[7px] text-white/50 uppercase font-bold mb-0.5">Latency</p>
+                    <p className="text-[9px] font-mono text-purple-400 italic">{stats.latency}</p>
                   </div>
-                  <Sparkline data={history.latency} color="#c084fc" height={20} />
+                  <Sparkline data={history.latency} color="#c084fc" height={15} />
                 </div>
               </div>
             </div>
@@ -436,10 +438,10 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
       <div className="shrink-0 space-y-4">
         {/* Stream Info Card - Visible in READY and LIVE */}
         {(step === "READY" || step === "LIVE") && (
-          <div className="bg-noir-terminal/50 border border-noir-border rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="bg-noir-terminal/50 border border-noir-border rounded-xl p-3 md:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
             <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight mb-1">{settings.title}</h1>
-              <div className="flex items-center gap-3 text-muted-text text-xs">
+              <h1 className="text-lg md:text-xl font-bold text-foreground tracking-tight mb-1">{settings.title}</h1>
+              <div className="flex items-center gap-2 md:gap-3 text-muted-text text-[10px] md:text-xs">
                 <span className="flex items-center gap-1.5 bg-noir-bg px-2 py-0.5 rounded-full border border-noir-border">
                   <span className={`w-1.5 h-1.5 rounded-full ${settings.visibility === "public" ? "bg-electric-lime" : "bg-muted-text"}`} />
                   <span className="capitalize">{settings.visibility}</span>
@@ -449,9 +451,9 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
             </div>
 
             {step === "READY" && !isLoading && !isConnecting && (
-              <Button variant="ghost" size="sm" onClick={() => setStep("SETUP")} className="text-muted-text hover:text-foreground shrink-0 h-8">
+              <Button variant="ghost" size="sm" onClick={() => setStep("SETUP")} className="text-muted-text hover:text-foreground shrink-0 h-8 text-[10px] md:text-xs">
                 <Settings2 className="w-3.5 h-3.5 mr-2" />
-                Edit
+                Edit Settings
               </Button>
             )}
           </div>
@@ -483,11 +485,11 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
           </div>
 
           {/* Center: Main Actions */}
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center px-2">
             {step === "READY" && !isLoading && !isConnecting && (
               <Button
                 onClick={startBroadcast}
-                className="bg-signal-red hover:bg-signal-red/90 text-white font-bold h-12 px-10 rounded-xl text-base shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all scale-100 hover:scale-105 active:scale-95"
+                className="w-full sm:w-auto bg-signal-red hover:bg-signal-red/90 text-white font-bold h-12 px-6 sm:px-10 rounded-xl text-sm sm:text-base shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all scale-100 hover:scale-105 active:scale-95"
               >
                 Go Live
               </Button>
@@ -496,13 +498,13 @@ export function StudioWebcamMode({ isLive, setIsLive, settings, setSettings, isV
             {step === "LIVE" && (
               <Button
                 onClick={() => setShowEndConfirm(true)}
-                className="bg-noir-bg border border-signal-red/30 text-signal-red hover:bg-signal-red hover:text-white font-bold h-12 px-8 rounded-xl transition-all"
+                className="w-full sm:w-auto bg-noir-bg border border-signal-red/30 text-signal-red hover:bg-signal-red hover:text-white font-bold h-12 px-6 sm:px-8 rounded-xl transition-all"
               >
                 End Stream
               </Button>
             )}
 
-            {step === "SETUP" && <p className="text-muted-text text-sm font-medium">Configure stream details</p>}
+            {step === "SETUP" && <p className="text-muted-text text-[10px] md:text-sm font-medium uppercase tracking-widest text-center truncate px-2">Configure stream details</p>}
           </div>
 
           {/* Right: Spacer */}
