@@ -9,8 +9,16 @@ import type { Video } from "@/types/api";
 
 export default async function Home() {
   const activeStreamsData = await getLiveStreams({ limit: 4 });
-  const streamVodsResponse = await getVideos({ isLive: true, limit: 4, sort: "latest" });
-  const latestVideosResponse = await getVideos({ limit: 8, sort: "latest", isLive: false });
+  const streamVodsResponse = await getVideos({
+    isLive: true,
+    limit: 4,
+    sort: "latest",
+  });
+  const latestVideosResponse = await getVideos({
+    limit: 8,
+    sort: "latest",
+    isLive: false,
+  });
 
   const liveStreams = activeStreamsData;
   const streamVods = streamVodsResponse.videos;
@@ -28,13 +36,17 @@ export default async function Home() {
         <div className="lg:col-span-6 xl:col-span-5 space-y-8 text-center lg:text-left relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-4">
             <span className="w-1 h-1 rounded-full bg-electric-lime animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Next-Gen Streaming</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">
+              Next-Gen Streaming
+            </span>
           </div>
           <h1 className="text-[clamp(2.2rem,5vw,4rem)] font-black uppercase leading-[0.9] tracking-tighter text-white max-w-2xl mx-auto lg:mx-0">
-            Watch, <span className="text-electric-lime">Stream,</span> <br className="hidden lg:block" /> Follow Popular Creators
+            Watch, <span className="text-electric-lime">Stream,</span>{" "}
+            <br className="hidden lg:block" /> Follow Popular Creators
           </h1>
           <p className="text-muted-text text-base md:text-lg max-w-lg mx-auto lg:mx-0 leading-relaxed font-medium">
-            Immerse yourself in live broadcasts and connect with the next generation of creative icons.
+            Immerse yourself in live broadcasts and connect with the next
+            generation of creative icons.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
             <Link
@@ -63,7 +75,9 @@ export default async function Home() {
               <div className="w-16 h-16 rounded-full bg-noir-terminal flex items-center justify-center mb-4">
                 <Play className="w-8 h-8 text-muted-text opacity-20" />
               </div>
-              <p className="text-muted-text text-sm tracking-widest font-bold">No featured content</p>
+              <p className="text-muted-text text-sm tracking-widest font-bold">
+                No featured content
+              </p>
             </div>
           )}
         </div>
@@ -73,7 +87,9 @@ export default async function Home() {
       {liveStreams.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-bold text-white normal-case not-italic">Live now</h2>
+            <h2 className="text-lg md:text-xl font-bold text-white normal-case not-italic">
+              Live now
+            </h2>
             <Link
               href="/live"
               className="text-[10px] md:text-xs text-muted-text hover:text-white px-4 md:px-5 py-2 md:py-2.5 border border-noir-border rounded-full transition-colors tracking-widest font-bold"
@@ -81,8 +97,8 @@ export default async function Home() {
               View all
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-            {liveStreams.map(stream => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {liveStreams.map((stream) => (
               <StreamCard key={stream.id} stream={stream} />
             ))}
           </div>
@@ -90,7 +106,11 @@ export default async function Home() {
       )}
 
       {/* Stream Highlights */}
-      <VideoRow title="Stream highlights" videos={streamVods} emptyMessage="No stream highlights yet" />
+      <VideoRow
+        title="Stream highlights"
+        videos={streamVods}
+        emptyMessage="No stream highlights yet"
+      />
 
       {/* Latest Uploads */}
       <VideoRow title="Latest uploads" videos={latestVideos} />
@@ -104,11 +124,17 @@ interface VideoRowProps {
   emptyMessage?: string;
 }
 
-function VideoRow({ title, videos, emptyMessage = "No videos found" }: VideoRowProps) {
+function VideoRow({
+  title,
+  videos,
+  emptyMessage = "No videos found",
+}: VideoRowProps) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg md:text-xl font-bold text-white normal-case not-italic">{title}</h2>
+        <h2 className="text-lg md:text-xl font-bold text-white normal-case not-italic">
+          {title}
+        </h2>
         <Link
           href="/videos"
           className="text-[10px] md:text-xs text-muted-text hover:text-white px-4 md:px-5 py-2 md:py-2.5 border border-noir-border rounded-full transition-colors tracking-widest font-bold"
@@ -118,12 +144,16 @@ function VideoRow({ title, videos, emptyMessage = "No videos found" }: VideoRowP
       </div>
       {videos.length === 0 ? (
         <div className="py-12 flex flex-col items-center justify-center border border-noir-border rounded-xl bg-noir-terminal/50 text-center px-4">
-          <p className="text-sm font-medium text-foreground tracking-widest">{emptyMessage}</p>
-          <p className="text-xs text-muted-text mt-1">Check back later for new content!</p>
+          <p className="text-sm font-medium text-foreground tracking-widest">
+            {emptyMessage}
+          </p>
+          <p className="text-xs text-muted-text mt-1">
+            Check back later for new content!
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-          {videos.slice(0, 5).map(video => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {videos.slice(0, 4).map((video) => (
             <VideoCard
               key={video.id}
               id={video.id}
