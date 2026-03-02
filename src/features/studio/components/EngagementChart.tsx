@@ -1,7 +1,7 @@
 "use client";
 
 import { EngagementAnalytics } from "@/actions/analytics";
-import { cn } from "@/lib/utils";
+import { cn, formatMetric } from "@/lib/utils";
 import { useMemo } from "react";
 
 interface EngagementChartProps {
@@ -58,36 +58,35 @@ export function EngagementChart({ data }: EngagementChartProps) {
             const h = (total / max) * 100;
             
             return (
-              <div key={i} className="group relative flex-1 flex flex-col justify-end h-full">
-                <div 
+              <div key={i} className="group relative flex-1 flex flex-col justify-end h-full hover:z-50">
+                <div
                   className="w-full rounded-t-sm overflow-hidden flex flex-col justify-end transition-all duration-500 group-hover:ring-2 group-hover:ring-white/20"
                   style={{ height: `${Math.max(h, 2)}%` }}
                 >
                   {/* Stacked Bars */}
-                  <div 
-                    className="w-full bg-blue-500/40 relative group-hover:bg-blue-500/60 transition-colors"
-                    style={{ height: `${(p.shares / (total || 1)) * 100}%` }}
-                    title="Shares"
-                  />
-                  <div 
+                  <div className="w-full bg-blue-500/40 relative group-hover:bg-blue-500/60 transition-colors" style={{ height: `${(p.shares / (total || 1)) * 100}%` }} title="Shares" />
+                  <div
                     className="w-full bg-purple-500/50 relative group-hover:bg-purple-500/70 transition-colors border-t border-white/5"
                     style={{ height: `${(p.comments / (total || 1)) * 100}%` }}
                     title="Comments"
                   />
-                  <div 
+                  <div
                     className="w-full bg-electric-lime/80 relative group-hover:bg-electric-lime transition-colors border-t border-white/5"
                     style={{ height: `${(p.likes / (total || 1)) * 100}%` }}
                     title="Likes"
                   />
                 </div>
-                
+
                 {/* Smart Tooltip */}
-                <div className={cn(
-                  "absolute left-1/2 -translate-x-1/2 bg-noir-terminal border border-white/10 text-[10px] font-bold p-3 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl min-w-[140px]",
-                  h > 60 ? "top-4" : "bottom-full mb-4"
-                )}>
+                <div
+                  className={cn(
+                    "absolute left-1/2 -translate-x-1/2 bg-noir-terminal border border-white/10 text-[10px] font-bold p-3 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 pointer-events-none z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl min-w-[140px] scale-95 group-hover:scale-100",
+                    h > 60 ? "top-4" : "",
+                  )}
+                  style={h <= 60 ? { bottom: `${Math.max(h, 2) + 2}%` } : {}}
+                >
                   <div className="text-white/40 uppercase text-[8px] tracking-[0.2em] font-black mb-2 border-b border-white/5 pb-2">
-                    {new Date(p.bucket).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit' })}
+                    {new Date(p.bucket).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit" })}
                   </div>
                   <div className="space-y-1.5 pt-1">
                     <div className="flex justify-between items-center">
@@ -95,21 +94,21 @@ export function EngagementChart({ data }: EngagementChartProps) {
                         <div className="w-1.5 h-1.5 rounded-full bg-electric-lime" />
                         <span className="text-white/60 font-medium">Likes</span>
                       </div>
-                      <span className="text-white font-black">{p.likes}</span>
+                      <span className="text-white font-black">{formatMetric(p.likes)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                         <span className="text-white/60 font-medium">Comments</span>
                       </div>
-                      <span className="text-white font-black">{p.comments}</span>
+                      <span className="text-white font-black">{formatMetric(p.comments)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                         <span className="text-white/60 font-medium">Shares</span>
                       </div>
-                      <span className="text-white font-black">{p.shares}</span>
+                      <span className="text-white font-black">{formatMetric(p.shares)}</span>
                     </div>
                   </div>
                 </div>

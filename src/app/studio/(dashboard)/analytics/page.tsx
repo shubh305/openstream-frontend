@@ -2,7 +2,7 @@ import { getChannelAnalytics, getRealtimeStats, getTopContent, getEngagementAnal
 import { EngagementChart } from "@/features/studio/components/EngagementChart";
 import { MainPerformanceChart } from "@/features/studio/components/MainPerformanceChart";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn, formatWatchTime, formatMetric } from "@/lib/utils";
 import Link from "next/link";
 import { StudioCard } from "@/features/studio/components/StudioCard";
 
@@ -61,22 +61,22 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
           {
             label: "Total Reach",
             sublabel: "Views",
-            value: Intl.NumberFormat("en-US", { notation: "compact" }).format(Number(overview.views)),
-            trend: `${trends.views > 0 ? "+" : ""}${trends.views}%`,
+            value: formatMetric(overview.views),
+            trend: `${trends.views > 0 ? "+" : ""}${formatMetric(trends.views)}%`,
             status: trends.views >= 0 ? "positive" : "negative",
           },
           {
             label: "Retention",
-            sublabel: "Watch Hours",
-            value: Intl.NumberFormat("en-US", { notation: "compact" }).format(Number(overview.watchTimeHours)),
-            trend: `${trends.watchTime > 0 ? "+" : ""}${trends.watchTime}%`,
+            sublabel: "Watch Duration",
+            value: formatWatchTime(overview.watchTimeHours),
+            trend: `${trends.watchTime > 0 ? "+" : ""}${formatMetric(trends.watchTime)}%`,
             status: trends.watchTime >= 0 ? "positive" : "negative",
           },
           {
             label: "Audience",
             sublabel: "Subscribers",
-            value: overview.subscribers,
-            trend: `${overview.subscriberChange >= 0 ? "+" : ""}${overview.subscriberChange}`,
+            value: formatMetric(overview.subscribers),
+            trend: `${overview.subscriberChange >= 0 ? "+" : ""}${formatMetric(overview.subscriberChange)}`,
             status: overview.subscriberChange >= 0 ? "positive" : "negative",
           },
           {
@@ -157,7 +157,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
                     </div>
                     <div className="flex items-center gap-4 mt-2">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-white font-black leading-none">{video.views.toLocaleString()}</span>
+                        <span className="text-[10px] text-white font-black leading-none">{formatMetric(video.views)}</span>
                         <span className="text-[7px] text-muted-text font-black uppercase tracking-widest mt-1">Impacts</span>
                       </div>
                       <div className="w-px h-6 bg-white/5" />
@@ -229,7 +229,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
                         val / maxVal > 0.4 ? "top-1" : "bottom-full mb-1",
                       )}
                     >
-                      {val} VIEW{val !== 1 ? "S" : ""} @ {formattedTime}
+                      {formatMetric(val)} VIEW{val !== 1 ? "S" : ""} @ {formattedTime}
                     </div>
                   </div>
                 );
@@ -282,7 +282,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
                     <span className="text-sm font-black text-white uppercase tracking-tight group-hover:translate-x-1 transition-transform">{s.query}</span>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-lg font-black text-white">{s.count}</span>
+                    <span className="text-lg font-black text-white">{formatMetric(s.count)}</span>
                     <span className="text-[8px] font-black text-muted-text uppercase tracking-widest">Inquiries</span>
                   </div>
                 </div>

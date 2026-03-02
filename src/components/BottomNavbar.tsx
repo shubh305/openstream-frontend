@@ -138,7 +138,7 @@ export function BottomNavbar({ user }: BottomNavbarProps) {
         setIsSearchOpen(false);
         setIsAccountOpen(!isAccountOpen);
       },
-      active: isAccountOpen || (!isSearchOpen && (pathname.startsWith("/@") || pathname.startsWith("/studio") || pathname === "/upload")),
+      active: isAccountOpen || (!isSearchOpen && ((user && pathname === `/@${user.username}`) || pathname.startsWith("/studio") || pathname === "/upload")),
       isAvatar: true,
     },
   ];

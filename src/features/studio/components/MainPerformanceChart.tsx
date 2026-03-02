@@ -1,7 +1,7 @@
 "use client";
 
 import { AnalyticsOverview } from "@/actions/analytics";
-import { cn } from "@/lib/utils";
+import { cn, formatMetric } from "@/lib/utils";
 import { useMemo } from "react";
 
 interface MainPerformanceChartProps {
@@ -56,8 +56,8 @@ export function MainPerformanceChart({ data }: MainPerformanceChartProps) {
         {trend.map((p, i: number) => {
           const h = (Number(p.views) / max) * 100;
           return (
-            <div key={i} className="group relative flex-1 flex flex-col justify-end h-full">
-               <div
+            <div key={i} className="group relative flex-1 flex flex-col justify-end h-full hover:z-50">
+              <div
                 className={cn(
                   "w-full rounded-t-sm transition-all duration-700 bg-gradient-to-t from-electric-lime to-electric-lime/40",
                   "opacity-80 group-hover:opacity-100 group-hover:shadow-[0_0_20px_rgba(163,251,1,0.4)]",
@@ -67,16 +67,17 @@ export function MainPerformanceChart({ data }: MainPerformanceChartProps) {
                 }}
               />
               {/* Smart Tooltip */}
-              <div className={cn(
-                "absolute left-1/2 -translate-x-1/2 bg-noir-terminal border border-white/10 text-[10px] font-bold p-3 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl whitespace-nowrap",
-                h > 60 ? "top-4" : "bottom-full mb-4"
-              )}>
+              <div
+                className={cn(
+                  "absolute left-1/2 -translate-x-1/2 bg-noir-terminal border border-white/10 text-[10px] font-bold p-3 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 pointer-events-none z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl whitespace-nowrap scale-95 group-hover:scale-100",
+                  h > 60 ? "top-4" : "",
+                )}
+                style={h <= 60 ? { bottom: `${Math.max(h, 2) + 2}%` } : {}}
+              >
                 <div className="text-white/40 uppercase text-[8px] tracking-[0.2em] font-black mb-1">
-                  {new Date(p.bucket).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit' })}
+                  {new Date(p.bucket).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit" })}
                 </div>
-                <div className="text-white font-black text-xs">
-                  {p.views} Views
-                </div>
+                <div className="text-white font-black text-xs">{formatMetric(p.views)} Views</div>
               </div>
             </div>
           );

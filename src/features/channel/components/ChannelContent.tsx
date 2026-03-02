@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Play, Eye } from "lucide-react";
 import Link from "next/link";
 import { SubscribeButton } from "@/features/video/components/SubscribeButton";
-import { StreamThumbnail } from "@/components/StreamThumbnail";
 import { Channel, Video, Stream, Playlist } from "@/types/api";
-import { PlaylistAction } from "@/components/PlaylistAction";
+import { VideoCard } from "@/features/video/components/VideoCard";
+import { cn } from "@/lib/utils";
 
 interface ChannelContentProps {
   channel: Channel;
@@ -18,6 +17,15 @@ interface ChannelContentProps {
   playlists: Playlist[];
   isOwner: boolean;
 }
+
+const EmptyState = ({ message }: { message: string }) => (
+  <div className="flex flex-col items-center justify-center py-20 text-white/20 border border-white/5 rounded-[2.5rem] bg-white/[0.01] animate-in fade-in duration-700">
+    <div className="w-12 h-12 rounded-2xl border border-white/5 flex items-center justify-center mb-6 opacity-50">
+      <div className="w-3 h-3 rounded-full bg-white/5" />
+    </div>
+    <p className="text-sm md:text-base font-black uppercase tracking-[0.4em] text-center px-6 leading-relaxed">{message}</p>
+  </div>
+);
 
 export function ChannelContent({ channel, videos, pastStreams = [], liveStreams, playlists, isOwner }: ChannelContentProps) {
   const [activeTab, setActiveTab] = useState("Videos");
@@ -32,14 +40,22 @@ export function ChannelContent({ channel, videos, pastStreams = [], liveStreams,
         {/* Left Sidebar (Channel Info Card) */}
         <aside className="hidden lg:block w-80 shrink-0 space-y-6 sticky top-24 h-fit">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex flex-col items-center text-center shadow-2xl">
-            <div className="w-32 h-32 rounded-full border-4 border-[#050505] bg-noir-terminal flex items-center justify-center shadow-lg mb-4 relative overflow-hidden">
-              <Image
-                src={channel.avatarUrl || `https://api.dicebear.com/9.x/bottts/svg?seed=${channel.handle}`}
-                alt={channel.name}
-                fill
-                className="object-cover grayscale"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
+            <div className="w-32 h-32 rounded-full border-4 border-[#050505] bg-noir-terminal flex items-center justify-center shadow-lg mb-4 relative">
+              <div className="w-full h-full rounded-full overflow-hidden relative">
+                <Image
+                  src={channel.avatarUrl || `https://api.dicebear.com/9.x/bottts/svg?seed=${channel.handle}`}
+                  alt={channel.name}
+                  fill
+                  className="object-cover grayscale"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
+
+              {liveStreams.length > 0 && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-signal-red px-2 py-0.5 rounded-md text-[8px] font-black text-white uppercase tracking-widest shadow-[0_4px_10px_rgba(239,68,68,0.5)] z-20">
+                  Live
+                </div>
+              )}
             </div>
 
             <h1 className="text-2xl font-bold mb-1 truncate w-full" title={channel.name}>
@@ -48,15 +64,28 @@ export function ChannelContent({ channel, videos, pastStreams = [], liveStreams,
             <p className="text-sm text-white/50 mb-6 truncate w-full">@{channel.handle}</p>
 
             <div className="grid grid-cols-2 gap-4 w-full mb-6">
-              <div className="bg-white/5 rounded-2xl p-3">
+              <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
                 <div className="text-xl font-bold">{channel.subscriberCount}</div>
-                <div className="text-[10px] text-white/40 font-medium tracking-wider">Subscribers</div>
+                <div className="text-[10px] text-white/40 font-black uppercase tracking-widest">Subscribers</div>
               </div>
-              <div className="bg-white/5 rounded-2xl p-3">
+              <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
                 <div className="text-xl font-bold">{videos.length + pastStreams.length}</div>
-                <div className="text-[10px] text-white/40 font-medium tracking-wider">Videos</div>
+                <div className="text-[10px] text-white/40 font-black uppercase tracking-widest">Videos</div>
               </div>
             </div>
+
+            <Link href={`/live/@${channel.handle}`} className="w-full mb-3">
+              <Button
+                className={cn(
+                  "w-full rounded-full h-11 font-black uppercase tracking-widest text-[10px] transition-all duration-500",
+                  liveStreams.length > 0
+                    ? "bg-signal-red hover:bg-signal-red/80 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+                    : "bg-white/5 hover:bg-white/10 text-white/60 border border-white/10",
+                )}
+              >
+                {liveStreams.length > 0 ? "Watch Live Now" : "Stream Terminal"}
+              </Button>
+            </Link>
 
             {!isOwner && (
               <div className="w-full mb-3">
@@ -142,66 +171,80 @@ export function ChannelContent({ channel, videos, pastStreams = [], liveStreams,
           {/* Content Sections */}
           <div className="space-y-12">
             {activeTab === "Videos" && (
-              <>
-                <section>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-bold flex items-center gap-3">
-                      <span className="w-1.5 h-6 bg-electric-lime rounded-full" />
-                      Latest uploads
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {videos.map(video => (
-                      <HubVideoCard key={video.id} video={video} />
-                    ))}
-                    {videos.length === 0 && <p className="text-white/40">No regular videos uploaded yet.</p>}
-                  </div>
-                </section>
-              </>
+              <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-sm font-black uppercase tracking-[0.4em] flex items-center gap-4 text-white/40">
+                    <span className="w-8 h-px bg-white/10" />
+                    Latest Broadcasts
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                  {videos.map(video => (
+                    <VideoCard key={video.id} {...video} />
+                  ))}
+                </div>
+                {videos.length === 0 && <EmptyState message="No broadcast records found in the archive" />}
+              </section>
             )}
 
             {activeTab === "Live" && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold flex items-center gap-3">
-                    <span className="w-1.5 h-6 bg-signal-red rounded-full shadow-[0_0_10px_#ef4444]" />
-                    Live content
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-sm font-black uppercase tracking-[0.4em] flex items-center gap-4 text-white/40">
+                    <span className="w-8 h-px bg-white/10" />
+                    Live Content
                   </h2>
                 </div>
                 {liveStreams.length > 0 || pastStreams.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {liveStreams.map(stream => (
-                      <HubStreamCard key={stream.id} stream={stream} />
+                      <VideoCard
+                        key={stream.id}
+                        id={stream.id}
+                        title={stream.title}
+                        thumbnailUrl={stream.thumbnailUrl || ""}
+                        duration="LIVE"
+                        views={stream.viewerCount || 0}
+                        uploadedAt="JUST NOW"
+                        creator={stream.creator}
+                        isLive={true}
+                      />
                     ))}
                     {pastStreams.map(video => (
-                      <HubVideoCard key={video.id} video={video} />
+                      <VideoCard key={video.id} {...video} />
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-20 text-white/30 border border-white/5 rounded-2xl bg-white/[0.02]">
-                    <p className="text-lg">No past live streams available.</p>
-                  </div>
+                  <EmptyState message="No active transmissions or past records" />
                 )}
               </section>
             )}
 
             {activeTab === "Playlists" && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-sm font-black uppercase tracking-[0.4em] flex items-center gap-4 text-white/40">
+                    <span className="w-8 h-px bg-white/10" />
+                    Playlists
+                  </h2>
+                </div>
                 {playlists.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {playlists.map(playlist => (
-                      <Link key={playlist.id} href={`/playlist?list=${playlist.id}`} className="block">
-                        <div className="group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl aspect-video flex items-center justify-center bg-noir-terminal">
-                          <span className="text-lg font-bold text-white group-hover:text-electric-lime">{playlist.title}</span>
-                          <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors" />
+                      <Link key={playlist.id} href={`/playlist?list=${playlist.id}`} className="block group">
+                        <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5 group-hover:border-white/20 transition-all duration-500">
+                          <div className="absolute inset-0 bg-white/[0.02]" />
+                          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-white/20 group-hover:text-white/60 transition-colors">
+                            Playlist Folder
+                          </div>
                         </div>
-                        <h3 className="mt-3 font-bold text-white truncate">{playlist.title}</h3>
-                        <p className="text-xs text-muted-text">{playlist.videoCount || 0} videos</p>
+                        <h3 className="mt-4 font-bold text-lg text-white group-hover:text-electric-lime transition-all duration-300">{playlist.title}</h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/20 mt-1">{playlist.videoCount || 0} Records</p>
                       </Link>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-white/40">No playlists available.</p>
+                  <EmptyState message="No categorized collections found" />
                 )}
               </section>
             )}
@@ -246,105 +289,4 @@ export function ChannelContent({ channel, videos, pastStreams = [], liveStreams,
       </div>
     </div>
   );
-}
-
-function HubVideoCard({ video }: { video: Video }) {
-    const isReady = video.isLive || (video.resolutions && video.resolutions.length > 0) || video.status === "READY" || video.status === "PUBLISHED";
-
-    return (
-      <div
-        className={`group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden transition-all duration-300 ${isReady ? "hover:border-white/20 hover:-translate-y-1 hover:shadow-2xl" : "opacity-60 grayscale-[0.5]"}`}
-      >
-        <Link href={`/watch/${video.id}`} className="block">
-          {/* Thumbnail Area */}
-          <div className="aspect-video relative overflow-hidden">
-            <StreamThumbnail
-              url={video.thumbnailUrl}
-              title={video.title}
-              className="w-full h-full"
-              avatarUrl={video.creator?.avatarUrl}
-              avatarFallback={(video.creator?.username || video.title || "V")[0].toUpperCase()}
-            />
-
-            {!isReady && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-30 pointer-events-none">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="h-1.5 w-24 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-electric-lime w-1/3 animate-[shimmer_2s_infinite]" />
-                  </div>
-                  <span className="text-[10px] font-bold text-electric-lime tracking-[0.2em] uppercase">Processing</span>
-                </div>
-              </div>
-            )}
-
-            {/* Duration Badge */}
-            {isReady && <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-[10px] font-bold font-mono border border-white/10">{video.duration}</div>}
-
-            {/* Play Overlay */}
-            {isReady && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                  <Play className="w-5 h-5 text-white fill-white" />
-                </div>
-              </div>
-            )}
-          </div>
-        </Link>
-
-        {/* Content Area */}
-        <div className="p-5 relative">
-          <Link href={`/watch/${video.id}`} className="block mb-2">
-            <h3 className={`text-base font-bold text-white leading-snug line-clamp-2 transition-colors ${isReady ? "group-hover:text-electric-lime" : ""}`}>{video.title}</h3>
-          </Link>
-          <div className="flex items-center justify-between text-xs text-white/40">
-            <div className="flex items-center gap-2">
-              <span>{video.views ? video.views.toLocaleString() : 0} views</span>
-              <span className="w-0.5 h-0.5 rounded-full bg-white/40" />
-              <span>{video.uploadedAt}</span>
-            </div>
-
-            <div
-              className="shrink-0"
-              onClick={e => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <PlaylistAction videoId={video.id} className="relative z-30" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-}
-
-function HubStreamCard({ stream }: { stream: Stream }) {
-    return (
-      <Link href={`/live/${stream.creator.username}`} className="block">
-        <div className="group relative bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden hover:border-electric-lime/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-          {/* Thumbnail Area */}
-          <div className="aspect-video relative overflow-hidden bg-noir-terminal">
-            <StreamThumbnail url={stream.thumbnailUrl} title={stream.title} avatarUrl={stream.creator?.avatarUrl} avatarFallback={(stream.creator?.username || stream.title || "S")[0].toUpperCase()} />
-
-            {/* Live Badge */}
-            <div className="absolute top-3 left-3 bg-signal-red px-2.5 py-1 rounded-md text-[10px] font-bold text-white tracking-wider animate-pulse flex items-center gap-1.5 shadow-lg shadow-signal-red/20 z-10">
-              <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-              Live
-            </div>
-
-            {/* Viewers Overlay */}
-            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-bold font-mono text-white border border-white/10 flex items-center gap-2 z-10">
-              <Eye className="w-3 h-3 text-white/70" />
-              <span className="text-white">{stream.viewerCount || 0} viewers</span>
-            </div>
-          </div>
-
-          {/* Content Area */}
-          <div className="p-5">
-            <h3 className="text-base font-bold text-white leading-snug line-clamp-2 group-hover:text-electric-lime transition-colors">{stream.title}</h3>
-            <p className="text-xs text-white/40 mt-1 line-clamp-1">{stream.category || "Just Chatting"}</p>
-          </div>
-        </div>
-      </Link>
-    );
 }
